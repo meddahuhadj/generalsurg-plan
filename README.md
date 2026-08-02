@@ -340,6 +340,30 @@ déforme bien son voisinage (propagation réelle des contraintes) — **pour les
 7 spécialités** (hbp, colorectal, gastrique, thyroïde, thoracique, cardiaque,
 urologie).
 
+### Tests E2E navigateur (Playwright) — `tests/e2e/`
+Complément de la validation ci-dessus : la SPA complète (`index.html` + assets)
+est désormais lancée dans **Chromium headless réel** via Playwright, sans
+backend (mode démo — le parcours d'un chirurgien sans serveur), et le chemin
+critique est vérifié : hub → sélection de module → vue Plan 3D (canvas WebGL
++ MPR dimensionnés, maillage réellement dessiné — `renderer.info.render.triangles > 0`)
+→ bascule de module/patient → onglet Analyse (volumétrie + score de risque
+calculés) → i18n FR→EN → navigation DICOM sans backend (dégradation douce,
+le viewer ne s'ouvre pas) → retour au hub. Chaque test échoue si une erreur
+JS/réseau non tolérée apparaît sur le chemin critique (seule la réponse
+`501` du serveur statique — le POST du pipeline démo vers un backend absent —
+est tolérée).
+
+```bash
+pip install -r backend/requirements.txt -r backend/requirements-dev.txt
+python -m playwright install chromium
+pytest tests/e2e -q        # 9 tests, ~1 min 30
+pytest backend/tests tests # suite complète backend + E2E
+```
+
+Note : `tests/test_unit_resilience.py` utilise des cooldowns de circuit-breaker
+de 10 ms (`sleep(0.02)`) ; très rapides seuls, ils peuvent échouer ponctuellement
+si la machine est fortement chargée en parallèle de la suite navigateur.
+
 ### Mise à jour — Jumeau branché sur le vrai maillage patient
 Le Jumeau utilisait jusqu'ici exclusivement `makeLumpGeometry()` (anatomie
 procédurale factice), même quand une vraie segmentation IA (Phase 1,

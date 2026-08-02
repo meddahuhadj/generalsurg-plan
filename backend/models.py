@@ -4,7 +4,7 @@ models.py — Modèles SQLAlchemy ORM (miroir de migrations/schema.sql).
 """
 
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import (
     Column, String, Integer, Float, Boolean, Text, DateTime, ForeignKey, JSON
@@ -16,6 +16,19 @@ from db import Base
 
 def _uuid():
     return str(uuid.uuid4())
+
+
+def _utcnow():
+    """Horodatage UTC naïf, remplaçant datetime.utcnow() (déprécié).
+
+    Retourne volontairement un datetime NAIF UTC (et non timezone-aware) :
+    c'est exactement ce que datetime.utcnow() produisait, donc le format
+    stocké par SQLAlchemy en SQLite (DateTime sans timezone=True) ne change
+    pas et les lignes existantes restent homogènes. Les valeurs timezone-aware
+    à destination des API/services restent produites par datetime.now(UTC)
+    là où c'est déjà le cas (auth.py, interop.py, etc.).
+    """
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
 class User(Base):
@@ -37,8 +50,8 @@ class User(Base):
     totp_recovery_codes = Column(JSON, default=list)           # codes de secours (hashés)
 
     last_login_at = Column(DateTime, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=_utcnow)
+    updated_at = Column(DateTime, default=_utcnow, onupdate=_utcnow)
 
 
 class Patient(Base):
@@ -56,8 +69,8 @@ class Patient(Base):
     urgence = Column(String(16), default="vert")
     note = Column(Text, nullable=True)
     status = Column(String(32), default="active")
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=_utcnow)
+    updated_at = Column(DateTime, default=_utcnow, onupdate=_utcnow)
 
     segments = relationship("Segment", back_populates="patient", cascade="all, delete-orphan")
 
@@ -79,7 +92,7 @@ class Segment(Base):
     color_hex = Column(String(7), default="#ff0000")
     mesh_ref = Column(Text, nullable=True)     # chemin/URL du maillage STL/GLB réel
     metadata_json = Column("metadata", JSON, default=dict)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=_utcnow)
 
     patient = relationship("Patient", back_populates="segments")
 
@@ -100,7 +113,7 @@ class DicomSeries(Base):
     size_bytes = Column(Integer, nullable=True)
     filename = Column(String(256), nullable=True)
     local_path = Column(String(512), nullable=True)  # dossier disque contenant les fichiers .dcm réels (si sauvegardés)
-    imported_at = Column(DateTime, default=datetime.utcnow)
+    imported_at = Column(DateTime, default=_utcnow)
 
 
 class VolumetrieResult(Base):
@@ -119,7 +132,7 @@ class VolumetrieResult(Base):
     bsa_m2 = Column(Float, nullable=True)
     margin_cm = Column(Float, default=1.0)
     is_cirrhotic = Column(Boolean, default=False)
-    computed_at = Column(DateTime, default=datetime.utcnow)
+    computed_at = Column(DateTime, default=_utcnow)
 
 
 class AuditLog(Base):
@@ -138,4 +151,4 @@ class AuditLog(Base):
     ip_address = Column(String(64), nullable=True)
     niveau = Column(String(16), default="info")
     metadata_json = Column("metadata", JSON, default=dict)
-    created_at = Column(DateTime, default=datetime.utcnow, index=True)
+    created_at = Column(DateTime, default=_utcnow, index=True)

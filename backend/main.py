@@ -267,21 +267,26 @@ async def unhandled_exception_handler(request: Request, exc: Exception):
 # ---------------------------------------------------------------------------
 API_V1 = "/api/v1"
 
-# Version v1 (nouvelle)
-app.include_router(auth_router.router, prefix=API_V1)
-app.include_router(patients_router.router, prefix=API_V1)
-app.include_router(dicom_router.router, prefix=API_V1)
-app.include_router(volumetrie_router.router, prefix=API_V1)
-app.include_router(chat_router.router, prefix=API_V1)
-app.include_router(audit_router.router, prefix=API_V1)
-
-# Compatibilité ascendante (anciens chemins, sans prefix)
-app.include_router(auth_router.router)
-app.include_router(patients_router.router)
-app.include_router(dicom_router.router)
-app.include_router(volumetrie_router.router)
-app.include_router(chat_router.router)
-app.include_router(audit_router.router)
+# Routers métier par domaine. Chaque router est monté DEUX fois :
+#   1. sous /api/v1 — l'API versionnée canonique (schéma OpenAPI/discussions API),
+#   2. sans préfixe — les anciens chemins documentés dans le README et que le
+#      frontend et les tests utilisent encore aujourd'hui (compatibilité ascendante).
+# Le double montage est délibéré : c'est le MÊME objet APIRouter, donc les deux
+# registrations ne peuvent pas diverger (aucun risque de dérive de schéma), et
+# FastAPI ne duplique pas les operationId de l'OpenAPI (vérifié empiriquement).
+# À terme, migrer le frontend et les tests vers /api/v1 puis retirer le passage
+# sans préfixe (chantier frontend, voir feuille de route).
+_core_routers = [
+    auth_router.router,
+    patients_router.router,
+    dicom_router.router,
+    volumetrie_router.router,
+    chat_router.router,
+    audit_router.router,
+]
+for _router in _core_routers:
+    app.include_router(_router, prefix=API_V1)
+    app.include_router(_router)
 
 # routers/dicom.py charge segmentation_service.py (pipeline réel TotalSegmentator)
 # dans son propre try/except et expose REAL_SEGMENTATION_AVAILABLE : app.mount()
