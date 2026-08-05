@@ -65,7 +65,7 @@ class Patient(Base):
     taille_cm = Column(Float, nullable=False)
     diagnostic = Column(Text, nullable=False)
     chirurgien = Column(String(128), nullable=False)
-    specialty = Column(String(32), nullable=False, default="hbp")
+    specialty = Column(String(32), nullable=False, default="cataracte")
     urgence = Column(String(16), default="vert")
     note = Column(Text, nullable=True)
     status = Column(String(32), default="active")
@@ -114,6 +114,39 @@ class DicomSeries(Base):
     filename = Column(String(256), nullable=True)
     local_path = Column(String(512), nullable=True)  # dossier disque contenant les fichiers .dcm réels (si sauvegardés)
     imported_at = Column(DateTime, default=_utcnow)
+
+
+class WorkflowRun(Base):
+    """Run du workflow de validation éclair « 3 clics » (Aperçu → Ajustement → Validation).
+
+    Créé automatiquement (trigger='auto') quand une série DICOM arrive sur le
+    serveur (upload manuel, import PACS DICOMweb, import PACS DIMSE), ou
+    manuellement (trigger='manual'). La préparation (lecture des voxels,
+    extraction heuristique des structures, simulation de marge) tourne en
+    tâche de fond ; le chirurgien ne fait que les 3 clics de validation.
+    """
+    __tablename__ = "workflow_runs"
+
+    id = Column(String(36), primary_key=True, default=_uuid)
+    patient_id = Column(String(32), ForeignKey("patients.id", ondelete="CASCADE"), nullable=False, index=True)
+    series_id = Column(String(36), nullable=True)          # DicomSeries d'origine (si importée sur ce serveur)
+    modality = Column(String(8), nullable=True)
+    specialty = Column(String(32), nullable=True)           # cataracte | glaucome | retine | autre
+    trigger = Column(String(16), default="manual")          # auto | manual
+    stage = Column(String(24), default="preparing")         # preparing | ready_for_review | validated | cancelled | failed
+    prep_status = Column(String(16), default="pending")     # pending | running | done | error
+    prep_progress = Column(String(256), nullable=True)
+    prep_error = Column(Text, nullable=True)
+    source = Column(String(24), nullable=True)              # dicom_voxels | metadata_estimate
+    safety_margin_mm = Column(Float, default=10.0)
+    structures = Column(JSON, default=list)                 # [{key,label,class,volume_ml,is_target,is_risk,method,color}]
+    margin_simulation = Column(JSON, default=dict)          # {margin_mm, resection_volume_ml, risk_structures[], guardrail{...}}
+    validated_at = Column(DateTime, nullable=True)
+    validated_by = Column(String(64), nullable=True)
+    export_dicom_sr = Column(JSON, nullable=True)
+    export_pdf_path = Column(String(512), nullable=True)
+    created_at = Column(DateTime, default=_utcnow)
+    updated_at = Column(DateTime, default=_utcnow, onupdate=_utcnow)
 
 
 class VolumetrieResult(Base):

@@ -31,7 +31,7 @@ def _register_and_login(client, *, password: str = "TestPass123") -> tuple[str, 
     return username, {"Authorization": f"Bearer {r.json()['access_token']}"}
 
 
-def _patient_payload(patient_id: str, specialty: str = "hbp") -> dict:
+def _patient_payload(patient_id: str, specialty: str = "cataracte") -> dict:
     return {
         "id": patient_id, "nom": "Test Patient", "age": 55, "sexe": "F",
         "poids_kg": 68.0, "taille_cm": 165.0, "diagnostic": "Test diagnostic",
@@ -39,7 +39,7 @@ def _patient_payload(patient_id: str, specialty: str = "hbp") -> dict:
     }
 
 
-def _create_patient(client, headers, specialty: str = "hbp") -> str:
+def _create_patient(client, headers, specialty: str = "cataracte") -> str:
     patient_id = _unique("pat")
     r = client.post("/patients", json=_patient_payload(patient_id, specialty), headers=headers)
     assert r.status_code == 201, r.text
@@ -96,20 +96,25 @@ def test_segments_require_authentication(client):
 # ---------------------------------------------------------------------------
 def test_volumetrie_without_segments_uses_specialty_defaults(client):
     _, headers = _register_and_login(client)
-    patient_id = _create_patient(client, headers, specialty="hbp")
+    patient_id = _create_patient(client, headers, specialty="cataracte")
 
     r = client.get(f"/patients/{patient_id}/volumetrie", headers=headers)
     assert r.status_code == 200, r.text
     data = r.json()
     assert data["patient_id"] == patient_id
     assert data["organ_volume_ml"] > 0
-    assert "flr_pct" in data  # spécifique HBP
-    assert "flr_safe" in data
+    # Le bloc FLR/TLV (Future Liver Remnant) était spécifique à l'ancienne
+    # spécialité "hbp", retirée depuis que Specialty ne couvre plus que
+    # cataracte/glaucome/retine (voir routers/volumetrie.py) — ces champs
+    # restent dans le schéma pour compatibilité mais ne sont plus jamais
+    # remplis, quelle que soit la spécialité.
+    assert data["flr_pct"] is None
+    assert data["flr_safe"] is None
 
 
 def test_volumetrie_reflects_real_segments_when_present(client):
     _, headers = _register_and_login(client)
-    patient_id = _create_patient(client, headers, specialty="hbp")
+    patient_id = _create_patient(client, headers, specialty="cataracte")
     client.post(f"/patients/{patient_id}/segments",
                 json=_segment_payload(_unique("organe"), "organe", 1000.0), headers=headers)
     client.post(f"/patients/{patient_id}/segments",

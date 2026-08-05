@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-GeneralSurg Plan MIMO — Backend Sécurisé v2.0 (multi-spécialités)
+OphtalmoSurg Plan — Backend Sécurisé v2.0 (ophtalmologie)
 ==================================================================
 Version "production-ready" (priorité 1 de la feuille de route) :
   ✓ Authentification forte : mot de passe (bcrypt) + 2FA TOTP optionnelle par utilisateur
@@ -21,7 +21,7 @@ Démarrage rapide (SQLite, aucune dépendance externe) :
 
 Démarrage avec PostgreSQL :
     docker compose up -d db
-    # éditer .env : DATABASE_URL=postgresql+psycopg2://generalsurg:generalsurg@localhost:5432/generalsurg
+    # éditer .env : DATABASE_URL=postgresql+psycopg2://ophtalmosurg:ophtalmosurg@localhost:5432/ophtalmosurg
     alembic -c migrations/alembic.ini upgrade head
     uvicorn main:app --reload --host 0.0.0.0 --port 8000
 """
@@ -58,6 +58,7 @@ import routers.dicom as dicom_router
 import routers.volumetrie as volumetrie_router
 import routers.chat as chat_router
 import routers.audit as audit_router
+import routers.workflow as workflow_router
 from schemas import DicomSRExportRequest, DicomSRExportResponse
 import schemas
 
@@ -72,7 +73,7 @@ SEED_DEMO_USERS = os.getenv("SEED_DEMO_USERS", "true").lower() == "true"
 
 # ── Logging structuré JSON + correlation IDs ───────────────────────────────
 setup_logging(os.getenv("LOG_LEVEL", "INFO"))
-logger = logging.getLogger("generalsurg.main")
+logger = logging.getLogger("ophtalmosurg.main")
 
 # ── Garde-fou anti-mauvaise-config (priorité sécurité, ajouté suite à l'audit
 # de juillet 2026) ───────────────────────────────────────────────────────────
@@ -157,6 +158,35 @@ async def lifespan(app: FastAPI):
                 db.commit()
                 logger.info("Utilisateurs de démonstration créés (dr.hadj / dr.benali, mdp: changeme). "
                             "À supprimer avant toute mise en production.")
+            # Patients de démonstration fictifs — miroir des 3 patients codés en dur
+            # dans MODULES (assets/app-part1.js), pour que le workflow 3-clics et le
+            # hub soient utilisables sur un backend vierge. Données fictives (aides
+            # "FICTIONAL_DEMO_DATA"), jamais destinées à un vrai patient.
+            if not db.query(models.Patient).first():
+                demo_patients = [
+                    models.Patient(
+                        id="40521-CAT", nom="Haddad, Leïla", age=74, sexe="F",
+                        poids_kg=64, taille_cm=160,
+                        diagnostic="Cataracte corticonucléaire OD stade N4",
+                        chirurgien="Dr. Hadj", specialty="cataracte", urgence="vert",
+                    ),
+                    models.Patient(
+                        id="52918-GLA", nom="Belaïd, Omar", age=68, sexe="M",
+                        poids_kg=80, taille_cm=176,
+                        diagnostic="Glaucome primitif à angle ouvert avancé OG",
+                        chirurgien="Dr. Benali", specialty="glaucome", urgence="orange",
+                    ),
+                    models.Patient(
+                        id="61147-RET", nom="Cissé, Fatou", age=57, sexe="F",
+                        poids_kg=69, taille_cm=165,
+                        diagnostic="Décollement de rétine rhegmatogène OD, macula off",
+                        chirurgien="Dr. Hadj", specialty="retine", urgence="rouge",
+                    ),
+                ]
+                db.add_all(demo_patients)
+                db.commit()
+                logger.info("Patients de démonstration créés (40521-CAT / 52918-GLA / 61147-RET, fictifs). "
+                            "À supprimer avant toute mise en production.")
         finally:
             db.close()
     # Nettoyage initial du stockage DICOM (TTL + quota)
@@ -169,7 +199,7 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(title="GeneralSurg Plan MIMO — Backend", version="2.1.0", lifespan=lifespan)
+app = FastAPI(title="OphtalmoSurg Plan — Backend", version="2.1.0", lifespan=lifespan)
 
 # ---------------------------------------------------------------------------
 # Middleware correlation ID — chaque requête reçoit un ID unique tracable
@@ -183,7 +213,7 @@ async def correlation_id_middleware(request: Request, call_next):
     response.headers["X-Correlation-ID"] = cid
     return response
 
-request_logger = logging.getLogger("generalsurg.request")
+request_logger = logging.getLogger("ophtalmosurg.request")
 
 @app.middleware("http")
 async def request_logging_middleware(request: Request, call_next):
@@ -219,7 +249,7 @@ app.add_middleware(
 import traceback as _traceback
 from sqlalchemy.exc import OperationalError, DBAPIError
 
-resilience_logger = logging.getLogger("generalsurg.resilience")
+resilience_logger = logging.getLogger("ophtalmosurg.resilience")
 
 
 def _log_incident(request: Request, exc: Exception) -> str:
@@ -283,6 +313,7 @@ _core_routers = [
     volumetrie_router.router,
     chat_router.router,
     audit_router.router,
+    workflow_router.router,
 ]
 for _router in _core_routers:
     app.include_router(_router, prefix=API_V1)
@@ -524,7 +555,7 @@ async def serve_frontend():
     path = os.path.join(os.path.dirname(__file__), "..", "index.html")
     if os.path.exists(path):
         return FileResponse(path)
-    return {"msg": "GeneralSurg Plan MIMO API — voir /docs pour la documentation."}
+    return {"msg": "OphtalmoSurg Plan API — voir /docs pour la documentation."}
 
 
 # Fichiers PWA à la racine (manifest, service worker, favicon) : on les sert

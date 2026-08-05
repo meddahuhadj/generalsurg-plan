@@ -108,7 +108,7 @@ async def generate_4d_bioprinting_gcode(
     
     # Génération d'un extrait de G-code représentatif pour bio-imprimeur 6 axes
     gcode_snippet = [
-        f"; GeneralSurgPlan3D NextGen — 4D In-Situ Bioprinting Trajectory #{print_job_id[:8]}",
+        f"; OphtalmoSurg Plan NextGen — 4D In-Situ Bioprinting Trajectory #{print_job_id[:8]}",
         f"; Target Site: {req.anatomical_site} | Volume: {req.resected_volume_ml} mL",
         "; Bioink: Alginate-Collagen + Mesenchymal Stem Cells (MSC) + VEGF @ 37.0°C",
         "G21 ; Set units to millimeters",

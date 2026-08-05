@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GeneralSurg Plan | Plateforme Chirurgicale Modulaire</title>
+  <title>OphtalmoSurg Plan | Plateforme Chirurgicale Ophtalmologique</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link
     href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
@@ -19,10 +19,10 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="GeneralSurg Plan">
+  <meta name="apple-mobile-web-app-title" content="OphtalmoSurg Plan">
 </head>
 
-<body data-mod="hbp">
+<body data-mod="cataracte">
 
   <!-- ═══════════════════════════════════════════════════════
      HUB DE DÉMARRAGE — Sélection de spécialité
@@ -36,8 +36,8 @@
       <div class="hub-logo">
         <div class="hub-logo-icon">🏥</div>
         <div class="hub-logo-text">
-          <h1>GeneralSurg Plan</h1>
-          <p>Plateforme chirurgicale modulaire</p>
+          <h1>OphtalmoSurg Plan</h1>
+          <p>Plateforme chirurgicale ophtalmologique</p>
         </div>
       </div>
       <p class="hub-tagline">Planification chirurgicale assistée par IA pour <span>toutes les spécialités</span>.
@@ -49,6 +49,37 @@
     <div class="hub-footer">
       <div class="hub-hint">Sélectionnez une spécialité chirurgicale</div>
       <div class="hub-badge">⚠ Prototype de démonstration — Ne pas utiliser en contexte clinique réel</div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════
+     ÉCRAN DE CONNEXION — affiché uniquement quand un backend (⚙ Paramètres
+     → URL Backend) est configuré et qu'aucun jeton valide n'est en mémoire.
+     En mode démo hors-ligne (aucune URL Backend), cet écran ne s'affiche
+     jamais — voir needsLogin()/showLoginGateIfNeeded() dans app-part3.js.
+     ═══════════════════════════════════════════════════════ -->
+  <div class="login-gate-overlay" id="login-gate" style="display:none">
+    <div class="login-gate-card">
+      <div class="login-gate-icon">🔐</div>
+      <h2 data-i18n="login.title">Connexion requise</h2>
+      <p class="login-gate-sub" data-i18n="login.subtitle">Un backend est configuré — authentifiez-vous pour continuer.
+      </p>
+      <div class="form-row">
+        <div class="form-label" data-i18n="login.username">Nom d'utilisateur</div>
+        <input class="form-control" id="login-username" autocomplete="username" placeholder="dr.hadj"
+          onkeydown="if(event.key==='Enter'){document.getElementById('login-password').focus()}">
+      </div>
+      <div class="form-row">
+        <div class="form-label" data-i18n="login.password">Mot de passe</div>
+        <input class="form-control" type="password" id="login-password" autocomplete="current-password"
+          placeholder="••••••••" onkeydown="if(event.key==='Enter'){submitLogin()}">
+      </div>
+      <div id="login-error" class="login-gate-error" style="display:none"></div>
+      <button class="btn btn-primary" style="width:100%;margin-top:6px" id="login-submit-btn"
+        onclick="submitLogin()" data-i18n="login.submit">Se connecter</button>
+      <div class="login-gate-hint">
+        <span data-i18n="login.backendLabel">Backend :</span> <span id="login-gate-backend-url"></span>
+      </div>
     </div>
   </div>
 
@@ -70,8 +101,8 @@
       <div class="brand">
         <div class="brand-icon">🏥</div>
         <div class="brand-text">
-          <div class="brand-name">GeneralSurg Plan</div>
-          <div class="brand-sub" id="brand-sub">HBP</div>
+          <div class="brand-name">OphtalmoSurg Plan</div>
+          <div class="brand-sub" id="brand-sub">Ophtalmologie</div>
         </div>
       </div>
       <div class="top-nav">
@@ -80,6 +111,8 @@
         <button data-view="jumeau"><span data-i18n="nav.twin">Jumeau Num.</span></button>
         <button data-view="ar"><span data-i18n="nav.ar">Réalité Augm.</span></button>
         <button data-view="audit"><span data-i18n="nav.audit">Audit Trail</span></button>
+        <button data-view="workflow" style="color:#06b6d4;font-weight:600">🚀 <span
+            data-i18n="nav.workflow3">Workflow 3-Clics</span></button>
         <button data-view="surgai" style="color:#a855f7;font-weight:600">🧠 <span
             data-i18n="nav.surgai">SurgAI</span></button>
         <button data-view="surgsim" style="color:#ff6b35;font-weight:600">⚡ <span
@@ -364,9 +397,9 @@
               onchange="loadDicomFiles(this.files)">
           </label>
           <label
-            style="font-size:9px;color:var(--text3);cursor:pointer;display:flex;align-items:center;gap:4px;border-left:1px solid var(--border);padding-left:8px"
+            style="font-size:9px;color:var(--text3);cursor:pointer;display:flex;align-items:center;gap:4px;border-left:1px solid var(--border);padding-left:8px;opacity:.5"
             data-i18n-title="toolbar.realSegmentationTitle"
-            title="Lance une vraie inférence de segmentation (TotalSegmentator) sur le backend et charge les maillages 3D réels obtenus">
+            title="Indisponible pour l'ophtalmologie : le pipeline serveur (TotalSegmentator) est entraîné pour l'imagerie abdominale (foie), pas les structures oculaires">
             🔬 <span data-i18n="toolbar.realSegmentation">Segmentation IA réelle</span>
             <input type="file" accept=".dcm,application/dicom,.nii,.nii.gz" multiple style="display:none"
               onchange="runRealSegmentation(this.files)">
@@ -439,9 +472,9 @@
           <select id="mpr-seg-selector" onchange="state.mpr.activeSegment=this.value"
             style="font-size:8px;background:var(--bg2);color:var(--text1);border:1px solid var(--border);border-radius:4px;padding:2px 4px;cursor:pointer">
             <option value="tumor">🔴 Tumeur</option>
-            <option value="portal_vein">🔵 Veine porte</option>
-            <option value="hepatic_vein">🟣 VS-Hépatiques</option>
-            <option value="bile_duct">🟡 Voies bil.</option>
+            <option value="portal_vein">🔵 Vaisseau rétinien</option>
+            <option value="hepatic_vein">🟣 Membrane épirétin.</option>
+            <option value="bile_duct">🟡 Exsudats/Hémorr.</option>
             <option value="gtv">🟠 GTV</option>
             <option value="ctv">🟤 CTV</option>
           </select>
@@ -500,11 +533,11 @@
         <div class="dash-info-row"><span class="dash-info-lbl">Patient:</span> <span class="dash-info-val"
             id="dash-pat-name">Jean Dupont (PAT-2026-001)</span></div>
         <div class="dash-info-row"><span class="dash-info-lbl">Chirurgien:</span> <span class="dash-info-val">Dr. Martin
-            (HBP)</span></div>
+            (Ophtalmologie)</span></div>
         <div class="dash-info-row"><span class="dash-info-lbl">Anesthésiste:</span> <span class="dash-info-val">Dr.
             Dubois</span></div>
         <div class="dash-info-row"><span class="dash-info-lbl">Intervention:</span> <span
-            class="dash-info-val">Hépatectomie droite (Robotique)</span></div>
+            class="dash-info-val">Phacoémulsification + implant LIO (OD)</span></div>
 
         <div
           style="margin-top: 30px; text-align: center; background: rgba(0,0,0,0.2); padding: 20px; border-radius: 8px;">
@@ -515,7 +548,7 @@
             style="font-size: 82px; font-weight: 800; font-family: var(--mono); color: var(--accent); letter-spacing: 2px;">
             02:15:30</div>
           <div style="font-size: 22px; color: var(--orange); margin-top: 15px; font-weight: 600;">Phase Actuelle:
-            Dissection Hilaire</div>
+            Capsulorhexis</div>
         </div>
       </div>
 
@@ -526,18 +559,18 @@
           <div
             style="display:flex; justify-content:space-between; color: var(--text3); cursor:pointer; padding: 8px; border-radius: 8px; transition: background 0.2s;"
             onmouseover="this.style.background='rgba(255,255,255,0.05)'"
-            onmouseout="this.style.background='transparent'" onclick="loadSurgeryFromSchedule('thyroide')"><span>08:00 -
-              10:00</span> <span>Martin, S. (Thyroïdectomie)</span></div>
+            onmouseout="this.style.background='transparent'" onclick="loadSurgeryFromSchedule('glaucome')"><span>08:00 -
+              09:00</span> <span>Belaïd, O. (Trabéculectomie)</span></div>
           <div
             style="display:flex; justify-content:space-between; color: var(--accent); font-weight: bold; background: rgba(var(--accent-rgb), 0.1); padding: 12px; border-radius: 8px; border: 1px solid rgba(var(--accent-rgb), 0.3); cursor:pointer; transition: background 0.2s;"
             onmouseover="this.style.background='rgba(var(--accent-rgb), 0.2)'"
-            onmouseout="this.style.background='rgba(var(--accent-rgb), 0.1)'" onclick="loadSurgeryFromSchedule('hbp')">
-            <span>10:30 - 14:30</span> <span>Benali, K. (Hépatectomie D.)</span></div>
+            onmouseout="this.style.background='rgba(var(--accent-rgb), 0.1)'" onclick="loadSurgeryFromSchedule('cataracte')">
+            <span>09:30 - 10:00</span> <span>Haddad, L. (Phacoémulsification)</span></div>
           <div
             style="display:flex; justify-content:space-between; color: var(--text2); cursor:pointer; padding: 8px; border-radius: 8px; transition: background 0.2s;"
             onmouseover="this.style.background='rgba(255,255,255,0.05)'"
-            onmouseout="this.style.background='transparent'" onclick="loadSurgeryFromSchedule('colorectal')"><span>15:00
-              - 18:00</span> <span>Dubois, M. (Résection Rectum)</span></div>
+            onmouseout="this.style.background='transparent'" onclick="loadSurgeryFromSchedule('retine')"><span>10:30
+              - 12:00</span> <span>Cissé, F. (Vitrectomie)</span></div>
         </div>
       </div>
 
@@ -654,6 +687,7 @@
         <div class="form-row">
           <div class="form-label" data-i18n="settings.backendUrl">URL Backend</div><input class="form-control"
             placeholder="http://localhost:8000" id="input-api-base">
+          <div id="settings-login-status" style="font-size:9.5px;color:var(--text3);margin-top:4px"></div>
         </div>
         <div class="form-row">
           <div class="form-label" data-i18n="settings.surgeonName">Nom du chirurgien</div><input class="form-control"
@@ -883,6 +917,17 @@
     </div>
   </div>
 
+  <!-- ── Modale Workflow « 3 Clics » (validation éclair — Rec. 1, contenu dynamique en JS) ── -->
+  <div class="modal-overlay" id="modal-workflow">
+    <div class="modal" style="min-width:720px;max-width:94vw">
+      <div class="modal-hdr"><span class="modal-title" style="color:#06b6d4">🚀 <span
+            data-i18n="wf3.title">Workflow « 3 Clics » — Validation éclair</span></span><button class="modal-close"
+          onclick="closeModal('workflow')">✕</button></div>
+      <div class="modal-body" id="wf3-body" style="font-size:11px;line-height:1.6"></div>
+      <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('workflow')">Fermer</button></div>
+    </div>
+  </div>
+
   <!-- ── Modale SurgAI-Decision (XAI SHAP & Grad-CAM 3D) ── -->
   <div class="modal-overlay" id="modal-surgai">
     <div class="modal" style="min-width:640px">
@@ -898,10 +943,10 @@
         <div class="form-row">
           <div class="form-label">Sélectionner une stratégie chirurgicale modélisée par l'IA</div>
           <select class="form-control" id="surgai-strategy-select" onchange="updateSurgAiPreview()">
-            <option value="hep_droite">Option A : Hépatectomie Droite Cœlioscopique (Recommandée — Succès prédit :
-              94.2%)</option>
-            <option value="seg_7_8">Option B : Segmentectomie VII-VIII Paremchymateuse (Succès prédit : 88.5%)</option>
-            <option value="radiof">Option C : Thermo-ablation Radiofréquence Trans-hépatique (Succès prédit : 76.0%)
+            <option value="phaco_standard">Option A : Phacoémulsification Standard + LIO (Recommandée — Succès prédit :
+              98.5%)</option>
+            <option value="combinee_glaucome">Option B : Chirurgie Combinée Cataracte-Glaucome (Succès prédit : 91.2%)</option>
+            <option value="yag">Option C : Capsulotomie Postérieure au Laser YAG (Succès prédit : 96.0%)
             </option>
           </select>
         </div>
@@ -923,11 +968,11 @@
           <div style="background:var(--bg2);padding:10px;border-radius:6px;border:1px solid var(--border2)">
             <div style="font-weight:700;color:#f43f5e;margin-bottom:6px">🔥 Attention Grad-CAM 3D</div>
             <div style="font-size:10px;color:var(--text2)">
-              Zone critique détectée : <strong>Veine Sus-Hépatique Moyenne (VSHM)</strong> à 1.8 mm du plan de coupe
-              projectif.<br>
+              Zone critique détectée : <strong>Artère Centrale de la Rétine (ACR)</strong> à 1.8 mm du plan
+              d'incision projectif.<br>
               <div
                 style="margin-top:6px;padding:6px;background:rgba(244,63,94,.15);border-left:3px solid #f43f5e;border-radius:4px;font-size:9.5px">
-                💡 Recommandation SHAP : Dissection première du pédicule glissonnien droit pour réduire le risque
+                💡 Recommandation SHAP : Réduire la pression d'infusion avant capsulorhexis pour réduire le risque
                 d'hémorragie par 18%.
               </div>
             </div>
@@ -947,19 +992,19 @@
   <div class="modal-overlay" id="modal-surgsim">
     <div class="modal" style="min-width:620px">
       <div class="modal-hdr"><span class="modal-title" style="color:#ff6b35">⚡ SurgSim-PhysX — Simulation Rhéologique &
-          Clampage (WASM/WebGPU)</span><button class="modal-close" onclick="closeModal('surgsim')">✕</button></div>
+          Perfusion (WASM/WebGPU)</span><button class="modal-close" onclick="closeModal('surgsim')">✕</button></div>
       <div class="modal-body" style="font-size:11px;line-height:1.6">
         <div
           style="background:rgba(255,107,53,.1);border:1px solid rgba(255,107,53,.3);padding:10px;border-radius:6px;margin-bottom:12px">
           <strong>⚡ Moteur Physique des Milieux Continus :</strong> Calcule en temps réel ($< 100\text{ ms}$) sur WebGPU
-            les déformations hyperélastiques et l'ischémie en cas de ligature vasculaire virtuelle. </div>
+            les déformations hyperélastiques et l'ischémie rétinienne en cas de compression vasculaire virtuelle. </div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
               <div style="background:var(--bg2);padding:10px;border-radius:6px;border:1px solid var(--border2)">
                 <div style="font-weight:700;color:var(--orange);margin-bottom:8px">🧪 Rhéologie & Biophysique Tissulaire
                 </div>
                 <div style="margin-bottom:8px">
                   <label style="font-size:9px;color:var(--text3)">Module de Young E (<span
-                      id="surgsim-young-val">12</span> kPa - Foie normal) :</label>
+                      id="surgsim-young-val">12</span> kPa - Cristallin cataracté) :</label>
                   <input type="range" min="5" max="40" value="12" class="form-control" style="padding:0;cursor:pointer"
                     oninput="document.getElementById('surgsim-young-val').textContent=this.value;notify('Module d\'élasticité tissulaire E recalibré à '+this.value+' kPa','info')">
                 </div>
@@ -971,28 +1016,28 @@
                 </div>
               </div>
               <div style="background:var(--bg2);padding:10px;border-radius:6px;border:1px solid var(--border2)">
-                <div style="font-weight:700;color:#38bdf8;margin-bottom:8px">🩸 Simulateur de Clampage & Ischémie</div>
+                <div style="font-weight:700;color:#38bdf8;margin-bottom:8px">🩸 Simulateur de Compression & Ischémie</div>
                 <div style="display:flex;flex-direction:column;gap:6px">
                   <button class="btn btn-secondary"
                     style="text-align:left;font-size:10px;border-color:rgba(239,68,68,.4)"
-                    onclick="simulateClamping('Artère Hépatique Droite', 68.5, 'SÉCURISÉ ✅')">🔴 Clamper Artère
-                    Hépatique Droite</button>
+                    onclick="simulateClamping('Artère Ophtalmique', 68.5, 'SÉCURISÉ ✅')">🔴 Comprimer Artère
+                    Ophtalmique</button>
                   <button class="btn btn-secondary"
                     style="text-align:left;font-size:10px;border-color:rgba(56,189,248,.4)"
-                    onclick="simulateClamping('Veine Porte Branche Droite', 64.2, 'SÉCURISÉ ✅')">🔵 Clamper Veine Porte
-                    Branche Droite</button>
+                    onclick="simulateClamping('Artère Centrale de la Rétine', 64.2, 'SÉCURISÉ ✅')">🔵 Comprimer Artère
+                    Centrale de la Rétine</button>
                   <button class="btn btn-secondary"
                     style="text-align:left;font-size:10px;border-color:rgba(234,179,8,.4)"
-                    onclick="simulateClamping('Pédicule Glissonnien Segment VI-VII', 81.0, 'OPTIMAL ⭐')">🟡 Clamper
-                    Pédicule VI-VII</button>
+                    onclick="simulateClamping('Veine Centrale de la Rétine', 81.0, 'OPTIMAL ⭐')">🟡 Comprimer
+                    Veine Centrale de la Rétine</button>
                 </div>
               </div>
             </div>
             <div
               style="margin-top:12px;background:var(--bg3);padding:10px;border-radius:6px;border:1px solid var(--border2)">
               <div style="display:flex;justify-content:space-between;font-weight:700;margin-bottom:4px">
-                <span>Résultat Volumétrique Instantané (FLR) :</span>
-                <span id="surgsim-flr-status" style="color:var(--green)">FLR: 68.5% (1020 mL) — SÉCURISÉ ✅</span>
+                <span>Résultat Instantané de Perfusion (PRR) :</span>
+                <span id="surgsim-flr-status" style="color:var(--green)">PRR: 68.5% (513 µL/min) — SÉCURISÉ ✅</span>
               </div>
               <div style="width:100%;background:var(--bg0);height:12px;border-radius:6px;overflow:hidden">
                 <div id="surgsim-flr-bar"
@@ -1039,9 +1084,9 @@
               </tr>
               <tr style="border-bottom:1px solid var(--border)">
                 <td style="padding:6px;font-weight:600">Salle 2</td>
-                <td>HBP (Patient actuel)</td>
+                <td>Ophtalmologie (Patient actuel)</td>
                 <td style="color:var(--green)">🟢 Installation stérile — Incision dans 12m</td>
-                <td>Boîte Hépatectomie #4 RFID UHF ✅</td>
+                <td>Plateau Phacoémulsification #4 RFID UHF ✅</td>
               </tr>
               <tr>
                 <td style="padding:6px;font-weight:600">Salle 3</td>
@@ -1080,18 +1125,18 @@
             <div
               style="margin-top:8px;font-size:10px;color:var(--text2);background:var(--bg1);padding:6px 8px;border-radius:4px;border-left:3px solid #06b6d4"
               id="or-anesthesia-alert">
-              ℹ️ Stabilité hémodynamique indexée à 98.4%. Prêt pour clampage vasculaire ou résection parenchymateuse.
+              ℹ️ Stabilité hémodynamique indexée à 98.4%. Prêt pour compression vasculaire ou incision cornéenne.
             </div>
             <div style="margin-top:8px;display:flex;gap:6px">
               <button class="btn btn-secondary" style="font-size:10px;flex:1;border-color:rgba(239,68,68,.4)"
-                onclick="simulateVascularClampingHL7('Pédicule hépatique (Pringle)', 18.0)">🔴 Simulation Clampage
-                Pringle (18 min)</button>
+                onclick="simulateVascularClampingHL7('Artère Centrale de la Rétine', 18.0)">🔴 Simulation Occlusion
+                Artère Centrale Rétine (18 min)</button>
               <button class="btn btn-secondary" style="font-size:10px;flex:1;border-color:rgba(234,179,8,.4)"
-                onclick="simulateVascularClampingHL7('Artère Rénale Droite', 22.0)">🟠 Simulation Clampage Rénal (22
-                min)</button>
+                onclick="simulateVascularClampingHL7('Hypertonie Oculaire Aiguë', 22.0)">🟠 Simulation Hypertonie
+                Oculaire Aiguë (22 min)</button>
               <button class="btn btn-secondary" style="font-size:10px;flex:1;border-color:rgba(56,189,248,.4)"
-                onclick="simulateVascularClampingHL7('Artère Mésentérique Inf.', 35.0)">🟡 Simulation Clampage AMI (35
-                min)</button>
+                onclick="simulateVascularClampingHL7('Veine Centrale de la Rétine', 35.0)">🟡 Simulation Compression
+                Veine Centrale Rétine (35 min)</button>
             </div>
           </div>
         </div>
@@ -1156,8 +1201,8 @@
               :</div>
             <div style="display:flex;flex-direction:column;gap:6px">
               <button class="btn btn-secondary" style="text-align:left;font-size:10.5px"
-                onclick="simulateVoiceCommand('Surgi, affiche uniquement les veines sus-hépatiques et masque le squelette.', 'Système veineux isolé avec succès (couche 4 active).')">🔊
-                « Surgi, affiche uniquement les veines sus-hépatiques et masque le squelette. »</button>
+                onclick="simulateVoiceCommand('Surgi, affiche uniquement le réseau vasculaire rétinien et masque le squelette.', 'Réseau vasculaire rétinien isolé avec succès (couche 4 active).')">🔊
+                « Surgi, affiche uniquement le réseau vasculaire rétinien et masque le squelette. »</button>
               <button class="btn btn-secondary" style="text-align:left;font-size:10.5px"
                 onclick="simulateVoiceCommand('Surgi, quelle est la distance entre mon bistouri CUSA et le bord tumoral ?', 'La distance actuelle est de 4.2 millimètres.')">🔊
                 « Surgi, quelle est la distance entre mon bistouri CUSA et le bord tumoral ? »</button>
@@ -1181,30 +1226,31 @@
     <!-- ── Modale Découpe Virtuelle WebGPU (Jalon M4) ── -->
     <div class="modal-overlay" id="modal-webgpu-cut">
       <div class="modal" style="min-width:640px">
-        <div class="modal-hdr"><span class="modal-title" style="color:#ff6b35">✂️ Découpe Virtuelle WebGPU — Résection &
-            Calcul FLR en Temps Réel</span><button class="modal-close" onclick="closeModal('webgpu-cut')">✕</button>
+        <div class="modal-hdr"><span class="modal-title" style="color:#ff6b35">✂️ Découpe Virtuelle WebGPU — Traitement &
+            Calcul de Surface en Temps Réel</span><button class="modal-close" onclick="closeModal('webgpu-cut')">✕</button>
         </div>
         <div class="modal-body" style="font-size:11px;line-height:1.6">
           <div
             style="background:rgba(255,107,53,.1);border:1px solid rgba(255,107,53,.3);padding:10px;border-radius:6px;margin-bottom:12px">
-            <strong>✂️ Simulation de Résection Hépatique :</strong> Découpez virtuellement le parenchyme selon un plan
-            de coupe 3D interactif avec recalcul à 60 Hz du volume hépatique restant (FLR) et des marges oncologiques.
+            <strong>✂️ Simulation de Photocoagulation / Vitrectomie :</strong> Découpez virtuellement le volume selon un
+            plan de coupe 3D interactif avec recalcul à 60 Hz de la surface rétinienne restante et des marges
+            oncologiques.
           </div>
           <div class="form-row">
-            <div class="form-label">Sélectionner les segments de Couinaud à révoquer :</div>
+            <div class="form-label">Sélectionner les quadrants rétiniens à traiter :</div>
             <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px">
               <label
                 style="background:var(--bg2);padding:4px 8px;border-radius:4px;border:1px solid var(--border2);cursor:pointer"><input
-                  type="checkbox" id="cut-s6" checked> S6 (Post-Inf)</label>
+                  type="checkbox" id="cut-s6" checked> Temporal-Inf</label>
               <label
                 style="background:var(--bg2);padding:4px 8px;border-radius:4px;border:1px solid var(--border2);cursor:pointer"><input
-                  type="checkbox" id="cut-s7" checked> S7 (Post-Sup)</label>
+                  type="checkbox" id="cut-s7" checked> Temporal-Sup</label>
               <label
                 style="background:var(--bg2);padding:4px 8px;border-radius:4px;border:1px solid var(--border2);cursor:pointer"><input
-                  type="checkbox" id="cut-s5"> S5 (Ant-Inf)</label>
+                  type="checkbox" id="cut-s5"> Nasal-Inf</label>
               <label
                 style="background:var(--bg2);padding:4px 8px;border-radius:4px;border:1px solid var(--border2);cursor:pointer"><input
-                  type="checkbox" id="cut-s8"> S8 (Ant-Sup)</label>
+                  type="checkbox" id="cut-s8"> Nasal-Sup</label>
             </div>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
@@ -1222,20 +1268,20 @@
                   style="color:var(--green)">— (calculez d'abord)</strong></div>
               <div style="margin-top:4px;font-size:9px;color:var(--text3)" id="cut-voxel-source">Volume procédural 64³
               </div>
-              <div style="margin-top:6px;font-size:9px;color:var(--text3)">ℹ️ Si un ou plusieurs segments de Couinaud
-                sont cochés ci-dessus, ils priment sur le plan libre pour le calcul de résection (segmentectomie
+              <div style="margin-top:6px;font-size:9px;color:var(--text3)">ℹ️ Si un ou plusieurs quadrants rétiniens
+                sont cochés ci-dessus, ils priment sur le plan libre pour le calcul de traitement (quadrantectomie
                 anatomique). Sinon, le plan libre (angle/offset) est utilisé.</div>
             </div>
             <div style="background:var(--bg2);padding:10px;border-radius:6px;border:1px solid var(--border2)">
-              <div style="font-weight:700;color:#ff6b35;margin-bottom:6px">📊 Analyse Volumétrique FLR (Calculée)</div>
+              <div style="font-weight:700;color:#ff6b35;margin-bottom:6px">📊 Analyse Volumétrique (Calculée)</div>
               <div>• Vol. Total Organe : <strong id="cut-total-val">— mL</strong></div>
-              <div>• Vol. Résection : <strong id="cut-resected-val" style="color:var(--orange)">— mL</strong></div>
-              <div>• Vol. Restant (FLR) : <strong id="cut-flr-val" style="color:var(--green)">—%</strong></div>
+              <div>• Vol. Traité : <strong id="cut-resected-val" style="color:var(--orange)">— mL</strong></div>
+              <div>• Vol. Restant Sain : <strong id="cut-flr-val" style="color:var(--green)">—%</strong></div>
               <div
                 style="margin-top:8px;padding:4px;background:rgba(34,197,94,.15);border-radius:4px;text-align:center;font-weight:700;color:var(--green)"
                 id="cut-safety-status">⏳ Calculez d'abord...</div>
               <div style="margin-top:8px">
-                <div style="font-size:9px;color:var(--text3);margin-bottom:4px">Segments comptabilisés dans FLR :</div>
+                <div style="font-size:9px;color:var(--text3);margin-bottom:4px">Segments comptabilisés :</div>
                 <label style="font-size:9px;display:flex;align-items:center;gap:4px"><input type="checkbox"
                     id="cut-count-segments" checked> Inclure les segments manuels</label>
               </div>
@@ -1244,7 +1290,7 @@
         </div>
         <div class="modal-footer">
           <button class="btn btn-primary" style="background:#ff6b35;border-color:#ff6b35"
-            onclick="recomputeFLR();notify('FLR recalculé sur le volume courant','ok')">🔄 Recalculer FLR</button>
+            onclick="recomputeFLR();notify('Calcul recalculé sur le volume courant','ok')">🔄 Recalculer</button>
           <button class="btn btn-primary" style="background:#a855f7;border-color:#a855f7"
             onclick="simulateWebGpuCut()">✂️ Appliquer Découpe Virtuelle sur Jumeau</button>
           <button class="btn btn-secondary" onclick="closeModal('webgpu-cut')">Fermer</button>
@@ -1276,13 +1322,13 @@
                 CT) — maquette</div>
               <div style="display:flex;flex-direction:column;gap:6px">
                 <button class="btn btn-secondary" style="font-size:10px;text-align:left"
-                  onclick="setDvrPreset('parenchyma')">🟢 Parenchyme Hépatique (40 HU / 150 HU)</button>
+                  onclick="setDvrPreset('parenchyma')">🟢 Segment Antérieur (Cornée/Cristallin) (40 HU / 150 HU)</button>
                 <button class="btn btn-secondary" style="font-size:10px;text-align:left;color:#f43f5e"
-                  onclick="setDvrPreset('vessels')">🔴 Arbre Vasculaire & Pédicules (+120 HU)</button>
+                  onclick="setDvrPreset('vessels')">🔴 Réseau Vasculaire Rétinien (+120 HU)</button>
                 <button class="btn btn-secondary" style="font-size:10px;text-align:left;color:var(--orange)"
-                  onclick="setDvrPreset('tumors')">🟡 Lesions & Tumeurs Hypervasculaires</button>
+                  onclick="setDvrPreset('tumors')">🟡 Lésions Choroïdiennes / Rétiniennes</button>
                 <button class="btn btn-secondary" style="font-size:10px;text-align:left"
-                  onclick="setDvrPreset('bones')">⚪ Structures Osseuses (+400 HU)</button>
+                  onclick="setDvrPreset('bones')">⚪ Structures Orbitaires (+400 HU)</button>
               </div>
             </div>
             <div style="background:var(--bg2);padding:10px;border-radius:6px;border:1px solid var(--border2)">
@@ -1399,11 +1445,11 @@
                 ⚠️ Appariement de mots-clés sur un texte prédéfini — PAS un moteur de reconnaissance vocale ni de NLP
                 réel. À valider intégralement avant tout usage :</div>
               <button class="btn btn-secondary" style="font-size:10px;width:100%;text-align:left;margin-bottom:4px"
-                onclick="simulateCcamDictation('hepatectomie')" id="btn-dict-1">🔊 Exemple : « Hépatectomie droite
-                réglée par laparotomie avec clampage pédiculaire de 18 min »</button>
+                onclick="simulateCcamDictation('phaco')" id="btn-dict-1">🔊 Exemple : « Phacoémulsification avec
+                implantation de LIO en chambre postérieure »</button>
               <button class="btn btn-secondary" style="font-size:10px;width:100%;text-align:left"
-                onclick="simulateCcamDictation('cholecystectomie')" id="btn-dict-2">🔊 Exemple : « Cholécystectomie
-                cœlioscopique pour lithiase biliaire symptomatique »</button>
+                onclick="simulateCcamDictation('combinee')" id="btn-dict-2">🔊 Exemple : « Chirurgie combinée
+                cataracte-glaucome, phaco + trabéculectomie »</button>
             </div>
           </div>
           <div id="ccam-report-preview"
@@ -1510,25 +1556,25 @@
                   </tr>
                   <tr style="border-bottom:1px solid var(--border)">
                     <td style="font-weight:600">Bras 1 (Droit)</td>
-                    <td>Fenestrated Grasper #882</td>
+                    <td>Pince à Capsulorhexis Utrata #882</td>
                     <td style="color:#38bdf8">1.2 N</td>
                     <td>🟢 Actif</td>
                   </tr>
                   <tr style="border-bottom:1px solid var(--border)">
                     <td style="font-weight:600">Bras 2 (Gauche)</td>
-                    <td>CUSA Shears #441</td>
+                    <td>Vitréotome 27G #441</td>
                     <td style="color:#38bdf8">0.4 N</td>
                     <td>🟢 Actif</td>
                   </tr>
                   <tr style="border-bottom:1px solid var(--border)">
                     <td style="font-weight:600">Bras 3 (Caméra)</td>
-                    <td>3D Laparoscope 30°</td>
+                    <td>Endoscope Oculaire 3D 23G</td>
                     <td>0.0 N</td>
                     <td>🔵 Fixe</td>
                   </tr>
                   <tr>
                     <td style="font-weight:600">Bras 4 (Aux)</td>
-                    <td>ProGrasp Forceps #110</td>
+                    <td>Crochet à Capsule #110</td>
                     <td style="color:#eab308">2.1 N</td>
                     <td>🟡 Maintien</td>
                   </tr>
@@ -1544,7 +1590,7 @@
                 <div style="display:flex;flex-direction:column;gap:6px">
                   <button class="btn btn-secondary"
                     style="text-align:left;font-size:10px;border-color:rgba(34,197,94,.4)"
-                    onclick="simulateRoboticHaptic('Préhension Légère', 1.4, '🟢 Résistance normale — Parenchyme hépatique intact.')">🟢
+                    onclick="simulateRoboticHaptic('Préhension Légère', 1.4, '🟢 Résistance normale — Capsule cristallinienne intacte.')">🟢
                     Simuler Préhension Légère (1.4 N)</button>
                   <button class="btn btn-secondary"
                     style="text-align:left;font-size:10px;border-color:rgba(234,179,8,.4)"
@@ -1582,7 +1628,7 @@
             <div
               style="background:rgba(244,63,94,.1);border:1px solid rgba(244,63,94,.3);padding:10px;border-radius:6px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">
               <div><strong>🧬 Spatio-Temporal Video Transformer (70B) :</strong> Prédiction vidéo à horizon de 15 sec
-                des risques peropératoires (ruptures vasculaires, fuites biliaires) et filtrage du tremblement
+                des risques peropératoires (rupture capsulaire, déchirure rétinienne) et filtrage du tremblement
                 micro-robotique (&lt; 5 &micro;m).</div>
               <span class="badge green" style="padding:4px 8px;background:#f43f5e;color:#fff">52 400 Vidéos OR &bull;
                 Echelle 50:1 🎯</span>
@@ -1608,15 +1654,15 @@
                 <div style="display:flex;flex-direction:column;gap:6px">
                   <button class="btn btn-secondary"
                     style="text-align:left;font-size:10px;border-color:rgba(244,63,94,.4)"
-                    onclick="simulateGenAIPrediction('NEUROSURGERY', '💥 Rupture Anévrisme Willis', 84.2, '🛑 ALERTE CRITIQUE (84%) : Tension pariétale excessive ! Action IA : Clamper clip carotide proximal.')">🧠
-                    Simuler Neuro : Rupture Anévrisme Willis (84%)</button>
+                    onclick="simulateGenAIPrediction('CATARACT', '💥 Rupture Capsule Postérieure', 84.2, '🛑 ALERTE CRITIQUE (84%) : Pression de vide excessive ! Action IA : Réduire aspiration et retirer la sonde phaco.')">👁️
+                    Simuler Cataracte : Rupture Capsule Postérieure (84%)</button>
                   <button class="btn btn-secondary"
                     style="text-align:left;font-size:10px;border-color:rgba(234,179,8,.4)"
-                    onclick="simulateGenAIPrediction('HBP_HEPATIC', '🌊 Brèche Biliaire Canal Droit', 88.5, '🔴 ALERTE FUITE BILIAIRE (88%) : Transection trop proche du hile ! Action IA : Visualiser ICG AR WebXR.')">🫀
-                    Simuler Foie : Brèche Biliaire Canal Droit (88%)</button>
+                    onclick="simulateGenAIPrediction('GLAUCOMA', '🌊 Hypertonie Aiguë Post-Trabéculectomie', 88.5, '🔴 ALERTE HYPERTONIE (88%) : Bulle de filtration trop plate ! Action IA : Visualiser AR WebXR de la sclérotomie.')">💧
+                    Simuler Glaucome : Hypertonie Aiguë Post-Trabéculectomie (88%)</button>
                   <button class="btn btn-secondary"
                     style="text-align:left;font-size:10px;border-color:rgba(34,197,94,.4)"
-                    onclick="simulateGenAIPrediction('OPHTHALMOLOGY', '👁️ Anastomose Rétinienne', 12.0, '🟢 TRAJECTOIRE SÉCURISÉE (12%) : Tremblement filtré à 3.2 µm — Anastomose stable.')">👁️
+                    onclick="simulateGenAIPrediction('RETINA', '🔴 Anastomose Rétinienne', 12.0, '🟢 TRAJECTOIRE SÉCURISÉE (12%) : Tremblement filtré à 3.2 µm — Anastomose stable.')">🔴
                     Simuler Rétine : Anastomose Stable (12%)</button>
                 </div>
                 <div
@@ -1671,8 +1717,8 @@
                 <div style="display:flex;flex-direction:column;gap:6px">
                   <button class="btn btn-secondary"
                     style="text-align:left;font-size:10px;border-color:rgba(16,185,129,.4)"
-                    onclick="simulate4DBioprinting('LIVER_SEGMENT_6_DEFECT', 42.5, '1680 couches', '🟢 G-code calculé : Impression in-situ du parenchyme (Alginate-MSC-VEGF @ 37°C) en 191s.')">🫀
-                    Imprimer Patch Foie S6 (42.5 mL / 191s)</button>
+                    onclick="simulate4DBioprinting('CORNEAL_STROMA_PATCH', 0.25, '1680 couches', '🟢 G-code calculé : Impression in-situ du stroma cornéen (Collagène-Kératocytes @ 37°C) en 191s.')">👁️
+                    Imprimer Patch Stroma Cornéen (0.25 mL / 191s)</button>
                   <button class="btn btn-secondary"
                     style="text-align:left;font-size:10px;border-color:rgba(56,189,248,.4)"
                     onclick="simulate4DBioprinting('CRANIAL_DURA_MATER', 14.0, '560 couches', '🔵 G-code calculé : Reconstruction dure-mère crânienne stérile étanche au collafilm bioactif en 63s.')">🧠
@@ -1734,12 +1780,12 @@
                 <div style="display:flex;flex-direction:column;gap:6px">
                   <button class="btn btn-secondary"
                     style="text-align:left;font-size:10px;border-color:rgba(139,92,246,.4)"
-                    onclick="simulateBciAction('CLIPPING_ANEURYSM_NECK', 2.4, '52.8 µA', '🟢 Intention M1 décodée : Clip anévrismal posé — Sensation tactile S1 fluide et réaliste dans le cortex.')">🧠
-                    Clip Anévrisme Willis par la Pensée (2.4 N / 53 µA)</button>
+                    onclick="simulateBciAction('CAPSULORHEXIS_CONTINUOUS', 2.4, '52.8 µA', '🟢 Intention M1 décodée : Capsulorhexis circulaire continu réalisé — Sensation tactile S1 fluide et réaliste dans le cortex.')">👁️
+                    Capsulorhexis par la Pensée (2.4 N / 53 µA)</button>
                   <button class="btn btn-secondary"
                     style="text-align:left;font-size:10px;border-color:rgba(56,189,248,.4)"
-                    onclick="simulateBciAction('TRANSECTION_HEPATIC_PARENCHYMA', 4.2, '92.4 µA', '🟡 Intention M1 décodée : Transection hépatique — Sensation S1 intense (92 µA) indiquant un parenchyme dense.')">🫀
-                    Transection Foie par la Pensée (4.2 N / 92 µA)</button>
+                    onclick="simulateBciAction('TRABECULECTOMY_FLAP', 4.2, '92.4 µA', '🟡 Intention M1 décodée : Volet scléral de trabéculectomie — Sensation S1 intense (92 µA) indiquant un tissu scléral dense.')">💧
+                    Trabéculectomie par la Pensée (4.2 N / 92 µA)</button>
                   <button class="btn btn-secondary"
                     style="text-align:left;font-size:10px;border-color:rgba(239,68,68,.4)"
                     onclick="simulateBciAction('EMERGENCY_INTERLOCK', 5.0, '0 µA', '🛑 ALERTE FATIGUE COGNITIVE (>85%) : Découplage neuronal instantané ! Actionneurs verrouillés et impulsions S1 coupées.')">🛑
@@ -1798,12 +1844,12 @@
                 <div style="display:flex;flex-direction:column;gap:6px">
                   <button class="btn btn-secondary"
                     style="text-align:left;font-size:10px;border-color:rgba(14,165,233,.4)"
-                    onclick="simulateNanoAction('GUIDE_HEPATIC_S8_METS', 1.2, '4.1 mm/s', '🟢 Guidage magnétique 1.2 T/m : 4 985 000 nanorobots convergés sur micro-métastase S8 — Arrimage EGFR confirmé.')">🔬
-                    Guider Essaim vers Micro-Métastase Foie S8 (1.2 T/m)</button>
+                    onclick="simulateNanoAction('GUIDE_CHOROIDAL_NEOVASC', 1.2, '4.1 mm/s', '🟢 Guidage magnétique 1.2 T/m : 4 985 000 nanorobots convergés sur néovaisseaux choroïdiens — Arrimage anti-VEGF confirmé.')">🔬
+                    Guider Essaim vers Néovaisseaux Choroïdiens (1.2 T/m)</button>
                   <button class="btn btn-secondary"
                     style="text-align:left;font-size:10px;border-color:rgba(16,185,129,.4)"
-                    onclick="simulateNanoAction('TRIGGER_AMF_CRISPR_RELEASE', 43.5, '99.1% Apoptose', '🟢 Activation AMF 150 kHz (43.5°C) : Libération CRISPR-Cas9 KRAS-G12D en cours — Apoptose tumorale 99.1%, parenchyme sain 100% intact.')">🧬
-                    Déclencher Libération CRISPR-Cas9 (AMF 43.5°C)</button>
+                    onclick="simulateNanoAction('TRIGGER_AMF_CRISPR_RELEASE', 43.5, '99.1% Apoptose', '🟢 Activation AMF 150 kHz (43.5°C) : Libération CRISPR-Cas9 VEGFA en cours — Apoptose des néovaisseaux 99.1%, rétine saine 100% intacte.')">🧬
+                    Déclencher Libération CRISPR-Cas9 Anti-VEGF (AMF 43.5°C)</button>
                   <button class="btn btn-secondary"
                     style="text-align:left;font-size:10px;border-color:rgba(239,68,68,.4)"
                     onclick="simulateNanoAction('EMERGENCY_FIELD_DEMAGNETIZATION', 0.0, 'Dispersé', '🛑 ALERTE DENSITÉ VASCULAIRE : Démagnétisation instantanée des bobines table ! Essaim dispersé en flux physiologique normal.')">🛑
@@ -1859,12 +1905,12 @@
                 <div style="display:flex;flex-direction:column;gap:6px">
                   <button class="btn btn-secondary"
                     style="text-align:left;font-size:10px;border-color:rgba(234,179,8,.4)"
-                    onclick="simulateAutoAction('AUTONOMOUS_MICRO_ANASTOMOSIS', 12.5, '285 mmHg', '🟢 Exécution STAR-5 : Micro-anastomose artère hépatique — Soudure laser 12.5 J/cm² étanche (Burst 285 mmHg).')">🤖
-                    Anastomose Artérielle Autonome + Laser (285 mmHg)</button>
+                    onclick="simulateAutoAction('AUTONOMOUS_RETINAL_ANASTOMOSIS', 12.5, '285 mmHg', '🟢 Exécution STAR-5 : Micro-anastomose vasculaire rétinienne — Soudure laser 12.5 J/cm² étanche (Burst 285 mmHg).')">🤖
+                    Anastomose Vasculaire Rétinienne Autonome + Laser (285 mmHg)</button>
                   <button class="btn btn-secondary"
                     style="text-align:left;font-size:10px;border-color:rgba(16,185,129,.4)"
-                    onclick="simulateAutoAction('LASER_WELDING_BILIARY_DUCT', 14.0, '319 mmHg', '🟢 Exécution STAR-5 : Soudure laser du canal biliaire — Albumine-ICG polymérisée en 5.6s sans aucune fuite ni agrafe.')">🔥
-                    Soudure Laser Canal Biliaire (14.0 J/cm² / 319 mmHg)</button>
+                    onclick="simulateAutoAction('LASER_WELDING_RETINAL_TEAR', 14.0, '319 mmHg', '🟢 Exécution STAR-5 : Photocoagulation laser de la déchirure rétinienne — Adhésion choriorétinienne obtenue en 5.6s sans aucune fuite ni agrafe.')">🔥
+                    Soudure Laser Déchirure Rétinienne (14.0 J/cm² / 319 mmHg)</button>
                   <button class="btn btn-secondary"
                     style="text-align:left;font-size:10px;border-color:rgba(239,68,68,.4)"
                     onclick="simulateAutoAction('EMERGENCY_HUMAN_TAKEOVER', 0.0, 'BCI Reprise', '🛑 ALERTE REPRISE DE CONTRÔLE (< 1 ms) : Transfert immédiat des actionneurs au chirurgien via BCI/Voice ! Laser en sécurité.')">🛑
@@ -1923,8 +1969,8 @@
                 <div style="display:flex;flex-direction:column;gap:6px">
                   <button class="btn btn-secondary"
                     style="text-align:left;font-size:10px;border-color:rgba(34,197,94,.4)"
-                    onclick="simulateEpiAction('TRIGGER_HEPATIC_REJUVENATION', 0.85, '-20.4 Ans', '🟢 Activation FUS 0.85 MPa : Libération OSKM en zone hépatique S6/S7 — Horloge épigénétique inversée de 20.4 ans. Viabilité cellulaire 90.5%.')">🌱
-                    Réjuvénation Lobe Hépatique Post-Ischémique (-20 Ans)</button>
+                    onclick="simulateEpiAction('TRIGGER_RPE_REJUVENATION', 0.85, '-20.4 Ans', '🟢 Activation FUS 0.85 MPa : Libération OSKM en zone d\'épithélium pigmentaire rétinien — Horloge épigénétique inversée de 20.4 ans. Viabilité cellulaire 90.5%.')">🌱
+                    Réjuvénation Épithélium Pigmentaire Rétinien (-20 Ans)</button>
                   <button class="btn btn-secondary"
                     style="text-align:left;font-size:10px;border-color:rgba(14,165,233,.4)"
                     onclick="simulateEpiAction('OPTOGENETIC_FIBROSIS_REVERSAL', 150.0, '94.8% Clairance', '🟢 Excitation laser NIR 980 nm -> 470 nm par UCNPs : Activation de la collagénase — Clairance de la fibrose à 94.8% sans effraction cutanée.')">🌟
@@ -1987,11 +2033,11 @@
                 <div style="display:flex;flex-direction:column;gap:6px">
                   <button class="btn btn-secondary"
                     style="text-align:left;font-size:10px;border-color:rgba(6,182,212,.4)"
-                    onclick="simulateRamanAction('ANALYZE_HEPATIC_MARGIN', 1000, '99.8% Spécificité', '🟢 Biopsie optique CARS/SERS 1000 Hz en tranche S7 : Aucun pic nucléique aberrant détecté à 1575 cm⁻¹. Marge R0 certifiée.')">⚡
-                    Biopsie Optique Tranche de Section (Marge R0)</button>
+                    onclick="simulateRamanAction('ANALYZE_CHOROIDAL_MARGIN', 1000, '99.8% Spécificité', '🟢 Biopsie optique CARS/SERS 1000 Hz en marge scléro-choroïdienne : Aucun pic nucléique aberrant détecté à 1575 cm⁻¹. Marge R0 certifiée.')">⚡
+                    Biopsie Optique Marge Scléro-Choroïdienne (Marge R0)</button>
                   <button class="btn btn-secondary"
                     style="text-align:left;font-size:10px;border-color:rgba(14,165,233,.4)"
-                    onclick="simulateRamanAction('TRIGGER_CAP_ERADICATION', 12.5, '99.99% Apoptose', '🟢 Jet plasma froid CAP (12.5 kV / 36.8°C) sur micro-infiltrat : Apoptose sélective induite par RONS sans dommage aux vaisseaux nobles.')">🔬
+                    onclick="simulateRamanAction('TRIGGER_CAP_ERADICATION', 12.5, '99.99% Apoptose', '🟢 Jet plasma froid CAP (12.5 kV / 36.8°C) sur micro-infiltrat mélanocytaire : Apoptose sélective induite par RONS sans dommage aux vaisseaux nobles.')">🔬
                     Éradication Plasma Froid d'Infiltrat R1 (CAP 37°C)</button>
                   <button class="btn btn-secondary"
                     style="text-align:left;font-size:10px;border-color:rgba(239,68,68,.4)"
@@ -2052,8 +2098,8 @@
                 <div style="display:flex;flex-direction:column;gap:6px">
                   <button class="btn btn-secondary"
                     style="text-align:left;font-size:10px;border-color:rgba(56,189,248,.4)"
-                    onclick="simulateCryoAction('TRIGGER_NSPEF_HILAR_ABLATION', 30.0, '100% Vasculaire intact', '🟢 Ablation Cryo-IRE nsPEF (30 kV/cm / -20°C) au contact de la veine porte : Nanoporation létale 99.9% tumorale sans aucune dénaturation du collagène vasculaire.')">❄️
-                    Ablation nsPEF Hile Hépatique (Sans Thrombose)</button>
+                    onclick="simulateCryoAction('TRIGGER_NSPEF_CHOROIDAL_ABLATION', 30.0, '100% Vasculaire intact', '🟢 Ablation Cryo-IRE nsPEF (30 kV/cm / -20°C) au contact de la veine vortiqueuse : Nanoporation létale 99.9% tumorale sans aucune dénaturation du collagène vasculaire.')">❄️
+                    Ablation nsPEF Base Tumorale Choroïdienne (Sans Thrombose)</button>
                   <button class="btn btn-secondary"
                     style="text-align:left;font-size:10px;border-color:rgba(14,165,233,.4)"
                     onclick="simulateCryoAction('TRIGGER_BNCT_IRRADIATION', 65.0, '2.34 MeV / cellule', '🟢 Irradiation BNCT épithermique sur ¹⁰B-BPA accumulé (65 ppm) : Désintégration alpha sub-cellulaire (7 µm). 100% des cellules tumorales infiltrantes éradiquées.')">☢️
@@ -2101,7 +2147,7 @@
                     Laser 2PP</div>
                   <div>&bull; Injecteur : <strong style="color:var(--text1)">Lévitation Acoustique (40 kHz) + Piège
                       Optique</strong></div>
-                  <div>&bull; Sphéroïdes : <strong style="color:var(--green)">450 000 organoïdes hépatiques (300 µm) @
+                  <div>&bull; Sphéroïdes : <strong style="color:var(--green)">450 000 organoïdes rétiniens (300 µm) @
                       10 µm</strong></div>
                   <div>&bull; Laser 2PP : <strong>Femtoseconde Ti:Sapphire (780 nm / 100 fs)</strong></div>
                   <div>&bull; Anastomose : <strong>Réseau capillaire PEG-DA réticulé en 84.5 s</strong></div>
@@ -2116,11 +2162,11 @@
                   <div style="display:flex;flex-direction:column;gap:6px">
                     <button class="btn btn-secondary"
                       style="text-align:left;font-size:10px;border-color:rgba(16,185,129,.4)"
-                      onclick="simulateOrganoidAction('TRIGGER_LEVITATION_DEPOSITION', 450, '100% Comblement', '🟢 Dépôt acoustique de 450 000 sphéroïdes hépatiques (300 µm) dans la cavité de résection S5/S8 : Assemblage architectural parfait (précision 10 µm).')">🌱
-                      Dépôt Acoustique d'Organoïdes (Cavité S5/S8)</button>
+                      onclick="simulateOrganoidAction('TRIGGER_LEVITATION_DEPOSITION', 450, '100% Comblement', '🟢 Dépôt acoustique de 450 000 sphéroïdes rétiniens (300 µm) dans la zone de traitement maculaire : Assemblage architectural parfait (précision 10 µm).')">🌱
+                      Dépôt Acoustique d'Organoïdes (Zone Maculaire)</button>
                     <button class="btn btn-secondary"
                       style="text-align:left;font-size:10px;border-color:rgba(14,165,233,.4)"
-                      onclick="simulateOrganoidAction('TRIGGER_2PP_MICROVASCULARIZATION', 180.0, 'Anastomose 84.5s', '🟢 Photopolymérisation laser 2PP (780 nm / 180 mW) : Création du réseau micro-capillaire et anastomose aux moignons de la veine porte en 84.5s. Perfusion 100% rétablie !')">⚡
+                      onclick="simulateOrganoidAction('TRIGGER_2PP_MICROVASCULARIZATION', 180.0, 'Anastomose 84.5s', '🟢 Photopolymérisation laser 2PP (780 nm / 180 mW) : Création du réseau micro-capillaire et anastomose aux moignons de l\'artère centrale de la rétine en 84.5s. Perfusion 100% rétablie !')">⚡
                       Micro-Vasculogenèse Laser 2PP (Anastomose)</button>
                     <button class="btn btn-secondary"
                       style="text-align:left;font-size:10px;border-color:rgba(239,68,68,.4)"
@@ -2302,7 +2348,7 @@
         <div id="pwa-install-banner" role="complementary" aria-label="Installer l'application">
           <span class="pwa-banner-icon">🏥</span>
           <div class="pwa-banner-text">
-            <strong>Installer GeneralSurg Plan</strong>
+            <strong>Installer OphtalmoSurg Plan</strong>
             <span>Accès rapide, fonctionne hors ligne</span>
           </div>
           <button class="pwa-banner-btn-install" id="pwa-btn-install" aria-label="Installer l'application">

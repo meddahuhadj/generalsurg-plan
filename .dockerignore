@@ -4,7 +4,7 @@ __pycache__
 *.pyc
 storage/
 pbdtest_reports/
-generalsurg.db
+ophtalmosurg.db
 *.db
 .env
 .env.*

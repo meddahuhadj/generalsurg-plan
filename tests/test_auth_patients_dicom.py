@@ -12,7 +12,7 @@ les données patients et les identifiants — ce sont celles où une régression
 coûte le plus cher.
 
 Utilise la fixture `client` (session-scoped, tests/conftest.py) : une base
-SQLite temporaire dédiée, jamais backend/generalsurg.db.
+SQLite temporaire dédiée, jamais backend/ophtalmosurg.db.
 """
 
 import io
@@ -205,7 +205,7 @@ def _patient_payload(patient_id: str) -> dict:
     return {
         "id": patient_id, "nom": "Test Patient", "age": 55, "sexe": "F",
         "poids_kg": 68.0, "taille_cm": 165.0, "diagnostic": "Test diagnostic",
-        "chirurgien": "Dr. Test", "specialty": "hbp", "urgence": "vert",
+        "chirurgien": "Dr. Test", "specialty": "cataracte", "urgence": "vert",
     }
 
 

@@ -5,17 +5,36 @@ tests/load_test.py — Test de charge réel contre une instance du backend
 Contrairement à test_resilience.py (mocké, sans réseau), ce script tape pour
 de vrai en HTTP sur un backend démarré (par défaut http://127.0.0.1:8000).
 Il mesure ce qui compte en pratique pour un bloc opératoire : combien de
-chirurgiens/postes peuvent consulter le dossier patient en même temps sans
-dégradation notable.
+chirurgiens/postes peuvent consulter le dossier patient — et lancer les
+endpoints de segmentation/volumétrie — en même temps sans dégradation notable.
 
 Usage :
     uvicorn main:app --host 0.0.0.0 --port 8000 &
     python3 tests/load_test.py --base-url http://127.0.0.1:8000 --concurrency 20 --requests 200
 
 Limite assumée : ceci simule de la charge sur CE backend (auth, patients,
-audit, PACS/capabilities) — pas sur des services tiers externes (Gemini/Groq/
-PACS réel), injoignables depuis ce sandbox et non pertinents pour un test de
-charge de toute façon (leur latence dépend d'eux, pas de nous).
+audit, PACS/capabilities, segmentation/volumétrie) — pas sur des services
+tiers externes (Gemini/Groq/PACS réel), injoignables depuis ce sandbox et non
+pertinents pour un test de charge de toute façon (leur latence dépend d'eux,
+pas de nous).
+
+Ce que ce script NE mesure PAS (et ne peut pas mesurer depuis un sandbox) :
+  - Le job de segmentation IA réelle lui-même (TotalSegmentator, potentiellement
+    plusieurs minutes de calcul, souvent GPU) : /segmentation/auto ne fait que
+    democratiquement accepter le job et retourner un job_id (202) en tâche de
+    fond ; on charge donc /segmentation/capabilities (ce que le frontend
+    interroge avant CHAQUE tentative) et /segmentation/status/{id} — pas
+    l'exécution du pipeline nnU-Net elle-même, qui nécessite un GPU réel.
+  - Le comportement sous charge GPU réelle (ce sandbox n'a pas de GPU).
+  - Le comportement sur un réseau hospitalier dégradé/à latence variable (WAN) :
+    ce script tape en localhost ou sur une URL fournie, sans simuler de perte
+    de paquets, de jitter ou de bande passante limitée. Pour ça, il faudrait
+    un outil dédié (tc/netem, Toxiproxy, ou un test depuis un poste distant sur
+    le vrai réseau cible) — hors de portée d'un simple script HTTP.
+Ces limites sont documentées ici plutôt que masquées : les chiffres produits
+par ce script restent des ordres de grandeur pour valider le comportement du
+backend lui-même (pooling DB, middlewares, sérialisation), pas un SLA de
+production ni une validation de l'infrastructure de calcul IA.
 """
 from __future__ import annotations
 
@@ -66,23 +85,55 @@ async def timed_get(client: httpx.AsyncClient, path: str, headers: dict, result:
         result.errors += 1
 
 
+async def ensure_load_test_patient(client: httpx.AsyncClient, headers: dict) -> str:
+    """Crée (ou réutilise) un patient dédié au test de charge, pour pouvoir
+    taper sur /patients/{id}/volumetrie et /patients/{id}/segments — les
+    endpoints réellement sollicités par le planning chirurgical, pas juste la
+    liste générique. Idempotent : réutilise le même id à chaque run plutôt que
+    d'accumuler des patients de charge à chaque exécution du script."""
+    patient_id = "LOADTEST-0001"
+    r = await client.get(f"/patients/{patient_id}", headers=headers)
+    if r.status_code == 200:
+        return patient_id
+    payload = {
+        "id": patient_id, "nom": "Load Test Patient", "age": 50, "sexe": "M",
+        "poids_kg": 75, "taille_cm": 175, "diagnostic": "Patient synthétique pour test de charge",
+        "chirurgien": "Load Test", "urgence": "vert",
+    }
+    r = await client.post("/patients", json=payload, headers=headers)
+    r.raise_for_status()
+    return patient_id
+
+
 async def run_load_test(base_url: str, concurrency: int, total_requests: int,
                          username: str, password: str):
     async with httpx.AsyncClient(base_url=base_url, timeout=10) as client:
-        print(f"[1/3] Authentification ({username})...")
+        print(f"[1/4] Authentification ({username})...")
         token = await login(client, username, password)
         headers = {"Authorization": f"Bearer {token}"}
 
-        print(f"[2/3] Vérification de la disponibilité (/health)...")
+        print(f"[2/4] Vérification de la disponibilité (/health)...")
         r = await client.get("/health", headers=headers)
         r.raise_for_status()
         print("      backend accessible:", r.json())
 
-        print(f"[3/3] Charge : {total_requests} requêtes, concurrence={concurrency}")
+        print(f"[3/4] Préparation d'un patient de test (volumétrie/segments)...")
+        patient_id = await ensure_load_test_patient(client, headers)
+        print(f"      patient prêt : {patient_id}")
+
+        print(f"[4/4] Charge : {total_requests} requêtes, concurrence={concurrency}")
         endpoints = {
             "/health": EndpointResult("/health"),
             "/patients": EndpointResult("/patients"),
             "/pacs/capabilities": EndpointResult("/pacs/capabilities"),
+            # Interrogé par le frontend avant CHAQUE tentative de segmentation
+            # réelle (voir runRealSegmentation() côté client) — c'est le chemin
+            # chaud, pas /segmentation/auto lui-même (job async, potentiellement
+            # plusieurs minutes de calcul GPU, pas mesurable en charge concurrente
+            # synchrone ici — voir la limite documentée en tête de fichier).
+            "/segmentation/capabilities": EndpointResult("/segmentation/capabilities"),
+            f"/patients/{patient_id}/volumetrie": EndpointResult("/patients/{id}/volumetrie"),
+            f"/patients/{patient_id}/segments": EndpointResult("/patients/{id}/segments"),
         }
         semaphore = asyncio.Semaphore(concurrency)
 

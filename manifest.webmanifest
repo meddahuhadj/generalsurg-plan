@@ -1,7 +1,7 @@
 {
-  "name": "GeneralSurg Plan — Plateforme Chirurgicale Modulaire",
-  "short_name": "GeneralSurg Plan",
-  "description": "Planification chirurgicale assistée par IA (HBP, Colorectal, Gastrique, Thyroïde, Thoracique, Cardiaque, Urologique) — prototype de démonstration, non certifié, ne pas utiliser en contexte clinique réel.",
+  "name": "OphtalmoSurg Plan — Plateforme Chirurgicale Ophtalmologique",
+  "short_name": "OphtalmoSurg Plan",
+  "description": "Planification chirurgicale assistée par IA en ophtalmologie (Cataracte, Glaucome, Chirurgie Vitréo-Rétinienne) — prototype de démonstration, non certifié, ne pas utiliser en contexte clinique réel.",
   "id": "/",
   "start_url": "/",
   "scope": "/",
@@ -31,29 +31,29 @@
       "sizes": "512x512",
       "type": "image/png",
       "form_factor": "narrow",
-      "label": "Module de planification chirurgicale HBP"
+      "label": "Module de planification chirurgicale Cataracte"
     }
   ],
   "shortcuts": [
     {
-      "name": "Module HBP",
-      "short_name": "HBP",
-      "description": "Chirurgie hépatobiliaire et pancréatique",
-      "url": "/?mod=hbp",
+      "name": "Module Cataracte",
+      "short_name": "Cataracte",
+      "description": "Chirurgie de la cataracte",
+      "url": "/?mod=cataracte",
       "icons": [{ "src": "assets/icons/icon-192.png", "sizes": "192x192" }]
     },
     {
-      "name": "Module Colorectal",
-      "short_name": "Colorectal",
-      "description": "Chirurgie colorectale",
-      "url": "/?mod=colorectal",
+      "name": "Module Glaucome",
+      "short_name": "Glaucome",
+      "description": "Chirurgie du glaucome",
+      "url": "/?mod=glaucome",
       "icons": [{ "src": "assets/icons/icon-192.png", "sizes": "192x192" }]
     },
     {
-      "name": "Module Thoracique",
-      "short_name": "Thoracique",
-      "description": "Chirurgie thoracique",
-      "url": "/?mod=thoracic",
+      "name": "Module Rétine",
+      "short_name": "Rétine",
+      "description": "Chirurgie vitréo-rétinienne",
+      "url": "/?mod=retine",
       "icons": [{ "src": "assets/icons/icon-192.png", "sizes": "192x192" }]
     }
   ]

@@ -2,7 +2,7 @@
 """
 pacs_router_v2.py — Routeur PACS NextGen v2 (DICOMweb Streaming, DICOM-SEG, DICOM-SR & FHIR R5)
 ================================================================================================
-Implémentation pour le Jalon M2 du Cahier des Charges GeneralSurgPlan3D NextGen (2026-2046).
+Implémentation pour le Jalon M2 du Cahier des Charges OphtalmoSurg Plan NextGen (2026-2046).
 Garantit la compatibilité ascendante sans supprimer ni modifier pacs_router.py (v1).
 
 Endpoints exposés (/api/v2/pacs & /api/v2/fhir) :
@@ -241,7 +241,7 @@ async def create_or_sync_fhir_procedure(payload: FhirProcedureRequest, db: Sessi
             "coding": [{
                 "system": "https://www.ameli.fr/ccam",
                 "code": payload.procedure_code,
-                "display": "Acte chirurgical planifié sous GeneralSurgPlan3D"
+                "display": "Acte chirurgical planifié sous OphtalmoSurg Plan"
             }]
         },
         "subject": {

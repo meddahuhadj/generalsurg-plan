@@ -108,7 +108,7 @@ class PatientCreate(BaseModel):
     taille_cm: float = Field(..., ge=30, le=250)
     diagnostic: str = Field(..., min_length=1, max_length=1000)
     chirurgien: str = Field(..., min_length=1, max_length=128)
-    specialty: Specialty = "hbp"
+    specialty: Specialty = "cataracte"
     urgence: Literal["vert", "orange", "rouge"] = "vert"
     note: Optional[str] = None
 
@@ -201,7 +201,8 @@ class VolumetrieResponse(BaseModel):
     volume_resection_ml: float
     remnant_pct: float
     margin_cm: float
-    # HBP-specific
+    # Anciennement spécifique à la spécialité "hbp" (retirée) — toujours None
+    # désormais, conservés pour compatibilité (voir routers/volumetrie.py).
     tlv_ml: Optional[float] = None
     tv_ml: Optional[float] = None
     flr_pct: Optional[float] = None
@@ -217,7 +218,7 @@ class VolumetrieResponse(BaseModel):
 
 class ChatRequest(BaseModel):
     message: str = Field(..., min_length=1, max_length=4000)
-    specialty: Specialty = "hbp"
+    specialty: Specialty = "cataracte"
     context: Literal["surgical-planning", "surgical-summary"] = "surgical-planning"
 
 

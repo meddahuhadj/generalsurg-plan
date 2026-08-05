@@ -1,4 +1,4 @@
-// sw.js — Service Worker de GeneralSurg Plan
+// sw.js — Service Worker de OphtalmoSurg Plan
 // =============================================================================
 // Objectif : rendre l'app shell (HTML/CSS/JS statiques) installable et
 // disponible hors-ligne, SANS jamais mettre en cache une réponse d'API.

@@ -31,39 +31,19 @@
     }
 
     /* ── Specialty Theme Overrides ── */
-    body[data-mod="hbp"] {
+    body[data-mod="cataracte"] {
       --accent: #4fc3f7;
       --accent-rgb: 79, 195, 247;
     }
 
-    body[data-mod="colorectal"] {
+    body[data-mod="glaucome"] {
       --accent: #22c55e;
       --accent-rgb: 34, 197, 94;
     }
 
-    body[data-mod="gastrique"] {
-      --accent: #ff6b35;
-      --accent-rgb: 255, 107, 53;
-    }
-
-    body[data-mod="thyroide"] {
-      --accent: #a855f7;
-      --accent-rgb: 168, 85, 247;
-    }
-
-    body[data-mod="thoracique"] {
-      --accent: #06b6d4;
-      --accent-rgb: 6, 182, 212;
-    }
-
-    body[data-mod="cardiaque"] {
+    body[data-mod="retine"] {
       --accent: #ef4444;
       --accent-rgb: 239, 68, 68;
-    }
-
-    body[data-mod="urologie"] {
-      --accent: #14b8a6;
-      --accent-rgb: 20, 184, 166;
     }
 
     body.light {
@@ -1622,6 +1602,72 @@
 
     .hub-overlay.hidden {
       display: none
+    }
+
+    /* Écran de connexion — au-dessus du hub (z-index supérieur), affiché
+       uniquement quand un backend est configuré sans jeton valide. */
+    .login-gate-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 99999;
+      background: rgba(4, 8, 12, .88);
+      backdrop-filter: blur(6px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px
+    }
+
+    .login-gate-card {
+      background: var(--bg1);
+      border: 1px solid var(--border2);
+      border-radius: 12px;
+      box-shadow: 0 25px 80px rgba(0, 0, 0, .6);
+      width: 100%;
+      max-width: 360px;
+      padding: 28px 24px;
+      text-align: center
+    }
+
+    .login-gate-icon {
+      font-size: 34px;
+      margin-bottom: 6px
+    }
+
+    .login-gate-card h2 {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 6px
+    }
+
+    .login-gate-sub {
+      font-size: 11px;
+      color: var(--text3);
+      margin-bottom: 16px;
+      line-height: 1.5
+    }
+
+    .login-gate-card .form-row {
+      text-align: left;
+      margin-bottom: 10px
+    }
+
+    .login-gate-error {
+      background: rgba(239, 68, 68, .12);
+      border: 1px solid rgba(239, 68, 68, .4);
+      color: #f87171;
+      font-size: 10.5px;
+      border-radius: 6px;
+      padding: 8px 10px;
+      margin-bottom: 10px;
+      text-align: left;
+      line-height: 1.4
+    }
+
+    .login-gate-hint {
+      font-size: 9.5px;
+      color: var(--text3);
+      margin-top: 14px
     }
 
     .hub-orb {

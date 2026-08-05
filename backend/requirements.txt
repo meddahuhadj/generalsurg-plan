@@ -27,3 +27,5 @@ rtree>=1.0.0
 dicomweb-client>=0.61.0
 pydicom>=3.0.0
 pynetdicom>=3.0.0
+# Export PDF du rapport de validation du workflow « 3 clics » (recommandation 1).
+reportlab>=4.2.0

@@ -1,5 +1,5 @@
 # ==============================================================================
-# docker-compose.yml — GeneralSurgPlan3D NextGen Enterprise Stack
+# docker-compose.yml — OphtalmoSurg Plan Enterprise Stack
 # ==============================================================================
 # Architecture complète et résiliente pour centre de cancérologie et hôpital universitaire.
 # Inclut :
@@ -23,10 +23,10 @@
 services:
   caddy:
     image: caddy:2-alpine
-    container_name: generalsurg_proxy
+    container_name: ophtalmosurg_proxy
     restart: always
     environment:
-      - DOMAIN=${DOMAIN:?Définissez DOMAIN (ex. generalsurg.mondomaine.fr) dans .env — voir .env.example}
+      - DOMAIN=${DOMAIN:?Définissez DOMAIN (ex. ophtalmosurg.mondomaine.fr) dans .env — voir .env.example}
       - ACME_EMAIL=${ACME_EMAIL:-}
     ports:
       - "80:80"
@@ -44,12 +44,12 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: generalsurgplan3d-nextgen:2.4.0
-    container_name: generalsurg_app
+    image: ophtalmosurgplan-nextgen:2.4.0
+    container_name: ophtalmosurg_app
     restart: always
     environment:
       - APP_ENV=production
-      - DATABASE_URL=postgresql://surguser:${POSTGRES_PASSWORD:?Définissez POSTGRES_PASSWORD dans un fichier .env à la racine (voir .env.example) avant de lancer ce stack}@postgres:5432/generalsurg_db
+      - DATABASE_URL=postgresql://surguser:${POSTGRES_PASSWORD:?Définissez POSTGRES_PASSWORD dans un fichier .env à la racine (voir .env.example) avant de lancer ce stack}@postgres:5432/ophtalmosurg_db
       - JWT_SECRET=${JWT_SECRET:?Définissez JWT_SECRET (ex. `openssl rand -hex 32`) dans .env avant la mise en production}
       - SEED_DEMO_USERS=false
       - ALLOWED_ORIGINS=https://${DOMAIN:?}
@@ -68,17 +68,17 @@ services:
 
   postgres:
     image: pgvector/pgvector:pg16
-    container_name: generalsurg_db
+    container_name: ophtalmosurg_db
     restart: always
     environment:
       - POSTGRES_USER=surguser
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?Définissez POSTGRES_PASSWORD dans un fichier .env à la racine (voir .env.example) avant de lancer ce stack}
-      - POSTGRES_DB=generalsurg_db
+      - POSTGRES_DB=ophtalmosurg_db
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./backend/migrations/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U surguser -d generalsurg_db"]
+      test: ["CMD-SHELL", "pg_isready -U surguser -d ophtalmosurg_db"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -87,12 +87,12 @@ services:
 
   orthanc:
     image: jodogne/orthanc-plugins:latest
-    container_name: generalsurg_pacs
+    container_name: ophtalmosurg_pacs
     restart: always
     ports:
       - "4242:4242"   # Port DICOM C-STORE standard hospitalier (protocole DIMSE, pas HTTP)
     environment:
-      - ORTHANC_NAME=GeneralSurgPlan3D_PACS
+      - ORTHANC_NAME=OphtalmoSurgPlan_PACS
     volumes:
       - orthanc_storage:/var/lib/orthanc/db
     networks:

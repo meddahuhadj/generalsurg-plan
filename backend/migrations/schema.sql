@@ -1,6 +1,6 @@
--- GeneralSurg Plan MIMO — Schéma PostgreSQL
+-- OphtalmoSurg Plan — Schéma PostgreSQL
 -- ======================================
--- Exécuter avec: psql -U postgres -d generalsurg -f schema.sql
+-- Exécuter avec: psql -U postgres -d ophtalmosurg -f schema.sql
 -- (ou laisser main.py le faire automatiquement au démarrage / via Alembic)
 
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
@@ -36,8 +36,8 @@ CREATE TABLE patients (
     bsa_m2          REAL GENERATED ALWAYS AS (SQRT(poids_kg * taille_cm / 3600)) STORED,
     diagnostic      TEXT NOT NULL,
     chirurgien      VARCHAR(128) NOT NULL,
-    specialty       VARCHAR(32) NOT NULL DEFAULT 'hbp'
-                    CHECK (specialty IN ('hbp','colorectal','gastrique','thyroide','thoracique','cardiaque','urologie')),
+    specialty       VARCHAR(32) NOT NULL DEFAULT 'cataracte'
+                    CHECK (specialty IN ('cataracte','glaucome','retine')),
     urgence         VARCHAR(16) DEFAULT 'vert' CHECK (urgence IN ('vert','orange','rouge')),
     note            TEXT,
     status          VARCHAR(32) DEFAULT 'active',
@@ -244,6 +244,40 @@ CREATE TABLE surgical_plans (
 CREATE INDEX idx_surgical_plans_patient ON surgical_plans(patient_id);
 CREATE INDEX idx_surgical_plans_status ON surgical_plans(strategy_status);
 CREATE TRIGGER surgical_plans_updated_at BEFORE UPDATE ON surgical_plans
+    FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
+-- Table: workflow_runs (Workflow de validation éclair « 3 clics » — préparation zero-touch)
+-- Créé automatiquement (trigger='auto') à l'arrivée d'une série DICOM sur le
+-- serveur (upload, DICOMweb WADO-RS, DIMSE) ou manuellement (trigger='manual').
+-- La préparation (extraction heuristique, simulation de marge, garde-fou)
+-- tourne en tâche de fond ; le chirurgien valide en 3 clics (Aperçu → Ajustement
+-- → Validation) puis exporte DICOM SR / PDF.
+CREATE TABLE workflow_runs (
+    id                      UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    patient_id              VARCHAR(32) NOT NULL REFERENCES patients(id) ON DELETE CASCADE,
+    series_id               UUID REFERENCES dicom_series(id) ON DELETE SET NULL,
+    modality                VARCHAR(8) CHECK (modality IN ('CT','MR','PT','US','OT')),
+    specialty               VARCHAR(32) CHECK (specialty IN ('cataracte','glaucome','retine','autre')),
+    trigger                 VARCHAR(16) NOT NULL DEFAULT 'manual' CHECK (trigger IN ('auto','manual')),
+    stage                   VARCHAR(24) NOT NULL DEFAULT 'preparing' CHECK (stage IN ('preparing','ready_for_review','validated','cancelled','failed')),
+    prep_status             VARCHAR(16) NOT NULL DEFAULT 'pending' CHECK (prep_status IN ('pending','running','done','error')),
+    prep_progress           TEXT,
+    prep_error              TEXT,
+    source                  VARCHAR(24) CHECK (source IN ('dicom_voxels','metadata_estimate')),
+    safety_margin_mm        REAL NOT NULL DEFAULT 10.0,
+    structures              JSONB NOT NULL DEFAULT '[]'::jsonb,
+    margin_simulation       JSONB NOT NULL DEFAULT '{}'::jsonb,
+    validated_at            TIMESTAMPTZ,
+    validated_by            VARCHAR(64),
+    export_dicom_sr         JSONB,
+    export_pdf_path         TEXT,
+    created_at              TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at              TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_workflow_runs_patient ON workflow_runs(patient_id);
+CREATE INDEX idx_workflow_runs_series ON workflow_runs(series_id);
+CREATE TRIGGER workflow_runs_updated_at BEFORE UPDATE ON workflow_runs
     FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
 -- Table: audit_logs (Journal d'Audit Inaltérable - Conformité MDR/HIPAA avec chaînage SHA-256)

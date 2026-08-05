@@ -1,9 +1,20 @@
-# GeneralSurg Plan MIMO — enrichi
+# OphtalmoSurg Plan (ex-GeneralSurg Plan MIMO) — Ophtalmologie
 
-Plateforme chirurgicale modulaire multi-spécialités (HBP, Colorectal, Gastrique,
-Thyroïde, Thoracique, Cardiaque), portée au même niveau de complétude que
-`GeneralSurgPlan3D - 4` : moteur 3D data-driven, MPR volumétrique réel, IA
-connectée, analyse prédictive calculée, backend FastAPI générique.
+Plateforme de planification chirurgicale dédiée à l'ophtalmologie (Cataracte,
+Glaucome, Chirurgie Vitréo-Rétinienne) : moteur 3D data-driven, MPR volumétrique
+réel, IA connectée, analyse prédictive calculée, backend FastAPI générique.
+
+> Cette version est une transformation front-end du prototype multi-spécialités
+> `GeneralSurg Plan MIMO` original (HBP, Colorectal, Gastrique, Thyroïde,
+> Thoracique, Cardiaque, Urologie) vers l'ophtalmologie. Les 3 modules
+> (`MODULES` dans `assets/app-part1.js`), l'anatomie 3D procédurale, le panneau
+> d'évaluation clinique (LOCS III / Hodapp / PVR, ex-staging TNM), les
+> guidelines (ESCRS/EGS/EVRS), la base de connaissances IA hors-ligne, les
+> commandes vocales et les codes CCAM de démonstration ont été réécrits pour
+> l'ophtalmologie. Le **backend reste générique et inchangé** (patients, DICOM,
+> auth, volumétrie) — voir « Limites connues » plus bas pour le détail de ce
+> qui n'a volontairement pas été retouché (panneaux « Recherche » spéculatifs
+> et pipeline de segmentation hépatique avancé, hors périmètre de cette passe).
 
 ## Contenu
 
@@ -100,6 +111,59 @@ renseignez :
   `DATABASE_URL` (PostgreSQL) pour la persistance réelle.
 - L'anatomie 3D est procédurale (silhouettes crédibles par spécialité, pas des
   maillages anatomiques importés depuis de vraies segmentations DICOM).
+- **Transformation ophtalmologie (front)** : le cœur du parcours chirurgien
+  (modules, anatomie 3D, staging clinique, guidelines, IA hors-ligne, vocal,
+  CCAM) est entièrement réécrit pour l'ophtalmologie. Les panneaux « Mode
+  Recherche » (SurgSim, découpe WebGPU, GenAI, robotique, bio-impression, BCI,
+  nanorobots, autonomie L5, épigénétique, Raman/plasma, nsPEF/BNCT,
+  organoïdes) ont aussi été repassés en texte ophtalmologique (perfusion
+  rétinienne au lieu de FLR hépatique, quadrants rétiniens au lieu de segments
+  de Couinaud, néovaisseaux choroïdiens/EPR/stroma cornéen au lieu de
+  cible hépatique, etc.) ; ce sont des gadgets non cliniques réétiquetés,
+  la logique géométrique sous-jacente (classification par octant, calcul de
+  marge/volume) n'a pas été réécrite — seuls les libellés visibles au
+  chirurgien ont changé.
+- **Ce qui reste structurellement lié au foie (backend, pas juste du texte)** :
+  le pipeline de segmentation IA réelle (`backend/segmentation_service.py`,
+  `backend/mesh_export.py`, ainsi que `backend/monai_pipeline_v2.py` en mode
+  Recherche) appelle TotalSegmentator avec les tâches `liver_segments`/
+  `liver_vessels`/`total` — un modèle entraîné pour l'imagerie abdominale, qui
+  n'a **aucune tâche pour les structures oculaires** (cornée, cristallin,
+  rétine ne font pas partie de son répertoire d'organes). Il n'existe pas
+  d'équivalent « TotalSegmentator pour l'œil » open-source à brancher à la
+  place. Plutôt que de laisser le bouton « 🔬 Real AI Segmentation » aboutir
+  à un résultat trompeur (ex. un volume hépatique ≈ 0 mL présenté comme une
+  segmentation valide pour un patient qui n'a pas de foie dans le champ
+  d'acquisition), le front bloque désormais explicitement cette action pour
+  les 3 modules ophtalmo (voir `REAL_SEGMENTATION_SUPPORTED_SPECIALTIES` dans
+  `assets/app-part1.js`) : message clair côté utilisateur, aucun appel réseau
+  inutile, aucun job de ~15 min lancé pour rien. Conséquence assumée : le
+  workflow « zero-touch » (imagerie arrivée au PACS la veille → maillage 3D
+  réel prêt le matin du bloc) **n'existe pas pour l'ophtalmologie** ; seule
+  l'anatomie procédurale (`SPECIALTY_SHAPE` + `makeLumpGeometry`) est
+  disponible. Généraliser ce pipeline à d'autres organes demande soit un
+  modèle de segmentation oculaire dédié (rare, souvent recherche/propriétaire),
+  soit un entraînement spécifique — hors de portée d'une session de code sans
+  données d'entraînement ni GPU. Le backend reste par ailleurs générique et
+  **n'a pas été adapté** à l'ophtalmologie (le calcul FLR/TLV spécifique
+  `specialty=hbp` existe toujours côté API mais n'est plus utilisé par le
+  front ; `backend/specialties.py` liste toujours les 7 spécialités
+  chirurgicales générales d'origine, pas les modules ophtalmo — un patient
+  créé côté front avec un backend réel connecté retombe donc sur
+  `specialty=hbp` par défaut, ce qui n'a pas été corrigé dans cette session).
+- **Tests de charge (`backend/tests/load_test.py`)** : couvrent désormais,
+  en plus de `/health`/`/patients`/`/pacs/capabilities`, les endpoints
+  `/segmentation/capabilities` (interrogé par le front avant chaque tentative
+  de segmentation réelle) et `/patients/{id}/volumetrie`+`/segments` (créés à
+  la volée sur un patient de test dédié). Ce que ce script **ne mesure
+  toujours pas**, et ne peut pas mesurer dans ce sandbox : l'exécution réelle
+  du job `/segmentation/auto` (calcul nnU-Net potentiellement de plusieurs
+  minutes, généralement sur GPU — pas de GPU disponible ici), le comportement
+  sous charge GPU réelle, et le comportement sur un réseau hospitalier
+  dégradé/WAN (latence variable, perte de paquets) qui nécessiterait un outil
+  dédié (tc/netem, Toxiproxy) ou un test depuis un poste distant sur le réseau
+  cible. Les chiffres produits restent des ordres de grandeur pour valider le
+  comportement du backend lui-même, pas un SLA de production.
 
 ## Backend v2.0 — Sécurité, persistance, audit (priorité 1 de la feuille de route)
 
@@ -117,7 +181,7 @@ renseignez :
 
 ### 2. Persistance PostgreSQL avec migrations
 - Modèles SQLAlchemy dans `backend/models.py` (miroir de `migrations/schema.sql`).
-- Dev rapide : SQLite zero-config (`./generalsurg.db`), tables créées automatiquement
+- Dev rapide : SQLite zero-config (`./ophtalmosurg.db`), tables créées automatiquement
   au démarrage — aucune installation requise.
 - Production : PostgreSQL via `docker compose up -d db`, puis
   `alembic -c migrations/alembic.ini upgrade head`. Voir `backend/migrations/README.md`.

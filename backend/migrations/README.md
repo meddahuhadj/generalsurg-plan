@@ -1,4 +1,4 @@
-# Migrations — GeneralSurg Plan MIMO
+# Migrations — OphtalmoSurg Plan
 
 Deux façons d'obtenir le schéma en base, du plus simple au plus rigoureux :
 
@@ -14,7 +14,7 @@ un **filet de sécurité**, pas un système de migration versionné.
 docker compose up -d db
 
 # 2. Configurer .env
-DATABASE_URL=postgresql+psycopg2://generalsurg:generalsurg@localhost:5432/generalsurg
+DATABASE_URL=postgresql+psycopg2://ophtalmosurg:ophtalmosurg@localhost:5432/ophtalmosurg
 
 # 3. Appliquer les migrations
 alembic -c migrations/alembic.ini upgrade head

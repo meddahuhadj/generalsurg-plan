@@ -14,7 +14,7 @@ Service FastAPI dédié à l'interopérabilité avec les consoles de chirurgie a
 Fonctionnalités :
     1. Télémétrie cinématique 7-DOF en temps réel et suivi des 4 bras robotiques (Denavit-Hartenberg).
     2. Boucle haptique viscoélastique (calcul de la résistance tissulaire en Newtons) synchronisée
-       avec le moteur Position-Based Dynamics (PBD / FEM) de GeneralSurgPlan3D.
+       avec le moteur Position-Based Dynamics (PBD / FEM) de OphtalmoSurg Plan.
     3. Barrière de sécurité active (Force-Limiting Safety Override) : verrouillage automatique
        des actionneurs si la force dépasse le seuil de déchirure parenchymateuse (> 4.5 N).
     4. Traçabilité médico-légale par chaînage SHA-256 dans `audit_logs` (MDR / FDA 510(k)).

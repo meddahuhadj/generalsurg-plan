@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-segmentation_service.py — GeneralSurg Plan
+segmentation_service.py — OphtalmoSurg Plan
 ============================================================
 Service RÉEL de segmentation hépatique automatique, basé sur le
 package officiel `TotalSegmentator` (nnU-Net, Wasserthal et al.),
@@ -77,7 +77,7 @@ router = APIRouter(prefix="/segmentation", tags=["segmentation"])
 # ------------------------------------------------------------------
 # Config
 # ------------------------------------------------------------------
-WORKDIR = Path(tempfile.gettempdir()) / "generalsurg_segmentation"
+WORKDIR = Path(tempfile.gettempdir()) / "ophtalmosurg_segmentation"
 WORKDIR.mkdir(parents=True, exist_ok=True)
 
 # Dossier servi statiquement (voir main.py: app.mount("/meshes", ...)) contenant

@@ -11,7 +11,7 @@ l'indiquer. Non utilisé par le frontend actuel (voir index.html (assets/app-par
 /segmentation/auto → segmentation_service.py, la vraie intégration TotalSegmentator). Pour une
 segmentation réelle, utiliser exclusivement /segmentation/auto et /segmentation/capabilities.
 
-Implémentation pour le Jalon M3 et M4 du Cahier des Charges GeneralSurgPlan3D NextGen (2026-2046).
+Implémentation pour le Jalon M3 et M4 du Cahier des Charges OphtalmoSurg Plan NextGen (2026-2046).
 Garantit la compatibilité ascendante sans supprimer ni modifier segmentation_service.py (v1).
 
 Fonctionnalités :
@@ -134,7 +134,7 @@ def _run_monai_segmentation_job(job_id: str, req: Segment3DRequest, db_url_str: 
     
     # Création d'un fichier maillage JSON/GLTF de démonstration
     dummy_gltf = {
-        "asset": {"version": "2.0", "generator": "GeneralSurgPlan3D MONAI-v2.4 Pipeline"},
+        "asset": {"version": "2.0", "generator": "OphtalmoSurg Plan MONAI-v2.4 Pipeline"},
         "scenes": [{"nodes": [0]}],
         "nodes": [{"name": "Liver_Multi_Organ_Twin", "mesh": 0}],
         "meshes": [{"name": "Couinaud_Segments_1_8", "primitives": [{"attributes": {"POSITION": 0}}]}]
@@ -225,7 +225,7 @@ async def start_monai_segmentation(
         }
 
     # Récupération de l'URL de base de données pour le thread
-    db_url = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/generalsurg_db")
+    db_url = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/ophtalmosurg_db")
     background_tasks.add_task(_run_monai_segmentation_job, job_id, req, db_url)
 
     return {

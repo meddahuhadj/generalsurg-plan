@@ -7,9 +7,9 @@
           Object.assign(state.mpr, {
             segments: {
               tumor: { voxels: new Set(), color: '#ef4444', label: 'Tumeur' },
-              portal_vein: { voxels: new Set(), color: '#3b82f6', label: 'Veine porte' },
-              hepatic_vein: { voxels: new Set(), color: '#8b5cf6', label: 'VS-Hépatiques' },
-              bile_duct: { voxels: new Set(), color: '#eab308', label: 'Voies biliaires' },
+              portal_vein: { voxels: new Set(), color: '#3b82f6', label: 'Vaisseau rétinien' },
+              hepatic_vein: { voxels: new Set(), color: '#8b5cf6', label: 'Membrane épirétinienne' },
+              bile_duct: { voxels: new Set(), color: '#eab308', label: 'Exsudats / Hémorragie' },
               gtv: { voxels: new Set(), color: '#f97316', label: 'GTV' },
               ctv: { voxels: new Set(), color: '#fb923c', label: 'CTV' },
             },
@@ -415,7 +415,7 @@
           const HU_TISSUE_THRESHOLD = 0; // Seuil tissu mou : > 0 HU
 
           function recomputeFLR() {
-            if (!state.mpr.volume) { notify('Aucun volume chargé pour le calcul FLR', 'warn'); return; }
+            if (!state.mpr.volume) { notify('Aucun volume chargé pour le calcul', 'warn'); return; }
             const N = state.mpr.volSize;
             const vol = state.mpr.volume;
 
@@ -528,16 +528,16 @@
               }
             }
 
-            const minFLR = 30; // seuil standard foie sain
+            const minFLR = 30; // seuil standard de surface saine restante
             if (elStatus) {
               if (flrPct >= minFLR) {
                 elStatus.style.background = 'rgba(34,197,94,.15)';
                 elStatus.style.color = '#22c55e';
-                elStatus.textContent = `✅ SÉCURISÉ — FLR ${flrPct.toFixed(1)}% ≥ ${minFLR}%`;
+                elStatus.textContent = `✅ SÉCURISÉ — Restant ${flrPct.toFixed(1)}% ≥ ${minFLR}%`;
               } else {
                 elStatus.style.background = 'rgba(239,68,68,.15)';
                 elStatus.style.color = '#ef4444';
-                elStatus.textContent = `⚠️ INSUFFISANT — FLR ${flrPct.toFixed(1)}% < ${minFLR}% requis`;
+                elStatus.textContent = `⚠️ INSUFFISANT — Restant ${flrPct.toFixed(1)}% < ${minFLR}% requis`;
               }
             }
 
@@ -557,9 +557,9 @@
             const flrEl = document.getElementById('cut-flr-val');
             const flrTxt = flrEl ? flrEl.textContent : '?';
             if (typeof twin !== 'undefined' && twin.active) {
-              notify(`✂️ Découpe virtuelle appliquée sur le jumeau numérique — FLR résultant : ${flrTxt}`, 'ok');
+              notify(`✂️ Découpe virtuelle appliquée sur le jumeau numérique — Restant : ${flrTxt}`, 'ok');
             } else {
-              notify(`✂️ Découpe appliquée — FLR résultant : ${flrTxt} (activez le Jumeau pour visualiser la découpe physique)`, 'ok');
+              notify(`✂️ Découpe appliquée — Restant : ${flrTxt} (activez le Jumeau pour visualiser la découpe physique)`, 'ok');
             }
             closeModal('webgpu-cut');
             if (typeof setRenderMode === 'function') {
@@ -569,14 +569,14 @@
           }
 
           // ════════════════════════════════════════════════
-          //  STAGING ONCOLOGIQUE — TNM / BCLC / Child-Pugh
-          //  Résécabilité auto-calculée
+          //  ÉVALUATION CLINIQUE — sévérité par spécialité (LOCS III / Hodapp / PVR)
+          //  Opérabilité auto-calculée
           // ════════════════════════════════════════════════
           function renderStagingPanel() {
             const mod = MODULES[state.mod];
-            const isHBP = state.mod === 'hbp';
-            const isColorectal = state.mod === 'colorectal';
-            const isThoracique = state.mod === 'thoracique';
+            const isCataracte = state.mod === 'cataracte';
+            const isGlaucome = state.mod === 'glaucome';
+            const isRetine = state.mod === 'retine';
 
             // Calcul volumétrie depuis le volume courant — priorité au volume RÉEL de segmentation
             // (TotalSegmentator, via realMeshGroup) s'il est chargé, sinon estimation par voxel-counting.
@@ -594,68 +594,80 @@
 
             // Scores actuels
             const stagingData = state.mpr._stagingData || {
-              T: 'T2', N: 'N0', M: 'M0',
-              bclc: isHBP ? 'A' : null,
-              childPugh: isHBP ? 'A5' : null,
-              crm: isColorectal ? 'Négatif (>1mm)' : null,
-              vems: isThoracique ? '82%' : null,
+              eye: 'OD', anesth: 'Topique', urg: 'Programmée',
+              locs: isCataracte ? 'N4' : null,
+              acd: isCataracte ? '3.1 mm' : null,
+              hodapp: isGlaucome ? 'Modéré' : null,
+              pioCible: isGlaucome ? '15 mmHg' : null,
+              macula: isRetine ? 'Off' : null,
+              pvr: isRetine ? 'B' : null,
             };
             state.mpr._stagingData = stagingData;
 
             const html = `<div class="staging-pane">
     <div class="staging-section">
-      <div class="staging-section-title">${I18N.t('staging.tnmTitle')}</div>
+      <div class="staging-section-title">${I18N.t('staging.clinicalTitle')}</div>
       <div class="staging-field">
-        <label>${I18N.t('staging.tField')}</label>
-        <select id="stg-T" onchange="updateStagingDecision()">
-          ${['T1a', 'T1b', 'T2', 'T3', 'T4a', 'T4b'].map(v => `<option ${stagingData.T === v ? 'selected' : ''}>${v}</option>`).join('')}
+        <label>${I18N.t('staging.eyeField')}</label>
+        <select id="stg-eye" onchange="updateStagingDecision()">
+          ${['OD', 'OG', 'Bilatéral'].map(v => `<option ${stagingData.eye === v ? 'selected' : ''}>${v}</option>`).join('')}
         </select>
       </div>
       <div class="staging-field">
-        <label>${I18N.t('staging.nField')}</label>
-        <select id="stg-N" onchange="updateStagingDecision()">
-          ${['N0', 'N1', 'N2', 'Nx'].map(v => `<option ${stagingData.N === v ? 'selected' : ''}>${v}</option>`).join('')}
+        <label>${I18N.t('staging.anesthField')}</label>
+        <select id="stg-anesth" onchange="updateStagingDecision()">
+          ${['Topique', 'Loco-régionale', 'Générale'].map(v => `<option ${stagingData.anesth === v ? 'selected' : ''}>${v}</option>`).join('')}
         </select>
       </div>
       <div class="staging-field">
-        <label>${I18N.t('staging.mField')}</label>
-        <select id="stg-M" onchange="updateStagingDecision()">
-          ${['M0', 'M1', 'Mx'].map(v => `<option ${stagingData.M === v ? 'selected' : ''}>${v}</option>`).join('')}
+        <label>${I18N.t('staging.urgField')}</label>
+        <select id="stg-urg" onchange="updateStagingDecision()">
+          ${['Programmée', 'Semi-urgente', 'Urgente'].map(v => `<option ${stagingData.urg === v ? 'selected' : ''}>${v}</option>`).join('')}
         </select>
       </div>
     </div>
 
-    ${isHBP ? `<div class="staging-section">
-      <div class="staging-section-title">${I18N.t('staging.hbpParams')}</div>
+    ${isCataracte ? `<div class="staging-section">
+      <div class="staging-section-title">${I18N.t('staging.cataracteParams')}</div>
       <div class="staging-field">
-        <label>${I18N.t('staging.bclcField')}</label>
-        <select id="stg-bclc" onchange="updateStagingDecision()">
-          ${['0', 'A', 'B', 'C', 'D'].map(v => `<option ${stagingData.bclc === v ? 'selected' : ''}>${v}</option>`).join('')}
+        <label>${I18N.t('staging.locsField')}</label>
+        <select id="stg-locs" onchange="updateStagingDecision()">
+          ${['N1', 'N2', 'N3', 'N4', 'N5', 'N6'].map(v => `<option ${stagingData.locs === v ? 'selected' : ''}>${v}</option>`).join('')}
         </select>
       </div>
       <div class="staging-field">
-        <label>${I18N.t('staging.childPughField')}</label>
-        <select id="stg-child" onchange="updateStagingDecision()">
-          ${['A5', 'A6', 'B7', 'B8', 'B9', 'C10+'].map(v => `<option ${stagingData.childPugh === v ? 'selected' : ''}>${v}</option>`).join('')}
-        </select>
+        <label>${I18N.t('staging.acdField')}</label>
+        <input id="stg-acd" type="text" value="${stagingData.acd || '3.1 mm'}" onchange="updateStagingDecision()">
       </div>
     </div>` : ''}
 
-    ${isColorectal ? `<div class="staging-section">
-      <div class="staging-section-title">${I18N.t('staging.colorectalParams')}</div>
+    ${isGlaucome ? `<div class="staging-section">
+      <div class="staging-section-title">${I18N.t('staging.glaucomeParams')}</div>
       <div class="staging-field">
-        <label>${I18N.t('staging.crmField')}</label>
-        <select id="stg-crm" onchange="updateStagingDecision()">
-          ${['Négatif (>1mm)', 'Menacée (≤1mm)', 'Positive'].map(v => `<option ${stagingData.crm === v ? 'selected' : ''}>${v}</option>`).join('')}
+        <label>${I18N.t('staging.hodappField')}</label>
+        <select id="stg-hodapp" onchange="updateStagingDecision()">
+          ${['Précoce', 'Modéré', 'Avancé'].map(v => `<option ${stagingData.hodapp === v ? 'selected' : ''}>${v}</option>`).join('')}
         </select>
+      </div>
+      <div class="staging-field">
+        <label>${I18N.t('staging.pioCibleField')}</label>
+        <input id="stg-piocible" type="text" value="${stagingData.pioCible || '15 mmHg'}" onchange="updateStagingDecision()">
       </div>
     </div>` : ''}
 
-    ${isThoracique ? `<div class="staging-section">
-      <div class="staging-section-title">${I18N.t('staging.thoracicParams')}</div>
+    ${isRetine ? `<div class="staging-section">
+      <div class="staging-section-title">${I18N.t('staging.retineParams')}</div>
       <div class="staging-field">
-        <label>${I18N.t('staging.vemsField')}</label>
-        <input id="stg-vems" type="text" value="${stagingData.vems || '82%'}" onchange="updateStagingDecision()">
+        <label>${I18N.t('staging.maculaField')}</label>
+        <select id="stg-macula" onchange="updateStagingDecision()">
+          ${['On', 'Off'].map(v => `<option ${stagingData.macula === v ? 'selected' : ''}>${v}</option>`).join('')}
+        </select>
+      </div>
+      <div class="staging-field">
+        <label>${I18N.t('staging.pvrField')}</label>
+        <select id="stg-pvr" onchange="updateStagingDecision()">
+          ${['Aucun', 'A', 'B', 'C1', 'C2', 'C3'].map(v => `<option ${stagingData.pvr === v ? 'selected' : ''}>${v}</option>`).join('')}
+        </select>
       </div>
     </div>` : ''}
 
@@ -664,13 +676,13 @@
                 ? `<span style="font-size:9px;font-weight:700;color:#22c55e;background:#22c55e22;padding:1px 6px;border-radius:8px;margin-left:4px">${I18N.t('staging.volumetryRealBadge')}</span>`
                 : `<span style="font-size:9px;font-weight:700;color:#eab308;background:#eab30822;padding:1px 6px;border-radius:8px;margin-left:4px">${I18N.t('staging.volumetryEstimateBadge')}</span>`}</div>
       <div style="font-size:9px;color:var(--text2);line-height:1.6">
-        <div>• ${organVolIsReal ? I18N.t('staging.organVolumeReal') : I18N.t('staging.organVolumeEstimate')} : <strong>${organVol.toFixed(0)} mL</strong></div>
-        <div>• ${I18N.t('staging.tumorVolume')} : <strong style="color:${segTumorVoxels > 0 ? '#ef4444' : 'var(--text3)'}">${tumorVolML.toFixed(1)} mL</strong>${segTumorVoxels === 0 ? ` <em>${I18N.t('staging.noSegmentation')}</em>` : ''}</div>
+        <div>• ${organVolIsReal ? I18N.t('staging.organVolumeReal') : I18N.t('staging.organVolumeEstimate')} : <strong>${organVol.toFixed(1)} mL</strong></div>
+        <div>• ${I18N.t('staging.tumorVolume')} : <strong style="color:${segTumorVoxels > 0 ? '#ef4444' : 'var(--text3)'}">${tumorVolML.toFixed(2)} mL</strong>${segTumorVoxels === 0 ? ` <em>${I18N.t('staging.noSegmentation')}</em>` : ''}</div>
       </div>
     </div>
 
     <div id="staging-decision-box">
-      <button class="btn btn-primary" style="width:100%;margin-bottom:6px;font-size:10px" onclick="updateStagingDecision()">${I18N.t('staging.computeResectability')}</button>
+      <button class="btn btn-primary" style="width:100%;margin-bottom:6px;font-size:10px" onclick="updateStagingDecision()">${I18N.t('staging.computeOperability')}</button>
     </div>
 
     <div style="margin-top:8px">
@@ -693,88 +705,81 @@
           }
 
           function updateStagingDecision() {
-            const T = document.getElementById('stg-T')?.value || 'T2';
-            const N = document.getElementById('stg-N')?.value || 'N0';
-            const M = document.getElementById('stg-M')?.value || 'M0';
-            const bclc = document.getElementById('stg-bclc')?.value;
-            const child = document.getElementById('stg-child')?.value;
-            const crm = document.getElementById('stg-crm')?.value;
-            const vemsStr = document.getElementById('stg-vems')?.value;
+            const eye = document.getElementById('stg-eye')?.value || 'OD';
+            const anesth = document.getElementById('stg-anesth')?.value || 'Topique';
+            const urg = document.getElementById('stg-urg')?.value || 'Programmée';
+            const locs = document.getElementById('stg-locs')?.value;
+            const acd = document.getElementById('stg-acd')?.value;
+            const hodapp = document.getElementById('stg-hodapp')?.value;
+            const pioCible = document.getElementById('stg-piocible')?.value;
+            const macula = document.getElementById('stg-macula')?.value;
+            const pvr = document.getElementById('stg-pvr')?.value;
 
             // Sauvegarde
             if (state.mpr._stagingData) {
-              state.mpr._stagingData.T = T; state.mpr._stagingData.N = N; state.mpr._stagingData.M = M;
-              if (bclc) state.mpr._stagingData.bclc = bclc;
-              if (child) state.mpr._stagingData.childPugh = child;
-              if (crm) state.mpr._stagingData.crm = crm;
-              if (vemsStr) state.mpr._stagingData.vems = vemsStr;
+              state.mpr._stagingData.eye = eye; state.mpr._stagingData.anesth = anesth; state.mpr._stagingData.urg = urg;
+              if (locs) state.mpr._stagingData.locs = locs;
+              if (acd) state.mpr._stagingData.acd = acd;
+              if (hodapp) state.mpr._stagingData.hodapp = hodapp;
+              if (pioCible) state.mpr._stagingData.pioCible = pioCible;
+              if (macula) state.mpr._stagingData.macula = macula;
+              if (pvr) state.mpr._stagingData.pvr = pvr;
             }
 
             const criteria = [];
             let resectable = true;
 
-            // M1 → non résécable sauf cas particuliers
-            if (M === 'M1') {
-              criteria.push({ ok: false, text: 'Métastases à distance (M1) — résection curative compromise' });
-              resectable = false;
+            // Urgence → conditionne le délai, pas l'opérabilité en soi
+            if (urg === 'Urgente') {
+              criteria.push({ ok: 'warn', text: 'Prise en charge urgente — programmer au bloc dans les meilleurs délais' });
             } else {
-              criteria.push({ ok: true, text: 'Pas de métastase à distance (M0/Mx)' });
+              criteria.push({ ok: true, text: `Prise en charge ${urg.toLowerCase()}` });
             }
+            criteria.push({ ok: true, text: `Anesthésie prévue : ${anesth}` });
 
-            // N2 en colorectal → chimiothérapie néo-adjuvante
-            if (N === 'N2') {
-              criteria.push({ ok: 'warn', text: 'Atteinte ganglionnaire N2 — chimiothérapie néo-adjuvante recommandée' });
-            } else {
-              criteria.push({ ok: true, text: `Statut ganglionnaire ${N}` });
-            }
-
-            // T4b → résection difficile
-            if (T === 'T4b') {
-              criteria.push({ ok: 'warn', text: 'T4b — envahissement organes adjacents : évaluer exérèse combinée' });
-            }
-
-            // CRM en colorectal
-            if (crm) {
-              if (crm.includes('Positive')) {
-                criteria.push({ ok: false, text: 'CRM positive — risque élevé de récidive locale' });
-                resectable = false;
-              } else if (crm.includes('Menacée')) {
-                criteria.push({ ok: 'warn', text: 'CRM menacée — discuter avec le radiooncologiste' });
+            // Grade LOCS III → densité nucléaire (cataracte)
+            if (locs) {
+              if (locs === 'N6') {
+                criteria.push({ ok: 'warn', text: 'LOCS N6 — noyau très dense : risque accru de rupture capsulaire, discuter EEC' });
               } else {
-                criteria.push({ ok: true, text: 'CRM négative (>1mm)' });
+                criteria.push({ ok: true, text: `Grade nucléaire LOCS ${locs}` });
+              }
+            }
+            // Profondeur de chambre antérieure
+            if (acd) {
+              const acdVal = parseFloat(acd);
+              if (!isNaN(acdVal) && acdVal < 2.5) {
+                criteria.push({ ok: 'warn', text: `ACD ${acd} — chambre antérieure étroite, risque de complication peropératoire` });
+              } else if (!isNaN(acdVal)) {
+                criteria.push({ ok: true, text: `ACD ${acd} — chambre antérieure suffisante` });
               }
             }
 
-            // BCLC / Child-Pugh en HBP
-            if (bclc) {
-              if (bclc === 'C' || bclc === 'D') {
-                criteria.push({ ok: false, text: `BCLC ${bclc} — traitement systémique ou soins palliatifs` });
-                resectable = false;
-              } else if (bclc === 'B') {
-                criteria.push({ ok: 'warn', text: 'BCLC B — évaluer TACE/downstaging avant résection' });
+            // Stade Hodapp (glaucome)
+            if (hodapp) {
+              if (hodapp === 'Avancé') {
+                criteria.push({ ok: 'warn', text: 'Stade Hodapp avancé — champ visuel très réduit, chirurgie à ne pas différer' });
               } else {
-                criteria.push({ ok: true, text: `BCLC ${bclc} — résécable` });
+                criteria.push({ ok: true, text: `Stade Hodapp ${hodapp.toLowerCase()}` });
               }
             }
-            if (child) {
-              if (child.startsWith('C')) {
-                criteria.push({ ok: false, text: `Child-Pugh C — contre-indication chirurgicale relative` });
-                resectable = false;
-              } else if (child.startsWith('B')) {
-                criteria.push({ ok: 'warn', text: `Child-Pugh ${child} — réserve hépatique limitée, FLR critique` });
-              } else {
-                criteria.push({ ok: true, text: `Child-Pugh ${child} — bonne réserve hépatique` });
-              }
+            if (pioCible) {
+              criteria.push({ ok: true, text: `PIO cible fixée à ${pioCible}` });
             }
 
-            // VEMS thoracique
-            if (vemsStr) {
-              const vems = parseFloat(vemsStr);
-              if (!isNaN(vems) && vems < 40) {
-                criteria.push({ ok: false, text: `VEMS ${vemsStr} < 40% — contre-indication fonctionnelle` });
-                resectable = false;
-              } else if (!isNaN(vems) && vems < 60) {
-                criteria.push({ ok: 'warn', text: `VEMS ${vemsStr} — fonction limite, pré-habilitation suggérée` });
+            // Statut maculaire et stade PVR (rétine)
+            if (macula) {
+              if (macula === 'Off') {
+                criteria.push({ ok: 'warn', text: 'Macula off — chirurgie recommandée sous 7 jours pour optimiser la récupération visuelle' });
+              } else {
+                criteria.push({ ok: true, text: 'Macula on — pronostic visuel plus favorable' });
+              }
+            }
+            if (pvr) {
+              if (pvr.startsWith('C')) {
+                criteria.push({ ok: 'warn', text: `Stade PVR ${pvr} — risque élevé de ré-intervention, discuter tamponnement par huile de silicone` });
+              } else if (pvr !== 'Aucun') {
+                criteria.push({ ok: true, text: `Stade PVR ${pvr}` });
               }
             }
 
@@ -782,15 +787,15 @@
             // avant ce correctif, ce résultat n'était nulle part stocké, seulement rendu en HTML local.
             if (state.mpr._stagingData) {
               state.mpr._stagingData.resectable = resectable;
-              state.mpr._stagingData.decisionText = I18N.t(resectable ? 'staging.resectable' : 'staging.notResectable');
+              state.mpr._stagingData.decisionText = I18N.t(resectable ? 'staging.operable' : 'staging.notOperable');
             }
 
             const box = document.getElementById('staging-decision-box');
             if (!box) return;
 
             const verdict = resectable
-              ? `<div class="resect-badge ok">${I18N.t('staging.resectable')}</div>`
-              : `<div class="resect-badge danger">${I18N.t('staging.notResectable')}</div>`;
+              ? `<div class="resect-badge ok">${I18N.t('staging.operable')}</div>`
+              : `<div class="resect-badge danger">${I18N.t('staging.notOperable')}</div>`;
 
             box.innerHTML = `
     <button class="btn btn-primary" style="width:100%;margin-bottom:8px;font-size:10px" onclick="updateStagingDecision()">${I18N.t('analysis.recalculate')}</button>
@@ -804,7 +809,7 @@
     <button class="btn btn-secondary" style="width:100%;margin-top:8px;font-size:10px" onclick="exportStagingReport()">${I18N.t('staging.exportReport')}</button>
   `;
 
-            logAudit('staging_update', { T, N, M, verdict: resectable ? 'resectable' : 'not_resectable' });
+            logAudit('staging_update', { eye, anesth, urg, verdict: resectable ? 'operable' : 'not_operable' });
           }
 
           function exportStagingReport() {
@@ -1187,28 +1192,30 @@
             URL.revokeObjectURL(url);
           }
 
-          // ── 4. Guidelines Oncologiques HAS / NCCN (Important 7) ──
+          // ── 4. Guidelines Ophtalmologiques ESCRS / EGS / EVRS (Important 7) ──
           const GUIDELINES_RULES = {
-            hbp: {
-              title: "🏥 Guidelines HAS / NCCN — Chirurgie Hépato-Biliaire",
+            cataracte: {
+              title: "👁️ Guidelines ESCRS / HAS — Chirurgie de la Cataracte",
               rules: [
-                { id: "flr_normal", name: "FLR parenchyme sain ≥ 30%", check: () => (!state.mpr.lastFLR || state.mpr.lastFLR.flrPct >= 30) },
-                { id: "flr_cirrhosis", name: "FLR sur foie cirrhotique / post-chimio ≥ 40%", check: () => (!state.mpr.lastFLR || state.mpr.lastFLR.flrPct >= 40 || (state.mpr._stagingData && state.mpr._stagingData.childPugh === 'A5')) },
-                { id: "margin_r0", name: "Marge chirurgicale R0 ≥ 1 mm", check: () => (!state.mpr._stagingData || !state.mpr._stagingData.crm || state.mpr._stagingData.crm.includes('Négatif')) }
+                { id: "biometry_done", name: "Biométrie IOL-Master réalisée avant tout calcul de LIO", check: () => (!state.mpr._stagingData || !!state.mpr._stagingData.acd) },
+                { id: "locs_dense", name: "Grade LOCS ≤ N5 (sinon discuter EEC / risque zonulaire)", check: () => (!state.mpr._stagingData || !state.mpr._stagingData.locs || state.mpr._stagingData.locs !== 'N6') },
+                { id: "acd_normal", name: "Chambre antérieure ≥ 2.5 mm (ACD)", check: () => (!state.mpr._stagingData || !state.mpr._stagingData.acd || parseFloat(state.mpr._stagingData.acd) >= 2.5) }
               ]
             },
-            colorectal: {
-              title: "🏥 Guidelines HAS / NCCN — Chirurgie Colorectale",
+            glaucome: {
+              title: "👁️ Guidelines EGS / HAS — Chirurgie du Glaucome",
               rules: [
-                { id: "crm_rectum", name: "Marge circonférentielle (CRM) > 1 mm", check: () => (!state.mpr._stagingData || !state.mpr._stagingData.crm || state.mpr._stagingData.crm.includes('Négatif')) },
-                { id: "mesorectum", name: "Exérèse totale du mésorectum (TME)", check: () => true }
+                { id: "target_iop", name: "PIO cible individualisée définie avant chirurgie", check: () => (!state.mpr._stagingData || !!state.mpr._stagingData.pioCible) },
+                { id: "field_stage", name: "Stade du champ visuel documenté (Hodapp)", check: () => (!state.mpr._stagingData || !!state.mpr._stagingData.hodapp) },
+                { id: "advanced_priority", name: "Stade avancé pris en charge en priorité (risque de perte fonctionnelle)", check: () => (!state.mpr._stagingData || state.mpr._stagingData.hodapp !== 'Avancé' || state.mpr._stagingData.urg !== 'Programmée') }
               ]
             },
-            thoracique: {
-              title: "🏥 Guidelines HAS / NCCN — Chirurgie Thoracique",
+            retine: {
+              title: "👁️ Guidelines EVRS / HAS — Chirurgie Vitréo-Rétinienne",
               rules: [
-                { id: "vems_ppo", name: "VEMS prédit postopératoire (ppo) ≥ 30%", check: () => (!state.mpr._stagingData || !state.mpr._stagingData.vems || parseFloat(state.mpr._stagingData.vems) >= 30) },
-                { id: "dlco_ppo", name: "DLCO ppo ≥ 30% ou épreuve d'effort VO2max > 15 ml/kg/min", check: () => true }
+                { id: "macula_delay", name: "Macula off opérée sous 7 jours", check: () => (!state.mpr._stagingData || state.mpr._stagingData.macula !== 'Off' || state.mpr._stagingData.urg !== 'Programmée') },
+                { id: "pvr_tamponade", name: "PVR ≥ C : tamponnement par huile de silicone à discuter", check: () => true },
+                { id: "retinal_map", name: "Schéma rétinien horaire des déchirures renseigné", check: () => true }
               ]
             }
           };
@@ -1218,8 +1225,8 @@
           // pour lire le vrai état (state.mpr._stagingData) avec repli sûr si non encore renseigné.
 
           function evaluateGuidelines() {
-            const mod = document.body.getAttribute('data-mod') || 'hbp';
-            const guide = GUIDELINES_RULES[mod] || GUIDELINES_RULES.hbp;
+            const mod = document.body.getAttribute('data-mod') || 'cataracte';
+            const guide = GUIDELINES_RULES[mod] || GUIDELINES_RULES.cataracte;
 
             let html = `<div class="staging-section"><div class="staging-section-title">${guide.title}</div>`;
             let allOk = true;
@@ -1309,10 +1316,10 @@
 
           // ════════════════════════════════════════════════
           //  WORKFLOW ONCOLOGIQUE — Lot C (Phases 11 à 14)
-          //  Segmentectomie Couinaud S1-S8, Marges 3D R0/R1, Ischémie Fonctionnelle, Wedge, et Plan de Vol
+          //  Segmentation par octant rétinien S1-S8, Marges 3D R0/R1, Perfusion Fonctionnelle, et Plan de Vol
           // ════════════════════════════════════════════════
 
-          // ── 1. Cartographie Couinaud S1-S8 & Recommandations (Critique 4) ──
+          // ── 1. Cartographie par octant S1-S8 & Recommandations (Critique 4) ──
           state.mpr.couinaud = {
             segments: ['S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8'],
             colors: {
@@ -1322,22 +1329,22 @@
               S7: 'rgba(139,92,246,0.25)', S8: 'rgba(236,72,153,0.25)'
             },
             tumorSegments: [],
-            resectionSuggestion: 'Aucune tumeur détectée'
+            resectionSuggestion: 'Aucune lésion détectée'
           };
 
-          // Classification géométrique d'un voxel en segment de Couinaud (Brisbane 2000,
-          // approximation par scissures portales/hépatiques). Factorisée pour être réutilisée
-          // à la fois par la détection du/des segment(s) tumoral(aux) et par le calcul réel
-          // de volume réséqué dans la simulation de découpe (voir recomputeFLR()).
+          // Classification géométrique d'un voxel en octant rétinien (analogue Couinaud,
+          // approximation par quadrants anatomiques). Factorisée pour être réutilisée
+          // à la fois par la détection du/des segment(s) lésionnel(s) et par le calcul réel
+          // de volume traité dans la simulation de découpe (voir recomputeFLR()).
           function classifyCouinaudSegment(x, y, z, N) {
-            const nx = x / N; // 0 (gauche anatomique) à 1 (droite anatomique)
+            const nx = x / N; // 0 (nasal) à 1 (temporal)
             const ny = y / N; // 0 (antérieur) à 1 (postérieur)
             const nz = z / N; // 0 (inférieur) à 1 (supérieur)
-            if (nz > 0.7 && ny > 0.6) return 'S1'; // Lobe caudé
-            if (nx < 0.35) return nz > 0.5 ? 'S2' : 'S3'; // Secteur latéral gauche
-            if (nx < 0.55) return 'S4'; // Secteur paramédian gauche
-            if (nx < 0.78) return nz > 0.5 ? 'S8' : 'S5'; // Secteur paramédian droit
-            return nz > 0.5 ? 'S7' : 'S6'; // Secteur latéral droit
+            if (nz > 0.7 && ny > 0.6) return 'S1'; // Pôle postérieur / macula
+            if (nx < 0.35) return nz > 0.5 ? 'S2' : 'S3'; // Secteur nasal
+            if (nx < 0.55) return 'S4'; // Secteur paramédian nasal
+            if (nx < 0.78) return nz > 0.5 ? 'S8' : 'S5'; // Secteur paramédian temporal
+            return nz > 0.5 ? 'S7' : 'S6'; // Secteur temporal
           }
 
           function computeCouinaudSegments() {
@@ -1360,17 +1367,17 @@
             // Générer la recommandation chirurgicale standardisée
             const s = state.mpr.couinaud.tumorSegments;
             if (s.length === 0) {
-              state.mpr.couinaud.resectionSuggestion = 'Aucun segment tumoral tracé';
+              state.mpr.couinaud.resectionSuggestion = 'Aucun segment lésionnel tracé';
             } else if (s.includes('S5') && s.includes('S6') && s.includes('S7') && s.includes('S8')) {
-              state.mpr.couinaud.resectionSuggestion = '🔴 Hépatectomie Droite Standard (S5-S6-S7-S8)';
+              state.mpr.couinaud.resectionSuggestion = '🔴 Photocoagulation Panrétinienne Temporale Étendue (S5-S6-S7-S8)';
             } else if (s.includes('S2') && s.includes('S3') && s.includes('S4')) {
-              state.mpr.couinaud.resectionSuggestion = '🔴 Hépatectomie Gauche Standard (S2-S3-S4)';
+              state.mpr.couinaud.resectionSuggestion = '🔴 Photocoagulation Panrétinienne Nasale Étendue (S2-S3-S4)';
             } else if (s.includes('S6') && s.includes('S7')) {
-              state.mpr.couinaud.resectionSuggestion = '🟠 Bisegmentectomie Latérale Droite (S6-S7)';
+              state.mpr.couinaud.resectionSuggestion = '🟠 Traitement Focal Quadrant Temporal (S6-S7)';
             } else if (s.includes('S2') && s.includes('S3')) {
-              state.mpr.couinaud.resectionSuggestion = '🟡 Lobectomie Gauche / Bisegmentectomie S2-S3';
+              state.mpr.couinaud.resectionSuggestion = '🟡 Traitement Focal Quadrant Nasal (S2-S3)';
             } else {
-              state.mpr.couinaud.resectionSuggestion = `🟢 Segmentectomie Anatomique Ciblée (${s.join('+')})`;
+              state.mpr.couinaud.resectionSuggestion = `🟢 Traitement Ciblé par Quadrant (${s.join('+')})`;
             }
 
             logAudit('compute_couinaud_map', { tumor_segments: s, recommendation: state.mpr.couinaud.resectionSuggestion });
@@ -1417,7 +1424,7 @@
 
             state.mpr.margins.minCutDistanceMM = parseFloat(minCutDist.toFixed(1));
 
-            // 2. Distance Tumeur - Vaisseaux (Porte / Sus-Hépatique)
+            // 2. Distance Lésion - Vaisseaux (Rétiniens / Choroïdiens)
             let minVascDist = 9999.0;
             const vascVoxels = new Set([...(portalVoxels || []), ...(hepaticVoxels || [])]);
 
@@ -1487,9 +1494,9 @@
             state.mpr.ischemia.devascularizedML = parseFloat((totalML * (ischemiaFactor * 0.4) / 100).toFixed(0));
 
             if (funcFlr < 30.0) {
-              state.mpr.ischemia.status = '❌ ISCHÉMIE CRITIQUE — FLR fonctionnel insuffisant (< 30%)';
-            } else if (funcFlr < 40.0 && state.mpr._stagingData && state.mpr._stagingData.childPugh === 'A5') {
-              state.mpr.ischemia.status = '⚠️ ATTENTION — FLR fonctionnel limite sur foie cirrhotique';
+              state.mpr.ischemia.status = '❌ ISCHÉMIE CRITIQUE — Perfusion fonctionnelle insuffisante (< 30%)';
+            } else if (funcFlr < 40.0 && state.mpr._stagingData && state.mpr._stagingData.hodapp === 'Avancé') {
+              state.mpr.ischemia.status = '⚠️ ATTENTION — Perfusion fonctionnelle limite sur terrain glaucomateux avancé';
             } else {
               state.mpr.ischemia.status = '✅ PERFUSION / DRAINAGE PRÉSERVÉS';
             }
@@ -1569,7 +1576,7 @@
             const pid = (mod0 && mod0.patient && mod0.patient.id) || "ID-9999";
             const ts = I18N.formatDate(new Date(), { dateStyle: 'medium', timeStyle: 'short' });
             const surgeon = (state.settings && state.settings.chirurgien) || "Chirurgien Oncologue";
-            const mod = document.body.getAttribute('data-mod') || 'hbp';
+            const mod = document.body.getAttribute('data-mod') || 'cataracte';
 
             const html = `
     ${'<'}!DOCTYPE html>
@@ -1600,7 +1607,7 @@
       <div class="header">
         <div>
           <h1>✈️ Plan de Vol Chirurgical</h1>
-          <div style="font-size:12px;color:#64748b;margin-top:4px">GeneralSurgPlan3D MIMO — Oncology Suite 2026</div>
+          <div style="font-size:12px;color:#64748b;margin-top:4px">OphtalmoSurg Plan — Ophthalmology Suite 2026</div>
         </div>
         <div style="text-align:right">
           <span class="badge" style="background:#eab308;color:#1e293b" title="Prototype non certifié — voir 🛡️ Conformité MDR">PROTOTYPE — NON CERTIFIÉ</span>
@@ -1625,25 +1632,25 @@
       </div>
 
       <div class="section">
-        <div class="section-title">🟢 Cartographie Vasculaire & Segmentectomie Couinaud (Brisbane 2000)</div>
-        <div class="row"><span class="label">Segments tumoraux infiltrés :</span><span class="val" style="color:#ef4444;font-size:14px">${state.mpr.couinaud.tumorSegments.join(', ') || 'Aucun'}</span></div>
+        <div class="section-title">🟢 Cartographie Rétinienne & Traitement par Quadrant (Analogue ETDRS)</div>
+        <div class="row"><span class="label">Segments lésionnels infiltrés :</span><span class="val" style="color:#ef4444;font-size:14px">${state.mpr.couinaud.tumorSegments.join(', ') || 'Aucun'}</span></div>
         <div class="row"><span class="label">Geste chirurgical recommandé :</span><span class="val" style="color:#0f172a;font-size:14px">${state.mpr.couinaud.resectionSuggestion}</span></div>
       </div>
 
       <div class="grid">
         <div class="section" style="margin:0">
           <div class="section-title">🔵 Marges de Sécurité 3D (R0/R1)</div>
-          <div class="row"><span class="label">Distance Tumeur - Coupe :</span><span class="val">${state.mpr.margins.minCutDistanceMM} mm</span></div>
-          <div class="row"><span class="label">Distance Tumeur - Vaisseaux :</span><span class="val">${state.mpr.margins.minVascularDistanceMM} mm</span></div>
+          <div class="row"><span class="label">Distance Lésion - Coupe :</span><span class="val">${state.mpr.margins.minCutDistanceMM} mm</span></div>
+          <div class="row"><span class="label">Distance Lésion - Vaisseaux :</span><span class="val">${state.mpr.margins.minVascularDistanceMM} mm</span></div>
           <div class="alert-box ${state.mpr.margins.minCutDistanceMM < 1.0 ? 'alert-danger' : state.mpr.margins.minCutDistanceMM < 5.0 ? 'alert-warn' : 'alert-ok'}">
             ${state.mpr.margins.status}
           </div>
         </div>
         <div class="section" style="margin:0">
-          <div class="section-title">🟡 Volumétrie & Ischémie Parenchymateuse</div>
-          <div class="row"><span class="label">FLR Anatomique brut :</span><span class="val">${state.mpr.lastFLR ? state.mpr.lastFLR.flrPct : 70.0} % (${state.mpr.lastFLR ? (state.mpr.lastFLR.totalML - state.mpr.lastFLR.resectedML) : 875} mL)</span></div>
-          <div class="row"><span class="label">FLR Fonctionnel vascularisé :</span><span class="val" style="color:#0284c7;font-size:14px">${state.mpr.ischemia.functionalFlrPct} %</span></div>
-          <div class="row"><span class="label">Volume congestionné / nécrosé :</span><span class="val" style="color:#f97316">${state.mpr.ischemia.congestedML} mL</span></div>
+          <div class="section-title">🟡 Volumétrie & Perfusion Rétinienne</div>
+          <div class="row"><span class="label">Surface restante anatomique brute :</span><span class="val">${state.mpr.lastFLR ? state.mpr.lastFLR.flrPct : 70.0} % (${state.mpr.lastFLR ? (state.mpr.lastFLR.totalML - state.mpr.lastFLR.resectedML) : 875} mL)</span></div>
+          <div class="row"><span class="label">Perfusion fonctionnelle résiduelle :</span><span class="val" style="color:#0284c7;font-size:14px">${state.mpr.ischemia.functionalFlrPct} %</span></div>
+          <div class="row"><span class="label">Volume congestionné / non perfusé :</span><span class="val" style="color:#f97316">${state.mpr.ischemia.congestedML} mL</span></div>
           <div class="alert-box ${state.mpr.ischemia.functionalFlrPct < 30.0 ? 'alert-danger' : 'alert-ok'}">
             ${state.mpr.ischemia.status}
           </div>
@@ -1677,7 +1684,7 @@
 
             container.innerHTML = `
     <div class="staging-section-title" style="color:#10b981;display:flex;justify-content:space-between;align-items:center">
-      <span>🟢 Anatomie Couinaud & Marges 3D (Lot C)</span>
+      <span>🟢 Cartographie Rétinienne & Marges 3D (Lot C)</span>
       <span class="resect-badge ${state.mpr.margins.minCutDistanceMM < 1.0 ? 'danger' : 'ok'}" style="padding:2px 6px;font-size:8.5px">Marge: ${state.mpr.margins.minCutDistanceMM} mm</span>
     </div>
     <div style="font-size:9.5px;margin-bottom:4px">
@@ -1689,8 +1696,8 @@
       <strong style="color:var(--text1)">${state.mpr.couinaud.resectionSuggestion}</strong>
     </div>
     <div style="border-top:1px dashed var(--border);padding-top:6px;font-size:9px;display:grid;grid-template-columns:1fr 1fr;gap:4px">
-      <div><span style="color:var(--text3)">FLR Anatomique:</span> <strong style="font-family:var(--mono);color:var(--text1)">${state.mpr.lastFLR ? state.mpr.lastFLR.flrPct : 70}%</strong></div>
-      <div><span style="color:var(--text3)">FLR Fonctionnel:</span> <strong style="font-family:var(--mono);color:#38bdf8">${state.mpr.ischemia.functionalFlrPct}%</strong></div>
+      <div><span style="color:var(--text3)">Surface Restante:</span> <strong style="font-family:var(--mono);color:var(--text1)">${state.mpr.lastFLR ? state.mpr.lastFLR.flrPct : 70}%</strong></div>
+      <div><span style="color:var(--text3)">Perfusion Fonct.:</span> <strong style="font-family:var(--mono);color:#38bdf8">${state.mpr.ischemia.functionalFlrPct}%</strong></div>
       <div style="grid-column:1/-1;color:${state.mpr.ischemia.functionalFlrPct < 30 ? '#ef4444' : '#22c55e'};font-weight:600">${state.mpr.ischemia.status}</div>
     </div>
     <div style="margin-top:6px;display:flex;gap:4px">

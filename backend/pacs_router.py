@@ -20,6 +20,7 @@ Endpoints exposés (tous authentifiés JWT, tous audités) :
 from __future__ import annotations
 
 import hashlib
+import logging
 import os
 import uuid
 from pathlib import Path
@@ -41,6 +42,7 @@ from db import get_db
 from deps import get_current_user, write_audit as _audit
 
 router = APIRouter(tags=["pacs-fhir-hl7"])
+logger = logging.getLogger("ophtalmosurg.pacs")
 
 # Même dossier et même variable d'environnement que routers/dicom.py
 # (DICOM_STORAGE_DIR) — sauvegarde réelle des pixels rapatriés depuis un PACS,
@@ -80,6 +82,18 @@ def _save_datasets_to_disk(local_series_id: str, datasets: list) -> Path:
             # l'instance entière pour un détail d'en-tête.
             pydicom.dcmwrite(str(out_path), ds, enforce_file_format=False)
     return series_dir
+
+
+def _auto_workflow_hook(db: Session, patient_id: str, series_id: str, modality: str, dicom_dir: Path) -> None:
+    """Zero-touch : prépare le workflow « 3 clics » à l'arrivée d'une série
+    importée depuis le PACS (WADO-RS ou DIMSE). Non-fatal en cas d'erreur."""
+    try:
+        import workflow_service
+        p = db.get(models.Patient, patient_id)
+        specialty = getattr(p, "specialty", None) if p is not None else None
+        workflow_service.auto_trigger_for_series(patient_id, series_id, modality, dicom_dir, specialty)
+    except Exception:  # noqa: BLE001
+        logger.warning("Déclenchement automatique du workflow impossible pour la série %s.", series_id, exc_info=True)
 
 
 def _pacs_config(qido_url: Optional[str], wado_url: Optional[str]) -> pacs_client.PacsConfig:
@@ -207,6 +221,7 @@ async def pacs_import_series(body: PacsImportBody, request: Request,
     _audit(db, request, "Import PACS (WADO-RS)", "pacs", current, patient_id=body.patient_id,
            niveau="ok", metadata={"study_uid": body.study_uid, "series_uid": body.series_uid,
                                    "n_instances": len(datasets)})
+    _auto_workflow_hook(db, body.patient_id, local_series_id, str(modality), local_dir)
     return {"imported": True, "local_series_id": local_series_id, "num_instances": len(datasets),
             "modality": str(modality)}
 
@@ -458,5 +473,6 @@ async def dimse_import_series(body: DimseImportBody, request: Request,
     _audit(db, request, "Import PACS (C-GET DIMSE)", "pacs_dimse", current, patient_id=body.patient_id,
            niveau="ok", metadata={"study_uid": body.study_uid, "series_uid": body.series_uid,
                                    "n_instances": len(datasets)})
+    _auto_workflow_hook(db, body.patient_id, local_series_id, str(modality), local_dir)
     return {"imported": True, "local_series_id": local_series_id, "num_instances": len(datasets),
             "modality": str(modality)}

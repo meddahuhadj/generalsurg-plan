@@ -12,6 +12,7 @@ tiers réel pour valider sa propre logique de fallback).
 Lancer : cd backend && pytest tests/test_resilience.py -v
 """
 import asyncio
+import sys
 import time
 
 import httpx
@@ -21,6 +22,27 @@ from sqlalchemy.exc import OperationalError
 
 import resilience
 from routers import chat as chat_router
+
+
+@pytest.fixture(autouse=True)
+def _windows_selector_event_loop():
+    """Sur Windows, quand cette suite tourne dans la même session pytest que
+    des tests utilisant `TestClient` (portail anyio en arrière-plan), le
+    ProactorEventLoop par défaut a une sémantique de détection de boucle
+    "running" qui entre en conflit avec le Runner de pytest-asyncio
+    (`Runner.run() cannot be called from a running event loop`). Le
+    SelectorEventLoop n'a pas ce comportement. Restreint à ce fichier (pas un
+    réglage global en conftest.py) car le SelectorEventLoop ne supporte PAS
+    la création de sous-processus sur Windows — nécessaire aux tests e2e
+    Playwright (tests/e2e/) qui peuvent tourner dans la même session.
+    """
+    if sys.platform == "win32":
+        previous = asyncio.get_event_loop_policy()
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+        yield
+        asyncio.set_event_loop_policy(previous)
+    else:
+        yield
 
 
 # ---------------------------------------------------------------------------
@@ -154,7 +176,7 @@ async def test_chat_falls_back_from_gemini_to_groq_on_network_failure(client_wit
 
     monkeypatch.setattr(httpx.AsyncClient, "post", fake_post)
 
-    r = client.post("/chat", json={"message": "Quel est le volume hépatique ?", "specialty": "hbp"})
+    r = client.post("/chat", json={"message": "Quelle puissance de LIO recommandez-vous ?", "specialty": "cataracte"})
     assert r.status_code == 200
     body = r.json()
     assert body["source"] == "groq"
@@ -173,7 +195,7 @@ async def test_chat_returns_clean_503_when_all_providers_down(client_with_fake_a
 
     monkeypatch.setattr(httpx.AsyncClient, "post", always_down)
 
-    r = client.post("/chat", json={"message": "test", "specialty": "hbp"})
+    r = client.post("/chat", json={"message": "test", "specialty": "cataracte"})
     assert r.status_code == 503
     detail = r.json()["detail"]
     assert "indisponibles" in detail
@@ -205,14 +227,14 @@ async def test_chat_breaker_opens_and_subsequent_calls_fail_fast(client_with_fak
 
     # Seuil par défaut du disjoncteur Gemini = 3 échecs consécutifs.
     for _ in range(3):
-        r = client.post("/chat", json={"message": "test", "specialty": "hbp"})
+        r = client.post("/chat", json={"message": "test", "specialty": "cataracte"})
         assert r.status_code == 200
 
     assert resilience.GEMINI_BREAKER.state == "open"
     calls_before = gemini_calls["n"]
     assert calls_before == 3  # max_attempts=1 côté /chat (pas de retry interne pour un chat interactif)
 
-    r = client.post("/chat", json={"message": "test", "specialty": "hbp"})
+    r = client.post("/chat", json={"message": "test", "specialty": "cataracte"})
     assert r.status_code == 200
     assert r.json()["source"] == "groq"
     # Le disjoncteur étant ouvert, Gemini n'a PAS été retenté :

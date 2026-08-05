@@ -1,9 +1,22 @@
 # -*- coding: utf-8 -*-
 """
-routers/volumetrie.py — Calcul de volumétrie (générique + FLR/TLV spécifique HBP).
+routers/volumetrie.py — Calcul de volumétrie générique (organe/lésion/résection).
 
 Endpoint exposé :
     GET /patients/{patient_id}/volumetrie
+
+Note : ce module portait autrefois un bloc de calcul FLR/TLV (Future Liver
+Remnant) spécifique à la chirurgie hépato-bilio-pancréatique (`specialty ==
+"hbp"`), une notion propre à l'hépatectomie sans équivalent clinique établi
+en ophtalmologie (aucune des 3 spécialités actuelles — cataracte, glaucome,
+rétine — n'a de concept de « volume d'organe restant fonctionnel » comparable
+à un parenchyme hépatique réséqué). Ce bloc est devenu du code mort depuis que
+`Specialty` (backend/specialties.py) n'accepte plus "hbp" — Pydantic rejette
+la valeur avant même d'atteindre cette route — et a donc été retiré plutôt que
+laissé inaccessible. Les champs `tlv_ml`/`tv_ml`/`flr_pct`/`flr_threshold_pct`/
+`flr_safe`/`flr_bw_pct`/`bsa_m2` de VolumetrieResponse restent dans le schéma
+(Optional, toujours `null` désormais) pour ne pas casser un client qui les
+lirait encore, mais plus aucune route ne les remplit.
 """
 
 import uuid
@@ -18,19 +31,15 @@ from schemas import VolumetrieResponse
 
 router = APIRouter(tags=["volumetrie"])
 
-
-def _bsa(weight_kg: float, height_cm: float) -> float:
-    return (weight_kg * height_cm / 3600) ** 0.5
-
-
-def _flr_threshold(is_cirrhotic: bool, bsa: float) -> float:
-    if is_cirrhotic:
-        return max(35.0, 30.0 + 12.0 * (1.0 - bsa / 1.9))
-    return max(25.0, 20.0 + 10.0 * (1.0 - bsa / 1.9))
+# Volume procédural par défaut (globe oculaire adulte ≈ 6.5 mL) quand aucun
+# segment "organe" n'a été tracé — identique pour les 3 spécialités, qui
+# opèrent toutes sur le même organe (contrairement à l'ancienne liste par
+# spécialité de chirurgie générale, où chaque organe différait).
+_DEFAULT_ORGAN_VOLUME_ML = 6.5
 
 
 @router.get("/patients/{patient_id}/volumetrie", response_model=VolumetrieResponse)
-async def get_volumetrie(patient_id: str, request: Request, margin_cm: float = 1.0, is_cirrhotic: bool = False,
+async def get_volumetrie(patient_id: str, request: Request, margin_cm: float = 1.0,
                           current: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
     p = db.get(models.Patient, patient_id)
     if not p:
@@ -40,36 +49,24 @@ async def get_volumetrie(patient_id: str, request: Request, margin_cm: float = 1
     lesion_vol = sum(s.volume_ml for s in segments if s.type == "lesion")
 
     if organe_vol == 0:
-        organe_vol = {"hbp": 1450.0, "colorectal": 350.0, "gastrique": 1100.0, "thyroide": 20.0,
-                       "thoracique": 4500.0, "cardiaque": 300.0, "urologie": 150.0}.get(p.specialty, 500.0)
+        organe_vol = _DEFAULT_ORGAN_VOLUME_ML
     if lesion_vol == 0:
-        lesion_vol = 20.0
+        lesion_vol = 0.4
 
-    resected = organe_vol * 0.55 + margin_cm * 32
+    resected = organe_vol * 0.55 + margin_cm * 0.1
     remnant_pct = round((organe_vol - resected) / organe_vol * 100, 1)
 
     result = {
         "patient_id": patient_id, "specialty": p.specialty,
-        "organ_volume_ml": round(organe_vol, 1), "lesion_volume_ml": round(lesion_vol, 1),
+        "organ_volume_ml": round(organe_vol, 2), "lesion_volume_ml": round(lesion_vol, 2),
         "ratio_lesion_organe_pct": round(lesion_vol / organe_vol * 100, 1),
-        "volume_resection_ml": round(resected), "remnant_pct": remnant_pct, "margin_cm": margin_cm,
+        "volume_resection_ml": round(resected, 2), "remnant_pct": remnant_pct, "margin_cm": margin_cm,
     }
-    if p.specialty == "hbp":
-        bsa_val = _bsa(p.poids_kg, p.taille_cm)
-        threshold = round(_flr_threshold(is_cirrhotic, bsa_val), 1)
-        result.update({
-            "tlv_ml": round(organe_vol, 1), "tv_ml": round(lesion_vol, 1), "flr_pct": remnant_pct,
-            "flr_threshold_pct": threshold, "flr_safe": remnant_pct >= threshold,
-            "flr_bw_pct": round(remnant_pct * 0.7 / 70, 2), "bsa_m2": round(bsa_val, 2),
-        })
 
     db.add(models.VolumetrieResult(
         id=str(uuid.uuid4()), patient_id=patient_id, organ_volume_ml=result["organ_volume_ml"],
         lesion_volume_ml=result["lesion_volume_ml"], ratio_lesion_organe_pct=result["ratio_lesion_organe_pct"],
-        volume_resection_ml=result["volume_resection_ml"], remnant_pct=remnant_pct,
-        flr_threshold_pct=result.get("flr_threshold_pct"), flr_safe=result.get("flr_safe"),
-        flr_bw_pct=result.get("flr_bw_pct"), bsa_m2=result.get("bsa_m2"), margin_cm=margin_cm,
-        is_cirrhotic=is_cirrhotic,
+        volume_resection_ml=result["volume_resection_ml"], remnant_pct=remnant_pct, margin_cm=margin_cm,
     ))
     write_audit(db, request, "Calcul volumétrie", "volumetrie", user=current, patient_id=patient_id)
     return result

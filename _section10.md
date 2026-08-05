@@ -22,7 +22,7 @@
 
 ```json
 {
-  "type": "https://errors.generalsurg.eu/validation-error",
+  "type": "https://errors.ophtalmosurg.eu/validation-error",
   "title": "Validation failed",
   "status": 422,
   "detail": "margin_cm must be between 0 and 5",

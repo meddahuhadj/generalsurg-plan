@@ -1,7 +1,7 @@
 # =============================================================================
 # .github/workflows/deploy.yml — CI/CD GitHub Actions → Render.com
 # =============================================================================
-# Pipeline en 2 étapes pour GeneralSurg Plan :
+# Pipeline en 2 étapes pour OphtalmoSurg Plan :
 #   1. tests  — lance la suite pytest (réutilise tests.yml pour la logique)
 #   2. deploy — si les tests passent ET on est sur la branche main,
 #               déclenche le redéploiement Render via Deploy Hook.

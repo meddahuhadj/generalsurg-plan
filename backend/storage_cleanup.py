@@ -20,7 +20,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Dict, Tuple
 
-logger = logging.getLogger("generalsurg.storage")
+logger = logging.getLogger("ophtalmosurg.storage")
 
 DICOM_STORAGE_DIR = Path(os.getenv("DICOM_STORAGE_DIR", "./storage/dicom_series")).resolve()
 MAX_STORAGE_BYTES = int(os.getenv("DICOM_STORAGE_MAX_GB", "50")) * 1024 ** 3

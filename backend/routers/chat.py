@@ -24,7 +24,7 @@ from schemas import AIProxyRequest, ChatRequest, ChatResponse
 from specialties import SPECIALTY_LABELS
 
 router = APIRouter(tags=["chat"])
-logger = logging.getLogger("generalsurg.chat")
+logger = logging.getLogger("ophtalmosurg.chat")
 
 
 # Instructions de commandes d'action pour l'interface — miroir exact de
@@ -41,8 +41,7 @@ ACTION_COMMAND_INSTRUCTIONS = (
     "bloc_operatoire_on, bloc_operatoire_off, mode_tactile_on, mode_tactile_off, "
     "mode_lecture_seule_on, mode_lecture_seule_off, open_analyse, open_ia, open_plan, open_implants, "
     "open_patients, open_settings, close_modal, recalc_analysis, export_plan, "
-    "switch_hbp, switch_colorectal, switch_gastrique, switch_thyroide, switch_thoracique, "
-    "switch_cardiaque, switch_urologie."
+    "switch_cataracte, switch_glaucome, switch_retine."
 )
 
 
@@ -54,7 +53,7 @@ async def chat(req: ChatRequest, request: Request, current: models.User = Depend
 
     label = SPECIALTY_LABELS.get(req.specialty, "chirurgie générale")
     system_prompt = (
-        f"Tu es GeneralSurg Plan IA, assistant chirurgical expert en {label}. "
+        f"Tu es OphtalmoSurg Plan IA, assistant chirurgical expert en {label}. "
         f"Utilisateur: {current.full_name}. Réponds UNIQUEMENT en français, de façon concise et "
         "cliniquement pertinente. Précise que la décision finale reste au chirurgien."
     ) + ACTION_COMMAND_INSTRUCTIONS
@@ -133,7 +132,7 @@ async def ws_chat_stream(ws: WebSocket):
 
     user_msg = data.get("message", "")
     context = data.get("context", "")
-    specialty = data.get("specialty", "hbp")
+    specialty = data.get("specialty", "cataracte")
     label = SPECIALTY_LABELS.get(specialty, "chirurgie générale")
     system = data.get("system", f"Tu es un assistant chirurgical expert en {label}.")
 

@@ -32,7 +32,7 @@ from deps import get_current_user, write_audit
 from schemas import DicomMetadata, DicomUploadResponse, SegmentationStartResponse
 
 router = APIRouter(tags=["dicom"])
-logger = logging.getLogger("generalsurg.dicom")
+logger = logging.getLogger("ophtalmosurg.dicom")
 
 # Dossier où sont réellement sauvegardés les fichiers .dcm des séries
 # importées (upload manuel, PACS DICOMweb, PACS DIMSE). Jusqu'à cette session,
@@ -88,6 +88,21 @@ async def upload_dicom(patient_id: str, study_uid: str, modality: str = "CT", sl
     db.commit()
     write_audit(db, request, "Import DICOM", "dicom", user=current, patient_id=patient_id,
                 metadata={"series_uid": series_uid, "modality": modality})
+
+    # Zero-touch : prépare automatiquement le workflow de validation « 3 clics »
+    # à l'arrivée de la série (lecture voxels -> extraction heuristique ->
+    # simulation de marge) en tâche de fond, sans action du chirurgien.
+    # Inactif si WORKFLOW_AUTO_TRIGGER=false ; toute erreur est non-fatale.
+    try:
+        import workflow_service
+        specialty = None
+        p = db.get(models.Patient, patient_id)
+        if p is not None:
+            specialty = getattr(p, "specialty", None)
+        workflow_service.auto_trigger_for_series(patient_id, series_uid, modality, series_dir, specialty)
+    except Exception:  # noqa: BLE001
+        logger.warning("Déclenchement automatique du workflow impossible pour la série %s.", series_uid, exc_info=True)
+
     return {"series_uid": series_uid, "sha256": sha}
 
 

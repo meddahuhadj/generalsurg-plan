@@ -57,18 +57,15 @@
                 // Adaptation dynamique du moteur de dictée CCAM selon la spécialité (Jalon M10)
                 const btnD1 = document.getElementById('btn-dict-1');
                 const btnD2 = document.getElementById('btn-dict-2');
-                if (id === 'colorectal') {
-                  if (btnD1) { btnD1.innerHTML = '🔊 Dictée : « Hémicolectomie droite laparoscopique avec anastomose iléo-colique »'; btnD1.setAttribute('onclick', "simulateCcamDictation('hemicolectomie')"); }
-                  if (btnD2) { btnD2.innerHTML = '🔊 Dictée : « Résection antérieure du rectum moyen avec exérèse mésorectale totale TME »'; btnD2.setAttribute('onclick', "simulateCcamDictation('rectum')"); }
-                } else if (id === 'gastrique') {
-                  if (btnD1) { btnD1.innerHTML = '🔊 Dictée : « Gastrectomie totale avec curage ganglionnaire D2 et anse en Y de Roux »'; btnD1.setAttribute('onclick', "simulateCcamDictation('gastrectomie')"); }
-                  if (btnD2) { btnD2.innerHTML = '🔊 Dictée : « Gastrectomie subtotale distale pour adénocarcinome antral »'; btnD2.setAttribute('onclick', "simulateCcamDictation('subtotale')"); }
-                } else if (id === 'thoracique') {
-                  if (btnD1) { btnD1.innerHTML = '🔊 Dictée : « Lobectomie pulmonaire supérieure droite thoracoscopique VATS »'; btnD1.setAttribute('onclick', "simulateCcamDictation('lobectomie')"); }
-                  if (btnD2) { btnD2.innerHTML = '🔊 Dictée : « Segmentectomie anatomique S6 avec curage radical médiastinal »'; btnD2.setAttribute('onclick', "simulateCcamDictation('segmentectomie_thor')"); }
+                if (id === 'glaucome') {
+                  if (btnD1) { btnD1.innerHTML = '🔊 Dictée : « Trabéculectomie avec mitomycine C, bulle de filtration fonctionnelle »'; btnD1.setAttribute('onclick', "simulateCcamDictation('trabeculectomie')"); }
+                  if (btnD2) { btnD2.innerHTML = '🔊 Dictée : « Implant de drainage Ahmed FP7 pour glaucome réfractaire »'; btnD2.setAttribute('onclick', "simulateCcamDictation('ahmed')"); }
+                } else if (id === 'retine') {
+                  if (btnD1) { btnD1.innerHTML = '🔊 Dictée : « Vitrectomie 25G pour décollement de rétine avec tamponnement gaz SF6 »'; btnD1.setAttribute('onclick', "simulateCcamDictation('vitrectomie')"); }
+                  if (btnD2) { btnD2.innerHTML = '🔊 Dictée : « Pelage de membrane épirétinienne avec peeling ILM »'; btnD2.setAttribute('onclick', "simulateCcamDictation('peeling')"); }
                 } else {
-                  if (btnD1) { btnD1.innerHTML = '🔊 Dictée : « Hépatectomie droite réglée par laparotomie avec clampage pédiculaire de 18 min »'; btnD1.setAttribute('onclick', "simulateCcamDictation('hepatectomie')"); }
-                  if (btnD2) { btnD2.innerHTML = '🔊 Dictée : « Cholécystectomie cœlioscopique pour lithiase biliaire symptomatique »'; btnD2.setAttribute('onclick', "simulateCcamDictation('cholecystectomie')"); }
+                  if (btnD1) { btnD1.innerHTML = '🔊 Dictée : « Phacoémulsification avec implantation de LIO en chambre postérieure »'; btnD1.setAttribute('onclick', "simulateCcamDictation('phaco')"); }
+                  if (btnD2) { btnD2.innerHTML = '🔊 Dictée : « Chirurgie combinée cataracte-glaucome, phaco + trabéculectomie »'; btnD2.setAttribute('onclick', "simulateCcamDictation('combinee')"); }
                 }
                 notify('Module ' + MODULES[id].short + ' chargé — Dictées CCAM auto-configurées', 'ok');
               }, 800);
@@ -280,7 +277,7 @@
             let tissue = 0;
             for (let i = 0; i < state.mpr.volume.length; i++) if (state.mpr.volume[i] > 15) tissue++;
             const fracTissue = tissue / (N * N * N);
-            const refML = { hbp: 1450, colorectal: 350, gastrique: 1100, thyroide: 20, thoracique: 4500, cardiaque: 300 }[state.mod] || 500;
+            const refML = { cataracte: 6.5, glaucome: 6.5, retine: 6.5 }[state.mod] || 6.5;
             // Normalise against the expected fraction for a centred ellipsoid (~0.28) so refML stays the anchor.
             return refML * (fracTissue / 0.28);
           }
@@ -406,7 +403,7 @@
               patient: { id: mod.patient.id, nom: mod.patient.nom },
               specialty: state.mod,
               volumetrie: { organ_volume_ml: Math.round(organVol), remnant_pct: 60, volume_source: volumeSource },
-              notes: 'Export généré depuis GeneralSurg Plan MIMO'
+              notes: 'Export généré depuis OphtalmoSurg Plan'
                 + (volumeSource === 'procedural_estimate_not_clinical'
                   ? ' — ⚠ volume_organe = estimation procédurale, PAS une mesure de segmentation clinique validée.'
                   : ' — volume_organe issu de la segmentation IA réelle (TotalSegmentator).')
@@ -502,7 +499,7 @@
             }
 
             if (state.mpr) {
-              // Segmentation manuelle (Wand — tumeur, veine porte, veine sus-hépatique) : pesait sinon
+              // Segmentation manuelle (Wand — tumeur, vaisseau rétinien, membrane épirétinienne) : pesait sinon
               // sur le calcul de résécabilité et le volume tumeur du nouveau patient.
               if (state.mpr.segments) Object.values(state.mpr.segments).forEach(s => s.voxels.clear());
               // Stadification TNM/BCLC/Child-Pugh/CRM/VEMS.
@@ -864,102 +861,47 @@
           //  pas une phrase générique.
           // ════════════════════════════════════════════════
           const OFFLINE_KNOWLEDGE = {
-            hbp: [
-              { kw: ['flr', 'remnant', 'reste', 'foie restant'], a: "Le FLR (Future Liver Remnant) doit rester ≥20% en foie sain, ≥30% après chimiothérapie, et ≥40% en cas de cirrhose ou fibrose significative. En dessous de ces seuils, le risque d'insuffisance hépatique post-opératoire augmente nettement — une embolisation portale préalable peut être envisagée pour hypertrophier le foie restant." },
-              { kw: ['fistule', 'biliaire'], a: "Le risque de fistule biliaire après hépatectomie majeure est de l'ordre de 5 à 8%, classé selon le grading ISGLS (A: sans conséquence clinique, B: nécessite un drainage, C: nécessite une reprise). Le risque augmente avec la complexité de la résection et la proximité des voies biliaires principales." },
-              { kw: ['coupe', 'plan', 'segment', 'couinaud'], a: "Le plan de coupe doit respecter la segmentation de Couinaud (I à VIII) et préserver la vascularisation portale et le drainage biliaire du parenchyme restant. Une marge de sécurité d'au moins 1cm autour de la lésion est généralement recherchée quand la fonction hépatique le permet." },
-              { kw: ['icg', 'fonction hépatique', 'r15'], a: "L'ICG-R15 (rétention du vert d'indocyanine à 15 minutes) évalue la fonction hépatique : <10% est considéré normal, 10-20% intermédiaire (prudence), >20% indique un risque élevé d'insuffisance hépatique post-opératoire et doit faire réduire l'étendue de la résection envisagée." },
-              { kw: ['5 ans', 'survie', 'pronostic', 'récidive'], a: "Le pronostic à 5 ans dépend fortement du type histologique, du stade et de la marge de résection (R0 vs R1). Pour le CHC sur foie non cirrhotique avec résection R0, la survie à 5 ans se situe généralement entre 40 et 60% ; elle est significativement plus faible en cas de cirrhose sous-jacente ou de marge positive." },
+            cataracte: [
+              { kw: ['lio', 'puissance', 'implant', 'calcul'], a: "La puissance de la LIO se calcule à partir de la biométrie (longueur axiale, kératométrie) via une formule adaptée à la morphologie oculaire : SRK/T pour les yeux de longueur moyenne, Barrett Universal II en 1re intention dans la plupart des cas, Hoffer Q pour les yeux courts, Haigis/Barrett pour les yeux longs. Une erreur de biométrie de 0.1mm sur la longueur axiale décale la réfraction post-opératoire d'environ 0.25 à 0.3 D." },
+              { kw: ['rupture', 'capsulaire', 'complication'], a: "Le risque de rupture capsulaire postérieure est plus élevé en cas de noyau dense (LOCS N5-N6), de pseudo-exfoliation, de zonule fragile ou de faible mydriase. Il impose alors une vitrectomie antérieure et peut nécessiter une fixation sclérale ou dans le sulcus de la LIO plutôt qu'une implantation dans le sac." },
+              { kw: ['torique', 'astigmatisme'], a: "Une LIO torique est indiquée en cas d'astigmatisme cornéen régulier ≥0.75-1D, pour corriger simultanément la cataracte et l'astigmatisme. Le marquage de l'axe et l'alignement peropératoire précis (à ±5°) sont essentiels à son efficacité." },
+              { kw: ['deuxième', '2e', 'œil', 'délai'], a: "Le délai entre les deux yeux dépend de la récupération visuelle et de la stabilité réfractive du premier œil (habituellement 1 à 4 semaines), et permet d'ajuster le calcul de LIO du second œil si un écart réfractif inattendu est constaté sur le premier." },
             ],
-            colorectal: [
-              { kw: ['crm', 'marge', 'circonférentielle'], a: "La CRM (marge de résection circonférentielle) est le facteur pronostique majeur en chirurgie rectale : une marge <1mm est considérée comme menacée/positive et multiplie significativement le risque de récidive locale. L'objectif chirurgical est toujours une CRM ≥1mm, idéalement >2mm." },
-              { kw: ['néo-adjuvant', 'radiothérapie', 'réponse'], a: "La réponse au traitement néo-adjuvant s'évalue par IRM (régression du volume tumoral, score de régression tumorale) et peut aller d'une réponse complète (pas de résidu visible) à une absence de réponse. Une bonne réponse peut permettre une chirurgie moins radicale, voire une stratégie de surveillance (watch-and-wait) dans certains protocoles." },
-              { kw: ['anastomose', 'type'], a: "Le type d'anastomose dépend du niveau de résection : anastomose colo-rectale mécanique circulaire pour les résections hautes/moyennes, anastomose colo-anale (manuelle ou mécanique basse) pour les résections très basses. Une stomie de protection est souvent indiquée si l'anastomose est à moins de 5cm de la marge anale ou après radiothérapie." },
-              { kw: ['récidive', 'locale'], a: "Le risque de récidive locale dépend principalement de la CRM (marge circonférentielle), du stade ganglionnaire (N) et de la qualité de l'exérèse mésorectale (TME). Avec une CRM négative et une TME complète, le risque de récidive locale à 5 ans est généralement inférieur à 10%." },
+            glaucome: [
+              { kw: ['pio', 'cible', 'pression'], a: "La PIO cible est individualisée selon le stade du glaucome, la PIO de départ et la vitesse de progression : réduction d'au moins 20-30% par rapport à la PIO initiale pour un stade précoce, cible plus basse (souvent <15mmHg) pour un stade avancé où la marge fonctionnelle est réduite." },
+              { kw: ['trabéculectomie', 'implant', 'drainage', 'choix'], a: "La trabéculectomie avec antimétabolite (mitomycine C) reste la référence pour une PIO cible basse chez un patient sans chirurgie conjonctivale antérieure ; un implant de drainage (Ahmed, Baerveldt) est privilégié en cas d'échec de filtration antérieur, de conjonctive cicatricielle ou de glaucome néovasculaire/réfractaire." },
+              { kw: ['bulle', 'filtration', 'risque'], a: "Les complications de la bulle de filtration incluent l'hypotonie précoce, la fibrose/échec de filtration à moyen terme, et le risque tardif de blébite/endophtalmie (plus élevé avec les bulles fines avasculaires sous mitomycine C) — d'où l'importance du suivi et de l'éducation du patient aux signes d'alerte." },
+              { kw: ['champ visuel', 'suivi', 'progression'], a: "Le suivi post-opératoire du champ visuel (Humphrey 24-2) se fait typiquement à 3-6 mois puis tous les 6-12 mois, en comparant la déviation moyenne (MD) et l'indice de progression (VFI) aux examens antérieurs pour confirmer la stabilisation attendue après chirurgie filtrante." },
             ],
-            gastrique: [
-              { kw: ['extension', 'tumorale', 't3', 't4'], a: "L'extension tumorale (stade T) doit être précisée par l'imagerie (TDM, écho-endoscopie) : T1 = muqueuse/sous-muqueuse, T2 = musculeuse, T3 = séreuse, T4 = organes adjacents. Le stade T oriente directement l'étendue de la gastrectomie et l'indication d'un traitement périopératoire." },
-              { kw: ['curage', 'd1', 'd2', 'ganglion'], a: "Le curage D2 (recommandations JGCA) inclut les stations ganglionnaires périgastriques (D1) plus les stations le long des artères gastrique gauche, hépatique commune, splénique et du tronc cœliaque. Il est recommandé pour les tumeurs avancées (T2 et plus) opérables à visée curative." },
-              { kw: ['fuite', 'anastomotique'], a: "Le risque de fuite anastomotique après gastrectomie totale (anastomose œso-jéjunale) est de l'ordre de 3 à 5%, un peu moins après gastrectomie subtotale. Les facteurs de risque incluent la dénutrition, le diabète, et une anastomose sous tension." },
-              { kw: ['pronostic', 'iiia', 'stade', 'survie'], a: "Le pronostic du stade IIIA (TNM AJCC 8e édition) reste réservé, avec une survie à 5 ans de l'ordre de 20 à 35% selon les séries, largement dépendante de la qualité du curage ganglionnaire (D2) et de la réponse à la chimiothérapie périopératoire." },
-            ],
-            thyroide: [
-              { kw: ['récurrent', 'nerf', 'paralysie'], a: "Le risque de lésion du nerf récurrent est de 1 à 2% en chirurgie thyroïdienne élective, mais peut monter à 5-10% en cas de reprise chirurgicale ou d'envahissement tumoral. Le monitoring neural (NIM) per-opératoire est recommandé pour réduire ce risque et le documenter." },
-              { kw: ['curage', 'central', 'prophylactique'], a: "Un curage central (compartiment VI) prophylactique est recommandé pour les carcinomes papillaires de plus de 1cm, ou en présence de signes d'extension ganglionnaire à l'imagerie. Il n'est généralement pas indiqué pour les microcarcinomes de bas risque." },
-              { kw: ['pth', 'hypocalcémie', 'hypoparathyroïdie'], a: "La PTH doit être dosée à H6 et H24 post-opératoires. Une PTH basse (<10-15 pg/mL) avec calcium ionisé abaissé signe une hypoparathyroïdie transitoire (fréquente, 10-30% après thyroïdectomie totale) et justifie une supplémentation calcique/vitamine D préventive." },
-              { kw: ['bilatérale', 'unilatérale', 'lobectomie'], a: "Le choix entre lobectomie (unilatérale) et thyroïdectomie totale (bilatérale) dépend de la taille tumorale, de la multifocalité, des antécédents d'irradiation cervicale et du stade ganglionnaire. Pour un carcinome papillaire unifocal <4cm sans facteur de risque, une lobectomie peut suffire selon les dernières recommandations ATA." },
-            ],
-            thoracique: [
-              { kw: ['vems', 'fonction', 'ppo'], a: "Le VEMS post-opératoire prédit (ppoFEV1) s'estime à partir du VEMS pré-opératoire et de la quantité de parenchyme fonctionnel réséqué. Un ppoFEV1 >40% est généralement considéré comme sûr ; en dessous, une évaluation fonctionnelle plus poussée (DLCO, VO2 max) est nécessaire." },
-              { kw: ['fissure', 'interlobaire'], a: "Une fissure interlobaire complète facilite la dissection vasculaire et bronchique lors d'une lobectomie ; une fissure incomplète ou absente augmente la difficulté technique et le risque de fuite aérienne prolongée, et peut orienter vers une approche différente (dissection fissure-less)." },
-              { kw: ['ganglion', 'médiastinal', 'n2', 'n1'], a: "L'évaluation ganglionnaire médiastinale suit la carte de l'IASLC (stations 2R/4R/7/8/9 à droite, 5/6/7/8/9 à gauche, etc.). Un envahissement N2 (ganglions médiastinaux homolatéraux) modifie significativement le pronostic et oriente souvent vers un traitement néo-adjuvant." },
-              { kw: ['néo-adjuvant', 'indication'], a: "Une chimiothérapie (ou chimio-immunothérapie) néo-adjuvante est généralement indiquée à partir du stade II-IIIA résécable, notamment en présence d'un envahissement ganglionnaire N1/N2 confirmé, pour améliorer les chances de résection complète et réduire le risque de récidive." },
-            ],
-            cardiaque: [
-              { kw: ['euroscore', 'score', 'risque'], a: "L'EuroSCORE II estime la mortalité opératoire prédite à partir de facteurs patient (âge, fonction rénale, FEVG...) et chirurgicaux (urgence, complexité). Un score >8-10% signe un risque élevé nécessitant une discussion collégiale (heart team) sur la meilleure stratégie (chirurgie classique vs alternative type TAVI)." },
-              { kw: ['valve', 'mécanique', 'biologique', 'prothèse'], a: "Une prothèse biologique est généralement préférée après 65-70 ans ou en cas de contre-indication aux anticoagulants au long cours ; une prothèse mécanique est plutôt réservée aux patients plus jeunes, au prix d'une anticoagulation à vie (AVK) et d'un risque hémorragique/thromboembolique associé." },
-              { kw: ['viabilité', 'myocarde', 'ischémie'], a: "La viabilité myocardique (IRM de stress, scintigraphie, échographie de stress à la dobutamine) doit être confirmée avant de revasculariser un territoire akinétique : un myocarde viable a un potentiel de récupération fonctionnelle après revascularisation, un myocarde non viable (fibrose transmurale) n'en bénéficiera pas." },
-              { kw: ['revascularisation', 'pontage', 'cabg', 'stratégie'], a: "Le choix de stratégie de revascularisation (pontage chirurgical vs angioplastie) dépend de la complexité coronarienne (score SYNTAX), de la fonction ventriculaire, du diabète et des comorbidités. Une atteinte tritronculaire ou du tronc commun avec diabète oriente généralement vers le pontage." },
-            ],
-            urologie: [
-              { kw: ['renal', 'néphrométrie', 'score'], a: "Le score RENAL (néphrométrie) évalue la complexité d'une tumeur rénale sur 5 critères (taille, exophytique/endophytique, proximité du sinus, position antérieure/postérieure, localisation polaire) : un score ≤6 est simple, 7-9 intermédiaire, ≥10 complexe — ce dernier oriente souvent vers une néphrectomie totale plutôt que partielle." },
-              { kw: ['hémorragie', 'clampage', 'saignement'], a: "Le risque hémorragique au déclampage après néphrectomie partielle dépend de la qualité de l'hémostase de la tranche de section et du temps d'ischémie chaude. Un temps de clampage prolongé (>25-30 min) augmente le risque d'insuffisance rénale post-opératoire sans nécessairement réduire le risque hémorragique." },
-              { kw: ['marge', 'chirurgicale'], a: "L'objectif en néphrectomie partielle est une marge de résection négative (R0), même minime — une marge positive n'implique pas systématiquement une récidive mais justifie une surveillance rapprochée. La marge attendue dépend directement du score RENAL et de la proximité de la tumeur avec le sinus rénal." },
-              { kw: ['fonction rénale', 'dfg', 'post-op'], a: "La fonction rénale post-opératoire dépend du volume de parenchyme sain préservé et du temps d'ischémie chaude. Une néphrectomie partielle préserve mieux le DFG à long terme qu'une néphrectomie totale, particulièrement chez les patients avec DFG pré-opératoire déjà réduit ou rein unique." },
+            retine: [
+              { kw: ['macula', 'on', 'off', 'statut'], a: "Le statut maculaire (on = macula à plat, off = macula décollée) conditionne le pronostic visuel final et l'urgence chirurgicale : une macula on doit être opérée en urgence (< 24-48h) pour préserver l'acuité centrale, une macula off tolère un délai un peu plus long (jusqu'à 7 jours) sans perte de chances majeure." },
+              { kw: ['tamponnement', 'gaz', 'silicone', 'choix'], a: "Le choix du tamponnement dépend de l'étendue et de la complexité du décollement : gaz (SF6, C3F8) pour les cas simples avec résorption spontanée en quelques semaines, huile de silicone pour les décollements complexes, la PVR sévère ou quand un positionnement prolongé est difficile pour le patient." },
+              { kw: ['pvr', 'prolifér', 'ré-intervention'], a: "La vitréorétinopathie proliférative (PVR) est classée de A (minime) à C (membranes rétractiles majeures) : les stades C sont associés à un taux de ré-intervention élevé et orientent vers un tamponnement par huile de silicone et une chirurgie plus extensive (rétinotomie de relaxation si nécessaire)." },
+              { kw: ['délai', 'urgence', 'chirurgical'], a: "Le délai chirurgical recommandé dépend du statut maculaire et du risque d'extension : macula on = urgence vraie (<24-48h), macula off récent = privilégier une prise en charge sous 7 jours, décollement chronique stable = délai moins critique mais à ne pas prolonger indûment." },
             ],
           };
 
           const SPECIALTY_PROMPTS = {
-            hbp: `EXPERTISE HBP — repères à utiliser quand pertinent :
-- Segmentation de Couinaud (I à VIII) pour décrire toute localisation hépatique.
-- Seuils de FLR (Future Liver Remnant) : ≥20% si foie sain, ≥30% après chimiothérapie, ≥40% si cirrhose/fibrose.
-- ICG-R15 : <10% = fonction hépatique normale ; >20% = risque élevé d'insuffisance hépatique post-opératoire.
-- Classification de Bismuth-Corlette pour les cholangiocarcinomes hilaires.
-- Fistule biliaire : grading ISGLS (A/B/C). Hémorragie post-hépatectomie : grading ISGLS également.
-- Toujours resituer une décision de résection majeure par rapport au couple FLR/volumétrie tumorale.`,
+            cataracte: `EXPERTISE CATARACTE — repères à utiliser quand pertinent :
+- Biométrie (IOL-Master) : longueur axiale, kératométrie moyenne, profondeur de chambre antérieure (ACD).
+- Formules de calcul de LIO : SRK/T (yeux moyens), Barrett Universal II (1re intention), Hoffer Q (yeux courts), Haigis (yeux longs).
+- Classification LOCS III pour la densité du cristallin (N1 à N6) — oriente la technique (phaco standard vs EEC si noyau très dense).
+- Facteurs de risque de rupture capsulaire : pseudo-exfoliation, zonule fragile, faible mydriase, noyau dense.
+- LIO torique si astigmatisme cornéen régulier ≥0.75-1D ; alignement peropératoire précis nécessaire.`,
 
-            colorectal: `EXPERTISE COLORECTALE — repères à utiliser quand pertinent :
-- CRM (marge de résection circonférentielle) : <1mm = marge menacée/positive, facteur majeur de récidive locale.
-- Stadification TNM/AJCC (8e édition) et réponse au traitement néo-adjuvant évaluée en RECIST/imagerie.
-- Score EMVI (extramural vascular invasion) à l'IRM comme facteur pronostique.
-- Indications de stomie de protection après résection antérieure basse (anastomose <5cm de la marge anale, radiothérapie néo-adjuvante).
-- Classification de Clavien-Dindo pour les complications post-opératoires (fuite anastomotique en particulier).`,
+            glaucome: `EXPERTISE GLAUCOME — repères à utiliser quand pertinent :
+- Classification de Hodapp-Parrish-Anderson (précoce/modéré/avancé) selon la déviation moyenne (MD) du champ visuel.
+- PIO cible individualisée : réduction ≥20-30% de la PIO initiale, cible plus stricte si stade avancé.
+- Choix trabéculectomie (± mitomycine C) vs implant de drainage (Ahmed/Baerveldt) selon antécédents conjonctivaux et sévérité.
+- MIGS (iStent, Xen) pour les stades précoces à modérés, souvent combinés à la chirurgie de la cataracte.
+- Complications de la bulle de filtration : hypotonie précoce, échec de filtration, risque de blébite/endophtalmie tardive.`,
 
-            gastrique: `EXPERTISE GASTRIQUE — repères à utiliser quand pertinent :
-- Classification de Lauren (type intestinal vs diffus/à cellules indépendantes) — pronostique.
-- Curage ganglionnaire D1 vs D1+ vs D2 selon les recommandations JGCA ; objectif R0 systématique.
-- Stadification TNM AJCC 8e édition ; score de Siewert pour les tumeurs de la jonction œso-gastrique.
-- Signe de linite plastique (linitis plastica) = pronostic défavorable, à signaler si présent.
-- Fuite anastomotique et fistule du moignon duodénal = complications majeures à évoquer selon le contexte.`,
-
-            thyroide: `EXPERTISE THYROÏDIENNE — repères à utiliser quand pertinent :
-- Classification TI-RADS (ACR) pour le risque échographique d'un nodule ; système de Bethesda pour la cytoponction.
-- Risque de lésion du nerf récurrent : 1-2% en électif, jusqu'à 5-10% en reprise ; monitoring neural (NIM) recommandé.
-- Hypoparathyroïdie post-opératoire : surveiller PTH à H6/H24, calcium ionisé ; supplémentation si PTH basse.
-- Indication de curage central prophylactique (VI) pour les carcinomes papillaires >1cm ou signes d'extension.
-- Stadification AJCC/TNM thyroïdien (âge <55 ans vs ≥55 ans change la classification du stade).`,
-
-            thoracique: `EXPERTISE THORACIQUE — repères à utiliser quand pertinent :
-- Stadification TNM pulmonaire (8e édition IASLC).
-- VEMS post-opératoire prédit (ppoFEV1) et DLCO : seuils de résécabilité fonctionnelle (ppoFEV1 >40% généralement sûr).
-- VO2 max à l'effort : <10 ml/kg/min = risque élevé ; >20 = faible risque pour pneumonectomie.
-- Évaluation du curage ganglionnaire médiastinal selon la carte de l'IASLC (stations 2R/4R/7/etc.).
-- Complications typiques à évoquer : fistule bronchopleurale, torsion de lobe, fuite aérienne prolongée.`,
-
-            cardiaque: `EXPERTISE CARDIAQUE — repères à utiliser quand pertinent :
-- EuroSCORE II et STS Score pour le risque opératoire ; classification NYHA pour les symptômes.
-- Sténose aortique sévère (critères ESC/AHA) : gradient moyen >40mmHg, surface valvulaire <1cm² (ou <0.6cm²/m²).
-- Classification de Carpentier pour l'insuffisance mitrale (type I/II/IIIa/IIIb) — oriente réparation vs remplacement.
-- Choix prothèse : biologique si >65-70 ans ou contre-indication aux AVK ; mécanique si plus jeune (anticoagulation à vie).
-- Viabilité myocardique (IRM de stress, scintigraphie) avant revascularisation d'un territoire akinétique.`,
-
-            urologie: `EXPERTISE UROLOGIQUE — repères à utiliser quand pertinent :
-- Score de néphrométrie RENAL (Radius, Exophytic/endophytic, Nearness au sinus, Anterior/posterior, Location) : score ≤6 = simple, 7-9 = intermédiaire, ≥10 = complexe — oriente néphrectomie partielle vs totale.
-- Classification de Bosniak pour les kystes rénaux (I à IV, risque de malignité croissant).
-- Score de Gleason / grade ISUP (1 à 5) et PI-RADS v2.1 (IRM prostatique, ≥4 = suspicion significative) pour la prostate.
-- Stadification TNM rénale/prostatique/vésicale selon organe concerné.
-- DFG pré/post-opératoire : anticiper l'impact d'une néphrectomie totale vs partielle sur la fonction rénale à long terme.
-- Complications à évoquer selon la procédure : hémorragie au déclampage, fistule urinaire, incontinence/dysfonction érectile (prostatectomie).`
+            retine: `EXPERTISE VITRÉO-RÉTINIENNE — repères à utiliser quand pertinent :
+- Statut maculaire (on/off) : facteur pronostique majeur et déterminant de l'urgence chirurgicale.
+- Classification PVR (A à C) — les stades C orientent vers un tamponnement par huile de silicone et une chirurgie plus extensive.
+- Choix du tamponnement : gaz (SF6/C3F8, résorption en semaines) vs huile de silicone (décollements complexes, ablation différée).
+- Schéma rétinien horaire des déchirures/décollement, essentiel à la planification du cerclage ou de la vitrectomie.
+- Délai chirurgical : macula on = urgence <24-48h, macula off = privilégier <7 jours.`
           };
 
           // Instructions de commandes d'action — partagées par TOUS les canaux
@@ -995,13 +937,9 @@
               `- "ferme" / "ferme la fenêtre" → [ACTION:close_modal]`,
               `- "recalcule l'analyse" / "recalcule le risque" → [ACTION:recalc_analysis]`,
               `- "exporte le plan" → [ACTION:export_plan]`,
-              `- "sélectionne le hub hépato-biliaire" / "passe au module HBP" → [ACTION:switch_hbp]`,
-              `- "sélectionne le hub colorectal" → [ACTION:switch_colorectal]`,
-              `- "sélectionne le hub gastrique" → [ACTION:switch_gastrique]`,
-              `- "sélectionne le hub thyroïde" → [ACTION:switch_thyroide]`,
-              `- "sélectionne le hub thoracique" → [ACTION:switch_thoracique]`,
-              `- "sélectionne le hub cardiaque" → [ACTION:switch_cardiaque]`,
-              `- "sélectionne le hub urologie" → [ACTION:switch_urologie]`,
+              `- "sélectionne le module cataracte" / "passe en cataracte" → [ACTION:switch_cataracte]`,
+              `- "sélectionne le module glaucome" → [ACTION:switch_glaucome]`,
+              `- "sélectionne le module rétine" / "passe en vitréo-rétinien" → [ACTION:switch_retine]`,
             ].join('\n');
           }
 
@@ -1009,7 +947,7 @@
             const mod = MODULES[state.mod];
             const warn = mod.metrics.filter(m => m.st === 'warn').map(m => `${m.label}: ${m.val}`).join(', ') || 'aucune';
             return [
-              `Tu es "GeneralSurg Live", l'assistant chirurgical vocal intégré au poste de planification ${mod.name}.`,
+              `Tu es "OphtalmoSurg Live", l'assistant chirurgical vocal intégré au poste de planification ${mod.name}.`,
               `Tu participes à une conversation ORALE CONTINUE en temps réel avec un chirurgien pendant sa préparation opératoire — pas à un échange écrit formel.`,
               ``,
               `Contexte patient actif : ${mod.patient.nom}, ${mod.patient.age} ans, ${mod.patient.sexe}, diagnostic "${mod.patient.diag}", niveau d'urgence: ${mod.patient.urg}.`,
@@ -1385,13 +1323,9 @@
               close_modal: () => document.querySelectorAll('.modal-overlay.open').forEach(m => m.classList.remove('open')),
               recalc_analysis: () => runAnalysis(),
               export_plan: () => exportPlan(),
-              switch_hbp: () => switchModule('hbp'),
-              switch_colorectal: () => switchModule('colorectal'),
-              switch_gastrique: () => switchModule('gastrique'),
-              switch_thyroide: () => switchModule('thyroide'),
-              switch_thoracique: () => switchModule('thoracique'),
-              switch_cardiaque: () => switchModule('cardiaque'),
-              switch_urologie: () => switchModule('urologie'),
+              switch_cataracte: () => switchModule('cataracte'),
+              switch_glaucome: () => switchModule('glaucome'),
+              switch_retine: () => switchModule('retine'),
               // Ajouts : vue 3D/MPR, zoom, thème, OR/tactile/lecture seule en versions
               // explicites on/off (une commande vocale doit toujours produire le même
               // résultat, pas basculer à l'aveugle selon l'état courant).
@@ -1691,15 +1625,142 @@
           //  AI ENGINE — chat du panneau droit (réponse ponctuelle, sans mémoire de session)
           //  Priorité : clé Gemini client → clé Groq client → backend proxy → réponse hors-ligne
           // ════════════════════════════════════════════════
+          // ════════════════════════════════════════════════
+          //  AUTHENTIFICATION BACKEND — écran de connexion réel
+          //  Remplace l'ancien getBackendToken() qui s'auto-authentifiait
+          //  silencieusement avec un identifiant de démo codé en dur
+          //  (dr.hadj/changeme) : n'importe quel déploiement réel se
+          //  connectait alors comme le même utilisateur, sans jamais montrer
+          //  d'écran de connexion. Ici, chaque utilisateur saisit ses propres
+          //  identifiants ; le jeton est mis en cache en mémoire + sessionStorage
+          //  (pas localStorage : un JWT ne doit pas survivre à la fermeture de
+          //  l'onglet sur un poste partagé) jusqu'à expiration.
+          //
+          //  Non couvert (choix assumé, voir README) : le flux 2FA/TOTP que le
+          //  backend expose déjà (POST /auth/2fa/verify) — un compte avec la 2FA
+          //  activée reçoit un message d'erreur clair plutôt qu'un blocage muet.
+          // ════════════════════════════════════════════════
+          const AUTH_STORAGE_KEY = 'ophtalmosurg_auth';
+
+          function loadStoredAuth() {
+            try {
+              const raw = sessionStorage.getItem(AUTH_STORAGE_KEY);
+              if (!raw) return;
+              const saved = JSON.parse(raw);
+              if (saved && saved.token && saved.expiresAt && Date.now() < saved.expiresAt) {
+                state.auth = saved;
+              }
+            } catch (e) { /* sessionStorage indisponible (navigation privée stricte) — pas bloquant */ }
+          }
+
+          function persistAuth() {
+            try {
+              if (state.auth.token) sessionStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(state.auth));
+              else sessionStorage.removeItem(AUTH_STORAGE_KEY);
+            } catch (e) { }
+          }
+
+          function isAuthenticated() {
+            return !!(state.auth.token && state.auth.expiresAt && Date.now() < state.auth.expiresAt);
+          }
+
+          // Un login est nécessaire dès qu'un backend est configuré et qu'aucun
+          // jeton valide n'est en mémoire — jamais en mode démo hors-ligne
+          // (apiBase vide), qui doit rester utilisable sans authentification.
+          function needsLogin() {
+            return !!state.settings.apiBase && !isAuthenticated();
+          }
+
+          function showLoginGateIfNeeded() {
+            const gate = document.getElementById('login-gate');
+            if (!gate) return;
+            if (needsLogin()) {
+              document.getElementById('login-gate-backend-url').textContent = state.settings.apiBase;
+              gate.style.display = 'flex';
+              const userEl = document.getElementById('login-username');
+              if (userEl) userEl.focus();
+            } else {
+              gate.style.display = 'none';
+            }
+          }
+
+          function logout() {
+            state.auth = { token: null, username: null, expiresAt: null };
+            persistAuth();
+            refreshLoginStatusUI();
+            showLoginGateIfNeeded();
+            notify('Déconnecté du backend.', 'info');
+          }
+
+          async function submitLogin() {
+            const usernameEl = document.getElementById('login-username');
+            const passwordEl = document.getElementById('login-password');
+            const errEl = document.getElementById('login-error');
+            const btn = document.getElementById('login-submit-btn');
+            const username = usernameEl.value.trim();
+            const password = passwordEl.value;
+            errEl.style.display = 'none';
+            if (!username || !password) {
+              errEl.textContent = "Renseignez l'identifiant et le mot de passe.";
+              errEl.style.display = 'block';
+              return;
+            }
+            const originalLabel = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = 'Connexion...';
+            try {
+              const base = state.settings.apiBase.replace(/\/+$/, '');
+              const form = new URLSearchParams({ username, password });
+              const r = await fetch(base + '/auth/token', {
+                method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: form
+              });
+              const data = await r.json().catch(() => ({}));
+              if (r.status === 401) throw new Error(data.detail || 'Identifiants invalides.');
+              if (r.status === 429) throw new Error(data.detail || 'Trop de tentatives — réessayez dans quelques instants.');
+              if (!r.ok) throw new Error(data.detail || ('Erreur serveur (HTTP ' + r.status + ')'));
+              if (data.requires_2fa) {
+                throw new Error("La double authentification (2FA) est activée sur ce compte — non prise en charge par cet écran de connexion pour l'instant. Utilisez un compte sans 2FA ou désactivez-la temporairement côté serveur.");
+              }
+              state.auth = {
+                token: data.access_token,
+                username,
+                expiresAt: Date.now() + (data.expires_in ? data.expires_in * 1000 : 8 * 3600 * 1000),
+              };
+              persistAuth();
+              passwordEl.value = '';
+              showLoginGateIfNeeded();
+              refreshLoginStatusUI();
+              notify('Connecté en tant que ' + username + '.', 'ok');
+            } catch (e) {
+              errEl.textContent = e.message;
+              errEl.style.display = 'block';
+            } finally {
+              btn.disabled = false;
+              btn.textContent = originalLabel;
+            }
+          }
+
+          function refreshLoginStatusUI() {
+            const el = document.getElementById('settings-login-status');
+            if (!el) return;
+            if (!state.settings.apiBase) {
+              el.textContent = '';
+            } else if (isAuthenticated()) {
+              el.innerHTML = 'Connecté en tant que <b>' + state.auth.username +
+                '</b> — <a href="#" onclick="logout();return false;">Se déconnecter</a>';
+            } else {
+              el.textContent = 'Non connecté au backend.';
+            }
+          }
+
           async function getBackendToken() {
-            if (state.backendToken) return state.backendToken;
-            const base = state.settings.apiBase.replace(/\/+$/, '');
-            const form = new URLSearchParams({ username: 'dr.hadj', password: 'changeme' });
-            const r = await fetch(base + '/auth/token', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: form });
-            if (!r.ok) throw new Error('Authentification backend refusée');
-            const data = await r.json();
-            state.backendToken = data.access_token;
-            return state.backendToken;
+            if (isAuthenticated()) return state.auth.token;
+            // Ne devrait normalement pas se produire : showLoginGateIfNeeded()
+            // bloque l'interface avant qu'un appel backend puisse être déclenché
+            // sans jeton valide. Filet de sécurité si un jeton expire pendant
+            // une session déjà ouverte.
+            showLoginGateIfNeeded();
+            throw new Error('Session backend expirée — reconnectez-vous.');
           }
 
           async function askAI(message) {
@@ -1709,7 +1770,7 @@
             const mod = MODULES[state.mod];
             // I18N : la langue de réponse suit la langue active de l'interface (I18N.currentLocale()),
             // pas "français" codé en dur — voir I18N.t('ai.respondInLanguage').
-            const system = `Tu es l'assistant chirurgical IA GeneralSurg Plan, spécialisé en ${mod.name}. ` +
+            const system = `Tu es l'assistant chirurgical IA OphtalmoSurg Plan, spécialisé en ${mod.name}. ` +
               `Patient en cours: ${mod.patient.nom}, ${mod.patient.age} ans, diagnostic: ${mod.patient.diag}. ` +
               `${I18N.t('ai.respondInLanguage', { language: I18N.languageName() })} Réponse concise (3-5 phrases max) et cliniquement pertinente. ` +
               `Rappelle que la décision finale reste au chirurgien.` +
@@ -1816,6 +1877,7 @@
           function closeModal(id) { document.getElementById('modal-' + id).classList.remove('open') }
 
           function saveSettings() {
+            const previousApiBase = state.settings.apiBase;
             state.settings.geminiKey = document.getElementById('input-gemini-key').value.trim();
             state.settings.geminiModel = document.getElementById('input-gemini-model').value.trim() || 'gemini-flash-latest';
             state.settings.groqKey = document.getElementById('input-groq-key').value.trim();
@@ -1824,7 +1886,12 @@
             state.settings.localServerModel = document.getElementById('input-local-server-model').value.trim() || 'llama3';
             state.settings.chirurgien = document.getElementById('input-chirurgien').value.trim() || state.settings.chirurgien;
             state.settings.offlineCertified = document.getElementById('toggle-offline-certified').classList.contains('on');
-            state.backendToken = null; // force re-auth if backend URL changed
+            // Un jeton obtenu pour un backend n'est pas valide pour un autre —
+            // force une nouvelle connexion si l'URL a changé.
+            if (state.settings.apiBase !== previousApiBase) {
+              state.auth = { token: null, username: null, expiresAt: null };
+              persistAuth();
+            }
             closeModal('settings');
             const mode = state.settings.offlineCertified ? '📚 Hors-ligne certifié (forcé)' :
               state.localEngine ? '🔒 Modèle local WebGPU (' + state.localEngineModel + ')' :
@@ -1832,6 +1899,8 @@
                   state.settings.geminiKey ? `Gemini (${state.settings.geminiModel})` :
                     state.settings.groqKey ? 'Groq (clé directe)' : state.settings.apiBase ? 'Backend proxy' : 'Démo hors-ligne';
             notify('Paramètres enregistrés — IA: ' + mode, 'ok');
+            refreshLoginStatusUI();
+            showLoginGateIfNeeded();
           }
 
           function prefillSettings() {
@@ -1850,6 +1919,7 @@
             document.getElementById('input-local-server-model').value = state.settings.localServerModel || '';
             document.getElementById('input-chirurgien').value = state.settings.chirurgien;
             document.getElementById('toggle-offline-certified').classList.toggle('on', !!state.settings.offlineCertified);
+            refreshLoginStatusUI();
             refreshWebGpuStatusUI();
             if (state.localEngine) {
               document.getElementById('btn-load-webgpu').style.display = 'none';
@@ -1971,18 +2041,18 @@
             const durEl = document.getElementById('surgai-dur');
             const eblEl = document.getElementById('surgai-ebl');
             const riskEl = document.getElementById('surgai-risk');
-            if (sel === 'hep_droite') {
-              durEl.textContent = '185 min'; eblEl.textContent = '210 mL';
-              riskEl.textContent = '12.4% (Faible)'; riskEl.style.color = 'var(--green)';
-              notify('Stratégie Hépatectomie Droite sélectionnée : SHAP recalibré.', 'info');
-            } else if (sel === 'seg_7_8') {
-              durEl.textContent = '240 min'; eblEl.textContent = '340 mL';
-              riskEl.textContent = '18.1% (Modéré)'; riskEl.style.color = 'var(--orange)';
-              notify('Stratégie Segmentectomie VII-VIII sélectionnée : Risque hémorragique +14%.', 'warn');
+            if (sel === 'phaco_standard') {
+              durEl.textContent = '18 min'; eblEl.textContent = '< 1 mL';
+              riskEl.textContent = '3.1% (Faible)'; riskEl.style.color = 'var(--green)';
+              notify('Stratégie Phacoémulsification standard sélectionnée : SHAP recalibré.', 'info');
+            } else if (sel === 'combinee_glaucome') {
+              durEl.textContent = '45 min'; eblEl.textContent = '< 2 mL';
+              riskEl.textContent = '11.8% (Modéré)'; riskEl.style.color = 'var(--orange)';
+              notify('Stratégie Chirurgie combinée cataracte-glaucome sélectionnée : Risque de bulle de filtration +9%.', 'warn');
             } else {
-              durEl.textContent = '95 min'; eblEl.textContent = '50 mL';
-              riskEl.textContent = '24.0% (Récidive à 2 ans élevée)'; riskEl.style.color = '#f43f5e';
-              notify('Option Thermo-ablation sélectionnée : Attention, marge < 5 mm.', 'warn');
+              durEl.textContent = '12 min'; eblEl.textContent = '< 1 mL';
+              riskEl.textContent = '15.5% (Opacification capsulaire à 2 ans)'; riskEl.style.color = '#f43f5e';
+              notify('Option Capsulotomie YAG sélectionnée : Attention, à ne réaliser qu\'après stabilisation réfractive.', 'warn');
             }
           }
 
@@ -1990,17 +2060,17 @@
             const flrBar = document.getElementById('surgsim-flr-bar');
             const flrStatus = document.getElementById('surgsim-flr-status');
             flrBar.style.width = flrPct + '%';
-            const volMl = Math.round(1490 * (flrPct / 100));
-            flrStatus.textContent = 'FLR: ' + flrPct + '% (' + volMl + ' mL) — ' + statusText;
+            const volUl = Math.round(750 * (flrPct / 100));
+            flrStatus.textContent = 'PRR: ' + flrPct + '% (' + volUl + ' µL/min) — ' + statusText;
             if (flrPct < 40) {
               flrBar.style.background = '#f43f5e'; flrStatus.style.color = '#f43f5e';
-              notify('⚠️ ALERTE CRITIQUE ISCHÉMIE : Clampage de ' + vesselName + ' entraîne un FLR insuffisant (' + flrPct + '%) !', 'err');
+              notify('⚠️ ALERTE CRITIQUE ISCHÉMIE : Compression de ' + vesselName + ' entraîne une perfusion rétinienne insuffisante (' + flrPct + '%) !', 'err');
             } else if (flrPct < 65) {
               flrBar.style.background = 'var(--orange)'; flrStatus.style.color = 'var(--orange)';
-              notify('🔀 Clampage virtuel de ' + vesselName + ' : FLR = ' + flrPct + '% (' + volMl + ' mL).', 'warn');
+              notify('🔀 Compression virtuelle de ' + vesselName + ' : PRR = ' + flrPct + '% (' + volUl + ' µL/min).', 'warn');
             } else {
               flrBar.style.background = 'var(--green)'; flrStatus.style.color = 'var(--green)';
-              notify('✅ Clampage virtuel de ' + vesselName + ' : FLR optimal au-dessus du seuil de sécurité (' + flrPct + '%).', 'ok');
+              notify('✅ Compression virtuelle de ' + vesselName + ' : perfusion rétinienne au-dessus du seuil de sécurité (' + flrPct + '%).', 'ok');
             }
           }
 
@@ -2015,7 +2085,7 @@
 
           function setDvrPreset(preset) {
             if (preset === 'parenchyma') {
-              notify('🌟 Fenêtrage Ray-Marching DVR ajusté : Parenchyme Hépatique (40/150 HU)', 'info');
+              notify('🌟 Fenêtrage Ray-Marching DVR ajusté : Segment Antérieur (40/150 HU)', 'info');
             } else if (preset === 'vessels') {
               notify('🌟 Fenêtrage Ray-Marching DVR ajusté : Arbre Vasculaire (+120 HU)', 'info');
             } else if (preset === 'tumors') {
@@ -2087,7 +2157,7 @@
             const alertEl = document.getElementById('or-anesthesia-alert');
             const pamEl = document.getElementById('or-pam-val');
 
-            const tolerance = (vessel.includes('Rénal') || vessel.includes('Rénale')) ? 25.0 : 45.0;
+            const tolerance = vessel.includes('Artère Centrale de la Rétine') ? 25.0 : 45.0;
             const rem = (tolerance - duration).toFixed(1);
 
             if (hitEl) hitEl.textContent = `${rem} min (sur ${tolerance}m max)`;
@@ -2114,17 +2184,15 @@
             if (preview) preview.style.display = 'block';
 
             const reports = {
-              hepatectomie: { code: 'HFMA009 (1380,00 €)', desc: '<b>1. Indication :</b> Tumeur maligne S7/S8.<br><b>2. Abord :</b> Laparotomie sous-costale droite élargie.<br><b>3. Geste :</b> Hépatectomie droite réglée, clampage pédiculaire 18 min.<br><b>4. Hémostase :</b> Tranche de section hémostasiée, FLR adéquat > 65%.', sha: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 (texte fixe de démonstration, pas un sceau réel)' },
-              cholecystectomie: { code: 'HHFA002 (410,00 €)', desc: '<b>1. Indication :</b> Lithiase biliaire symptomatique.<br><b>2. Abord :</b> Cœlioscopie 4 trocarts.<br><b>3. Geste :</b> Dissection du triangle de Calot, clipage canal cystique et artère cystique.<br><b>4. Fin d\'intervention :</b> Exérèse vésicule, extraction dans sac Endocatch.', sha: '8f434346648f6b96df89dda901c5176b10a6d83961dd3c1ac88b59b2dc327aa4 (texte fixe de démonstration, pas un sceau réel)' },
-              hemicolectomie: { code: 'HHFA001 (920,50 €)', desc: '<b>1. Indication :</b> Adénocarcinome côlon ascendant.<br><b>2. Abord :</b> Laparoscopie 4 trocarts.<br><b>3. Geste :</b> Hémicolectomie droite avec ligature primordiale des vaisseaux iléo-coliques.<br><b>4. Anastomose :</b> Iléo-transverse latéro-latérale mécanique au stapler linéaire.', sha: '7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b (texte fixe de démonstration, pas un sceau réel)' },
-              rectum: { code: 'HGCC002 (1450,00 €)', desc: '<b>1. Indication :</b> Cancer rectum moyen cT3N1.<br><b>2. Abord :</b> Laparoscopie pelvienne.<br><b>3. Geste :</b> Exérèse totale du mésorectum (TME) avec préservation du plexus hypogastrique.<br><b>4. Anastomose :</b> Colorectale basse mécanique au stapler circulaire EEA 28mm.', sha: '1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c (texte fixe de démonstration, pas un sceau réel)' },
-              gastrectomie: { code: 'HFMA004 (1520,00 €)', desc: '<b>1. Indication :</b> Adénocarcinome gastrique linitique.<br><b>2. Abord :</b> Laparotomy médiane sus-ombicale.<br><b>3. Geste :</b> Gastrectomie totale D2 avec curage des stations N1 à N6 et splénopancréatectomie préservée.<br><b>4. Anastomose :</b> Œsio-jéjunale sur anse montée en Y de Roux.', sha: '4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e (texte fixe de démonstration, pas un sceau réel)' },
-              subtotale: { code: 'HFMA003 (1180,00 €)', desc: '<b>1. Indication :</b> Tumeur antre gastrique.<br><b>2. Abord :</b> Laparoscopie.<br><b>3. Geste :</b> Gastrectomie des 4/5èmes distaux avec curage D1+.<br><b>4. Anastomose :</b> Gastro-jéjunale termino-latérale de type Finsterer.', sha: '9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f (texte fixe de démonstration, pas un sceau réel)' },
-              lobectomie: { code: 'GFMA008 (1340,00 €)', desc: '<b>1. Indication :</b> NSCLC lobe supérieur droit.<br><b>2. Abord :</b> Thoracoscopie VATS 3 trocarts.<br><b>3. Geste :</b> Dissection hilaire, agrafage veine et artère pulmonaires du LSD, agrafage bronche lobaire.<br><b>4. Fin d\'intervention :</b> Test d\'étanchéité sous eau négatif, drain thoracique 28Fr en aspiration.', sha: '2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b (texte fixe de démonstration, pas un sceau réel)' },
-              segmentectomie_thor: { code: 'GFFA002 (980,00 €)', desc: '<b>1. Indication :</b> Métastase pulmonaire S6 droit.<br><b>2. Abord :</b> VATS vidéo-assisté.<br><b>3. Geste :</b> Segmentectomie anatomique S6 de Fowler sous guidage par fluorescence ICG.<br><b>4. Hémostase :</b> Aérostase vérifiée au collafilm, drain 24Fr.', sha: '5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d (texte fixe de démonstration, pas un sceau réel)' }
+              phaco: { code: 'BFGA004 (517,89 €)', desc: '<b>1. Indication :</b> Cataracte corticonucléaire OD, LOCS N4.<br><b>2. Abord :</b> Incision cornéenne temporale 2.2mm.<br><b>3. Geste :</b> Phacoémulsification, implantation LIO monofocale en chambre postérieure dans le sac capsulaire.<br><b>4. Fin d\'intervention :</b> Étanchéité de l\'incision vérifiée, sans suture, injection intracamérulaire antibiotique.', sha: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 (texte fixe de démonstration, pas un sceau réel)' },
+              combinee: { code: 'BFGA010 (742,30 €)', desc: '<b>1. Indication :</b> Cataracte associée à un glaucome à angle ouvert non contrôlé.<br><b>2. Abord :</b> Incision cornéenne temporale + volet scléral.<br><b>3. Geste :</b> Phacoémulsification et implantation de LIO, puis trabéculectomie avec mitomycine C.<br><b>4. Fin d\'intervention :</b> Bulle de filtration fonctionnelle, chambre antérieure reformée.', sha: '8f434346648f6b96df89dda901c5176b10a6d83961dd3c1ac88b59b2dc327aa4 (texte fixe de démonstration, pas un sceau réel)' },
+              trabeculectomie: { code: 'BFGA002 (610,45 €)', desc: '<b>1. Indication :</b> Glaucome primitif à angle ouvert avancé OG, PIO non contrôlée sous trithérapie.<br><b>2. Abord :</b> Volet scléral base limbe.<br><b>3. Geste :</b> Trabéculectomie avec application de mitomycine C, iridectomie périphérique.<br><b>4. Fin d\'intervention :</b> Bulle de filtration fonctionnelle, sutures scérales ajustables.', sha: '7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b (texte fixe de démonstration, pas un sceau réel)' },
+              ahmed: { code: 'BFGA006 (895,20 €)', desc: '<b>1. Indication :</b> Glaucome réfractaire après échec de trabéculectomie.<br><b>2. Abord :</b> Quadrant supéro-temporal, dissection conjonctivale.<br><b>3. Geste :</b> Implantation d\'une valve d\'Ahmed FP7, tube inséré en chambre antérieure.<br><b>4. Fin d\'intervention :</b> Fixation du plateau à la sclère, recouvrement par patch scléral.', sha: '1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c (texte fixe de démonstration, pas un sceau réel)' },
+              vitrectomie: { code: 'BGFA003 (820,60 €)', desc: '<b>1. Indication :</b> Décollement de rétine rhegmatogène OD, macula off.<br><b>2. Abord :</b> Vitrectomie 25G trois voies.<br><b>3. Geste :</b> Vitrectomie centrale et périphérique, endophotocoagulation autour des déchirures, échange fluide-air.<br><b>4. Fin d\'intervention :</b> Tamponnement par gaz SF6 20%, positionnement post-opératoire prescrit.', sha: '4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e (texte fixe de démonstration, pas un sceau réel)' },
+              peeling: { code: 'BGFA005 (760,10 €)', desc: '<b>1. Indication :</b> Membrane épirétinienne maculaire symptomatique.<br><b>2. Abord :</b> Vitrectomie 25G trois voies.<br><b>3. Geste :</b> Pelage de la membrane épirétinienne à la pince, coloration au bleu Brillant, peeling de la limitante interne (ILM).<br><b>4. Fin d\'intervention :</b> Tamponnement par air, pas de positionnement particulier requis.', sha: '9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f (texte fixe de démonstration, pas un sceau réel)' }
             };
 
-            const rep = reports[type] || reports.hepatectomie;
+            const rep = reports[type] || reports.phaco;
             if (badge) badge.textContent = rep.code;
             if (txt) txt.innerHTML = rep.desc;
             if (sha) sha.textContent = rep.sha;
@@ -2419,23 +2487,23 @@
                 ? 'Jumeau 3D chargé depuis le cache patient'
                 : (isSimulated ? 'Estimation locale (backend de segmentation réelle indisponible)' : 'Jumeau 3D Patient-Spécifique Réel'));
               const vol = (data && data.volumetric_analysis_ml) || {};
-              const tlv = vol.total_liver_volume_tlv || 1420;
-              const tumor = vol.tumor_volume_chc || 320;
-              const flr = vol.future_liver_remnant_flr_s1_s2_s3_s4_s6_s7 || 640;
-              const flrPct = vol.flr_ratio_pct || 45.1;
+              const tlv = vol.total_eye_volume_tev || 6.5;
+              const tumor = vol.lesion_volume || 0.4;
+              const flr = vol.functional_reserve_ml || 5.8;
+              const flrPct = vol.functional_reserve_pct || 89.2;
               const meshCount = (data && data['3d_mesh_manifest_gltf']) ? data['3d_mesh_manifest_gltf'].length : 6;
 
               const desc = document.getElementById('anatomy-mode-desc');
               if (desc) desc.innerHTML = isSimulated
                 ? `<span style="color:#eab308">⚠ estimation locale, non clinique (${meshCount} structures)</span> • ` +
-                `Foie: <strong style="color:#a78bfa">${tlv} mL</strong> • ` +
-                `Tumeur: <strong style="color:#f87171">${tumor} mL</strong> • ` +
-                `FLR: <strong style="color:#34d399">${flr} mL (${flrPct}%)</strong>` +
+                `Globe oculaire: <strong style="color:#a78bfa">${tlv} mL</strong> • ` +
+                `Lésion: <strong style="color:#f87171">${tumor} mL</strong> • ` +
+                `Réserve fonctionnelle: <strong style="color:#34d399">${flr} mL (${flrPct}%)</strong>` +
                 `${fromCache ? ' <span style="color:var(--text3)">[cache]</span>' : ' • <span style="color:#eab308">backend de segmentation réelle indisponible</span>'}`
                 : `<span style="color:#10b981">✅ ${meshCount} maillages chargés</span> • ` +
-                `Foie: <strong style="color:#a78bfa">${tlv} mL</strong> • ` +
-                `Tumeur: <strong style="color:#f87171">${tumor} mL</strong> • ` +
-                `FLR: <strong style="color:#34d399">${flr} mL (${flrPct}%)</strong>` +
+                `Globe oculaire: <strong style="color:#a78bfa">${tlv} mL</strong> • ` +
+                `Lésion: <strong style="color:#f87171">${tumor} mL</strong> • ` +
+                `Réserve fonctionnelle: <strong style="color:#34d399">${flr} mL (${flrPct}%)</strong>` +
                 `${fromCache ? ' <span style="color:var(--text3)">[cache]</span>' : ''}`;
 
               this._setBanner(isSimulated ? 'warn' : 'ok');
@@ -2450,7 +2518,7 @@
               if (!fromCache) {
                 notify(isSimulated
                   ? `⚠️ Backend de segmentation réelle indisponible pour ${patId} — estimation locale affichée (non clinique), voir ⚙ Paramètres`
-                  : `✅ Jumeau 3D Patient-Spécifique ${patId} prêt : ${meshCount} structures, FLR ${flrPct}% — Aucune action requise`, isSimulated ? 'warn' : 'ok');
+                  : `✅ Jumeau 3D Patient-Spécifique ${patId} prêt : ${meshCount} structures, réserve fonctionnelle ${flrPct}% — Aucune action requise`, isSimulated ? 'warn' : 'ok');
               }
             },
 
@@ -2459,7 +2527,7 @@
               // Estompe le maillage procédural générique
               if (organMesh) {
                 organMesh.material.opacity = 0.06;
-                // Teinte violette pour le parenchyme hépatique réel
+                // Teinte violette pour le globe oculaire réel
                 if (organMesh.material.color) organMesh.material.color.setHex(0x8b5cf6);
               }
               if (wireframeMesh) wireframeMesh.material.opacity = 0.02;
@@ -2474,40 +2542,38 @@
 
               // Met à jour le HUD avec la volumétrie réelle
               const hudVol = document.getElementById('hud-vol');
-              if (hudVol) hudVol.textContent = (vol.total_liver_volume_tlv || 1420) + ' mL TLV';
+              if (hudVol) hudVol.textContent = (vol.total_eye_volume_tev || 6.5) + ' mL';
             },
 
             // Génère des données cliniquement réalistes patient-spécifiques localement
             _generateLocalPatientData(patId) {
-              const mod = MODULES[state.mod] || MODULES['hbp'];
+              const mod = MODULES[state.mod] || MODULES['cataracte'];
               const pat = mod.patient || {};
               // Variation pseudo-aléatoire reproductible basée sur l'ID patient
               const seed = patId.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
               const rnd = (base, amp) => Math.round((base + (seed % amp) - amp / 2) * 10) / 10;
-              const tlv = rnd(1420, 200);
-              const tumor = rnd(260, 100);
-              const resected = rnd(620, 150);
-              const flr = tlv - resected;
-              const flrPct = Math.round(flr / tlv * 1000) / 10;
+              const tev = rnd(6.5, 1.2);
+              const lesion = rnd(0.4, 0.3);
+              const reserve = tev - lesion;
+              const reservePct = Math.round(reserve / tev * 1000) / 10;
               return {
                 patient_id: patId,
                 patient_name: pat.nom || patId,
                 clinical_workflow: 'LOCAL_SIMULATION_REAL_ANATOMY 🏥',
                 volumetric_analysis_ml: {
-                  total_liver_volume_tlv: tlv,
-                  tumor_volume_chc: tumor,
-                  resected_volume_s5_s8: resected,
-                  future_liver_remnant_flr_s1_s2_s3_s4_s6_s7: flr,
-                  flr_ratio_pct: flrPct,
-                  portal_vein_diameter_mm: rnd(13.5, 4)
+                  total_eye_volume_tev: tev,
+                  lesion_volume: lesion,
+                  functional_reserve_ml: reserve,
+                  functional_reserve_pct: reservePct,
+                  central_retinal_vessel_diameter_mm: rnd(0.15, 0.05)
                 },
                 '3d_mesh_manifest_gltf': [
-                  { organ: 'Liver_Parenchyma', color: '#8b5cf6', volume_ml: tlv },
-                  { organ: 'Tumor_Lesion', color: '#ef4444', volume_ml: tumor },
-                  { organ: 'Portal_Vein_Tree', color: '#38bdf8', volume_ml: 80 },
-                  { organ: 'Hepatic_Artery', color: '#f43f5e', volume_ml: 40 },
-                  { organ: 'Hepatic_Veins', color: '#3b82f6', volume_ml: 95 },
-                  { organ: 'Gallbladder', color: '#10b981', volume_ml: 38 }
+                  { organ: 'Globe_Oculaire', color: '#8b5cf6', volume_ml: tev },
+                  { organ: 'Lesion_Retinienne', color: '#ef4444', volume_ml: lesion },
+                  { organ: 'Reseau_Vasculaire_Retinien', color: '#38bdf8', volume_ml: 0.3 },
+                  { organ: 'Artere_Centrale_Retine', color: '#f43f5e', volume_ml: 0.1 },
+                  { organ: 'Veine_Centrale_Retine', color: '#3b82f6', volume_ml: 0.15 },
+                  { organ: 'Corps_Vitre', color: '#10b981', volume_ml: 4.0 }
                 ],
                 // Correctif honnêteté (audit) : ce générateur ne fait qu'un hash trivial de l'ID
                 // patient (voir `seed` ci-dessus) — ce n'est ni un patient réel, ni une segmentation
@@ -2522,7 +2588,7 @@
 
             // Forçage de rechargement (bouton Forcer dans la bannière)
             forceReload() {
-              const mod = MODULES[state.mod] || MODULES['hbp'];
+              const mod = MODULES[state.mod] || MODULES['cataracte'];
               const patId = mod && mod.patient ? mod.patient.id : 'PAT-2026-001';
               delete this._cache[patId];
               notify('🔄 Re-ingestion PACS forcée — Suppression du cache et relance du pipeline complet', 'info');
@@ -2711,6 +2777,8 @@
 
           async function init() {
             await initI18nLanguage();
+            loadStoredAuth();
+            showLoginGateIfNeeded();
             state.anatomyMode = 'real';
             renderHub();
             renderPatientsTable();
@@ -2736,6 +2804,7 @@
                 if (view === 'dicom') { openDicomViewer(); return; }
                 if (view === 'ar') { openArPanel(); return; }
                 if (view === 'audit') { openAuditTrail(); return; }
+                if (view === 'workflow') { openWorkflowModule(); return; }
                 if (view === 'surgai') { openModal('surgai'); return; }
                 if (view === 'surgsim') { openModal('surgsim'); return; }
                 if (view === 'surgor') { openModal('surgor'); return; }
@@ -2764,6 +2833,338 @@
                 else if (twin.active) { exitDigitalTwin(); }
               });
             });
+          }
+
+          // ════════════════════════════════════════════════
+          //  WORKFLOW « 3 CLICS » — validation éclair (Rec. 1)
+          //  Parcours zéro-saisie : la préparation (J-1) tourne en tâche de fond
+          //  côté backend quand une série arrive (upload / PACS WADO-RS / DIMSE).
+          //  Ce module n'est que l'interface : il interroge /workflow/* via
+          //  workflowAuthedFetch() et rend Aperçu → Ajustement → Validation.
+          // ════════════════════════════════════════════════
+          const wf3 = { runId: null, run: null, timer: null };
+
+          function wf3StopPolling() {
+            if (wf3.timer) { clearInterval(wf3.timer); wf3.timer = null; }
+          }
+
+          async function workflowAuthedFetch(path, opts = {}) {
+            const base = state.settings.apiBase.replace(/\/+$/, '');
+            const token = await getBackendToken();
+            const headers = Object.assign({ 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }, opts.headers || {});
+            const r = await fetch(base + path, Object.assign({}, opts, { headers }));
+            let body = null;
+            try { body = await r.json(); } catch (e) { /* 204 ou binaire */ }
+            if (!r.ok) {
+              const msg = (body && (body.detail || body.message)) || ('HTTP ' + r.status);
+              const err = new Error(msg); err.status = r.status;
+              throw err;
+            }
+            return body;
+          }
+
+          function openWorkflowModule() {
+            openModal('workflow');
+            wf3StopPolling();
+            wf3.runId = null; wf3.run = null;
+            renderWorkflowModule();
+          }
+
+          function renderWorkflowModule() {
+            const el = document.getElementById('wf3-body');
+            if (!el) return;
+            if (!state.settings.apiBase) {
+              el.innerHTML = `<div style="background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);padding:12px;border-radius:6px;font-size:10.5px">
+              ${I18N.t('wf3.noBackend')}
+              <button class="btn btn-primary" style="margin-top:8px;width:100%" onclick="prefillSettings();openModal('settings')">⚙</button>
+            </div>`;
+              return;
+            }
+            el.innerHTML = `<div style="color:var(--text3);font-size:10px;padding:6px">${I18N.t('common.loading')}</div>`;
+            loadWorkflowRuns().catch(e => {
+              el.innerHTML = `<div style="color:#ef4444;font-size:10.5px;padding:8px">${I18N.t('wf3.loadFailed', { msg: e.message })}</div>`;
+            });
+          }
+
+          async function loadWorkflowRuns() {
+            const el = document.getElementById('wf3-body');
+            const mod = MODULES[state.mod];
+            const pid = mod && mod.patient ? mod.patient.id : '';
+            let data;
+            try {
+              data = await workflowAuthedFetch('/workflow/runs?patient_id=' + encodeURIComponent(pid));
+            } catch (e) {
+              el.innerHTML = `<div style="color:#ef4444;font-size:10.5px;padding:8px">${I18N.t('wf3.loadFailed', { msg: e.message })}</div>`;
+              return;
+            }
+            const runs = data.runs || [];
+            if (!runs.length) {
+              el.innerHTML = renderWorkflowHeader(null) + `
+              <div style="background:var(--bg2);border:1px solid var(--border2);padding:12px;border-radius:6px;margin-top:8px">
+                <div style="font-size:10.5px;margin-bottom:8px">${I18N.t('wf3.noRuns')}</div>
+                <button class="btn btn-primary" style="width:100%" onclick="triggerWorkflowPrep()">${I18N.t('wf3.triggerPrep')}</button>
+              </div>`;
+              return;
+            }
+            const list = runs.map(r => `
+              <div data-wf3-run="${r.id}" style="display:flex;align-items:center;gap:8px;padding:6px 8px;border:1px solid var(--border);border-radius:6px;margin-top:6px;cursor:pointer;${wf3.runId === r.id ? 'border-color:#06b6d4;background:#06b6d422' : ''}"
+                   onclick="selectWorkflowRun('${r.id}')">
+                <span style="font:9px var(--mono);color:var(--text3)">${String(r.id).slice(0, 8)}</span>
+                <span style="color:var(--text3)">${I18N.t('wf3.run')} ${r.trigger === 'auto' ? I18N.t('wf3.auto') : I18N.t('wf3.manual')}</span>
+                <span style="font-size:9px;color:${r.prep_status === 'error' ? '#ef4444' : r.prep_status === 'done' ? '#22c55e' : '#eab308'}">${r.prep_status}</span>
+                <span style="margin-left:auto;font-size:9px;color:var(--text3)">${r.modality || 'OT'} · ${r.stage}</span>
+              </div>`).join('');
+            el.innerHTML = renderWorkflowHeader(runs[0]) +
+              `<div style="font-size:9px;color:var(--text3);margin-top:8px">${I18N.t('wf3.selectRun')}</div>` + list +
+              `<div id="wf3-preview" style="margin-top:8px"></div>`;
+            selectWorkflowRun(runs[0].id);
+          }
+
+          function renderWorkflowHeader(run) {
+            const mod = MODULES[state.mod];
+            const p = mod && mod.patient;
+            const steps = [
+              { i: 1, key: 'wf3.step1', active: run ? run.stage !== 'validated' : true },
+              { i: 2, key: 'wf3.step2', active: run ? run.stage !== 'validated' : false },
+              { i: 3, key: 'wf3.step3', active: run ? run.stage === 'validated' : false }
+            ];
+            let html = `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
+              <div style="font-size:10px;color:var(--text3)">${p ? `${I18N.t('wf3.patient')} : <b>${p.nom}</b> (${p.id})` : ''}</div>
+            </div>`;
+            html += `<div style="display:flex;gap:6px;margin:10px 0 4px">${steps.map(s => `
+              <div style="flex:1;text-align:center;padding:6px;border-radius:6px;font-size:9.5px;font-weight:600;
+                  ${s.active ? 'background:#06b6d433;color:#06b6d4;border:1px solid #06b6d4' : 'background:var(--bg2);color:var(--text3);border:1px solid var(--border2)'}">
+                ${I18N.t(s.key)}
+              </div>`).join('')}</div>`;
+            return html;
+          }
+
+          async function selectWorkflowRun(runId) {
+            wf3StopPolling();
+            wf3.runId = runId; wf3.run = null;
+            renderWorkflowPreview();
+            wf3.timer = setInterval(pollWorkflowRun, 800);
+            await pollWorkflowRun();
+          }
+
+          async function pollWorkflowRun() {
+            if (!wf3.runId) return;
+            let run;
+            try {
+              run = await workflowAuthedFetch('/workflow/runs/' + encodeURIComponent(wf3.runId));
+            } catch (e) {
+              const el = document.getElementById('wf3-preview');
+              if (el) el.innerHTML = `<div style="color:#ef4444;font-size:10.5px">${I18N.t('wf3.loadFailed', { msg: e.message })}</div>`;
+              wf3StopPolling();
+              return;
+            }
+            wf3.run = run;
+            renderWorkflowPreview();
+            if (run.prep_status === 'done' || run.prep_status === 'error') {
+              wf3StopPolling();
+              if (run.prep_status === 'done') renderWorkflowRunsHighlight();
+            }
+          }
+
+          function renderWorkflowRunsHighlight() {
+            const mod = MODULES[state.mod];
+            const pid = mod && mod.patient ? mod.patient.id : '';
+            workflowAuthedFetch('/workflow/runs?patient_id=' + encodeURIComponent(pid))
+              .then(d => {
+                document.querySelectorAll('#modal-workflow [data-wf3-run]').forEach(n => {
+                  const match = (d.runs || []).find(r => r.id === n.getAttribute('data-wf3-run'));
+                  if (match) {
+                    n.style.borderColor = match.prep_status === 'done' ? '#22c55e' : '#eab308';
+                    n.style.color = match.prep_status === 'done' ? '#22c55e' : '#eab308';
+                  }
+                });
+              }).catch(() => { });
+          }
+
+          function renderWorkflowPreview() {
+            const el = document.getElementById('wf3-preview');
+            if (!el) return;
+            const run = wf3.run;
+            if (!run) { el.innerHTML = `<div style="color:var(--text3);font-size:10px">${I18N.t('wf3.selectRun')}</div>`; return; }
+            const isReady = run.prep_status === 'done';
+            const isError = run.prep_status === 'error';
+            if (!isReady && !isError) {
+              el.innerHTML = `<div style="background:var(--bg2);border:1px solid var(--border2);padding:12px;border-radius:6px;margin-top:8px">
+                <div style="font-size:10.5px;color:#eab308;font-weight:600">⏳ ${I18N.t('wf3.preparing')}</div>
+                <div style="font-size:9.5px;color:var(--text3);margin-top:4px">${run.prep_progress || '…'}</div>
+              </div>`;
+              return;
+            }
+            if (isError) {
+              el.innerHTML = `<div style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);padding:12px;border-radius:6px;margin-top:8px;color:#ef4444;font-size:10.5px">
+                ${I18N.t('wf3.prepError', { error: run.prep_error || '?' })}
+              </div>`;
+              return;
+            }
+
+            const sim = run.margin_simulation || {};
+            const guard = sim.guardrail || {};
+            const sourceBadge = run.source === 'metadata_estimate'
+              ? `<span style="font-size:9px;font-weight:700;color:#eab308;background:#eab30822;padding:1px 6px;border-radius:8px;margin-left:6px">${I18N.t('wf3.sourceEstimate')}</span>`
+              : `<span style="font-size:9px;font-weight:700;color:#22c55e;background:#22c55e22;padding:1px 6px;border-radius:8px;margin-left:6px">${I18N.t('wf3.sourceReal')}</span>`;
+
+            const structures = (run.structures || []).map(s => `
+              <div style="display:flex;align-items:center;gap:8px;padding:4px 6px;border-bottom:1px solid rgba(255,255,255,.04)">
+                <span style="width:9px;height:9px;border-radius:50%;background:${s.color || '#94a3b8'}"></span>
+                <span style="flex:1">${s.label}</span>
+                <span style="font-size:9px;color:${s.is_target ? '#06b6d4' : '#f43f5e'};font-weight:600">${s.is_target ? I18N.t('wf3.roleTarget') : I18N.t('wf3.roleRisk')}</span>
+                <span style="font:9px var(--mono);color:var(--text2)">${s.volume_ml} ${I18N.t('wf3.volumeMl')}</span>
+              </div>`).join('');
+
+            const overlaps = Object.keys(sim.risk_overlaps_pct || {}).map(k => {
+              const s = (run.structures || []).find(x => x.key === k);
+              return `<div style="display:flex;justify-content:space-between;font-size:9.5px">
+                <span style="color:var(--text3)">${s ? s.label : k}</span>
+                <span style="font-weight:600;color:${sim.risk_overlaps_pct[k] > 25 ? '#ef4444' : '#22c55e'}">${sim.risk_overlaps_pct[k]}%</span>
+              </div>`;
+            }).join('');
+
+            const flags = (guard.flags || []).map(f => `
+              <div style="font-size:9.5px;color:${f.status === 'ok' ? '#22c55e' : '#eab308'};padding:2px 0">
+                [${f.status === 'ok' ? I18N.t('wf3.flagOk') : I18N.t('wf3.flagWarn')}] ${f.rule} — ${f.message}
+              </div>`).join('');
+
+            const guardColor = guard.level === 'ok' ? '#22c55e' : '#eab308';
+            const margin = run.safety_margin_mm != null ? run.safety_margin_mm : 10;
+
+            el.innerHTML = `
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px">
+                <div style="background:var(--bg2);border:1px solid var(--border2);padding:10px;border-radius:6px">
+                  <div style="font-weight:700;font-size:10px;margin-bottom:6px">${I18N.t('wf3.structuresTitle')} ${sourceBadge}</div>
+                  ${structures || '<div style="font-size:9px;color:var(--text3)">—</div>'}
+                </div>
+                <div style="display:flex;flex-direction:column;gap:8px">
+                  <div style="background:var(--bg2);border:1px solid var(--border2);padding:10px;border-radius:6px">
+                    <label style="font-size:9.5px;color:var(--text3)">${I18N.t('wf3.marginLabel')} : <strong id="wf3-margin-val">${margin}</strong> mm</label>
+                    <input type="range" id="wf3-margin" min="0" max="20" step="0.5" value="${margin}" class="form-control"
+                      style="padding:0;cursor:pointer" oninput="onWf3MarginInput(this)">
+                  </div>
+                  <div style="background:var(--bg2);border:1px solid var(--border2);padding:10px;border-radius:6px">
+                    <div style="display:flex;justify-content:space-between;font-size:10px">
+                      <span style="color:var(--text3)">${I18N.t('wf3.resectionVolume')}</span>
+                      <span style="font-weight:700;color:var(--accent)" id="wf3-resection">${sim.resection_volume_ml != null ? sim.resection_volume_ml : '—'} ${I18N.t('wf3.volumeMl')}</span>
+                    </div>
+                    ${overlaps ? `<div style="margin-top:6px;border-top:1px dashed var(--border);padding-top:6px">${I18N.t('wf3.riskOverlap')} :${overlaps}</div>` : ''}
+                  </div>
+                  <div style="border:1px solid ${guardColor}55;background:${guardColor}18;padding:10px;border-radius:6px">
+                    <div style="font-weight:700;font-size:10px;color:${guardColor}">🛡 ${I18N.t('wf3.guardrailTitle')} : ${guard.level === 'ok' ? I18N.t('wf3.guardrailOk') : I18N.t('wf3.guardrailWarn')}</div>
+                    <div style="margin-top:4px">${flags}</div>
+                    <div style="font-size:8.5px;color:var(--text3);margin-top:4px">${I18N.t('wf3.guideline', { g: guard.guideline || '—' })}</div>
+                  </div>
+                </div>
+              </div>
+              <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+                <button class="btn btn-primary" style="flex:1" onclick="validateWorkflowRun()" ${run.stage === 'validated' ? 'disabled' : ''}>${I18N.t('wf3.validate')}</button>
+                <button class="btn btn-secondary" onclick="exportWorkflowSr()">${I18N.t('wf3.exportSr')}</button>
+                <button class="btn btn-secondary" onclick="downloadWorkflowPdf()">${I18N.t('wf3.exportPdf')}</button>
+              </div>
+              <div id="wf3-validated" style="margin-top:8px"></div>`;
+            renderWorkflowValidated(run);
+          }
+
+          function renderWorkflowValidated(run) {
+            const box = document.getElementById('wf3-validated');
+            if (!box) return;
+            if (run.stage === 'validated' && run.validated_at) {
+              box.innerHTML = `<div style="background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.3);padding:10px;border-radius:6px;font-size:10px">
+                ✅ ${I18N.t('wf3.validatedBy')} : <b>${run.validated_by || '—'}</b> ${I18N.t('wf3.validatedAt')} ${new Date(run.validated_at).toLocaleString()}</div>`;
+            }
+          }
+
+          function onWf3MarginInput(input) {
+            const val = parseFloat(input.value);
+            document.getElementById('wf3-margin-val').textContent = val;
+            clearTimeout(wf3._debounce);
+            wf3._debounce = setTimeout(() => recalcWorkflowMargin(val), 250);
+          }
+
+          async function recalcWorkflowMargin(marginMm) {
+            if (!wf3.runId) return;
+            try {
+              const sim = await workflowAuthedFetch('/workflow/runs/' + encodeURIComponent(wf3.runId) + '/margin', {
+                method: 'POST', body: JSON.stringify({ margin_mm: marginMm })
+              });
+              if (wf3.run) {
+                wf3.run.margin_simulation = sim;
+                wf3.run.safety_margin_mm = sim.margin_mm;
+                renderWorkflowPreview();
+              }
+              notify(I18N.t('wf3.recalcDone', { mm: marginMm }), 'ok');
+            } catch (e) {
+              notify(I18N.t('wf3.recalcFailed') + ' (' + e.message + ')', 'warn');
+            }
+          }
+
+          async function validateWorkflowRun() {
+            if (!wf3.runId) return;
+            if (!confirm(I18N.t('wf3.confirmValidate'))) return;
+            try {
+              const res = await workflowAuthedFetch('/workflow/runs/' + encodeURIComponent(wf3.runId) + '/validate', {
+                method: 'POST', body: JSON.stringify({})
+              });
+              if (wf3.run) {
+                wf3.run.stage = res.stage;
+                wf3.run.validated_at = res.validated_at;
+                wf3.run.validated_by = res.validated_by;
+              }
+              renderWorkflowPreview();
+              renderWorkflowRunsHighlight();
+              notify('✅ ' + I18N.t('wf3.prepDone'), 'ok');
+            } catch (e) {
+              notify(I18N.t('wf3.recalcFailed') + ' (' + e.message + ')', 'warn');
+            }
+          }
+
+          async function exportWorkflowSr() {
+            if (!wf3.runId) return;
+            try {
+              const sr = await workflowAuthedFetch('/workflow/runs/' + encodeURIComponent(wf3.runId) + '/export-sr', {
+                method: 'POST', body: JSON.stringify({})
+              });
+              notify(I18N.t('wf3.srExported', { title: sr.title || '' }), 'ok');
+            } catch (e) {
+              notify(I18N.t('wf3.srUnavailable') + ' (' + e.message + ')', 'warn');
+            }
+          }
+
+          async function downloadWorkflowPdf() {
+            if (!wf3.runId) return;
+            try {
+              const base = state.settings.apiBase.replace(/\/+$/, '');
+              const token = await getBackendToken();
+              const r = await fetch(base + '/workflow/runs/' + encodeURIComponent(wf3.runId) + '/export-pdf', {
+                headers: { 'Authorization': 'Bearer ' + token }
+              });
+              if (!r.ok) throw new Error('HTTP ' + r.status);
+              const blob = await r.blob();
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url; a.download = 'plan_validation_' + wf3.runId.slice(0, 8) + '.pdf';
+              document.body.appendChild(a); a.click(); a.remove();
+              setTimeout(() => URL.revokeObjectURL(url), 4000);
+              notify(I18N.t('wf3.prepDone'), 'ok');
+            } catch (e) {
+              notify(I18N.t('wf3.pdfUnavailable') + ' (' + e.message + ')', 'warn');
+            }
+          }
+
+          async function triggerWorkflowPrep() {
+            const mod = MODULES[state.mod];
+            const pid = mod && mod.patient ? mod.patient.id : '';
+            try {
+              const res = await workflowAuthedFetch('/workflow/auto-import', {
+                method: 'POST', body: JSON.stringify({ patient_id: pid, specialty: state.mod })
+              });
+              notify(I18N.t('wf3.preparing'), 'info');
+              loadWorkflowRuns();
+            } catch (e) {
+              notify(I18N.t('wf3.recalcFailed') + ' (' + e.message + ')', 'warn');
+            }
           }
 
           document.addEventListener('DOMContentLoaded', init);

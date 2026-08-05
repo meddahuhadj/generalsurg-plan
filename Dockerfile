@@ -1,5 +1,5 @@
 # ==============================================================================
-# Dockerfile — GeneralSurgPlan3D NextGen (Production Readiness & MDR Class C)
+# Dockerfile — OphtalmoSurg Plan NextGen (Production Readiness & MDR Class C)
 # ==============================================================================
 # Image de base optimisée et sécurisée pour déploiement en centre hospitalier universitaire,
 # compatible avec accélération GPU NVIDIA (CUDA / TensorRT / WebGPU server-side rendering).
@@ -7,7 +7,7 @@
 FROM python:3.11-slim-bookworm as builder
 
 # Métadonnées et conformité réglementaire
-LABEL maintainer="GeneralSurgPlan3D NextGen Architecture Team"
+LABEL maintainer="OphtalmoSurg Plan Architecture Team"
 LABEL version="2.4.0-Enterprise-MDR"
 LABEL description="Plateforme mondiale de planification chirurgicale, simulation et navigation 3D"
 LABEL regulatory.mdr="CE MDR 2017/745 Class IIb/C compliant"

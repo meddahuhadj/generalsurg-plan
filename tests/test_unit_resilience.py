@@ -12,6 +12,27 @@ import resilience
 from resilience import CircuitBreaker, CircuitOpenError, RateLimiter
 
 
+@pytest.fixture(autouse=True)
+def _windows_selector_event_loop():
+    """Sur Windows, quand cette suite tourne dans la même session pytest que
+    des tests utilisant `TestClient` (portail anyio en arrière-plan, ex.
+    tests/test_auth_patients_dicom.py), le ProactorEventLoop par défaut a une
+    sémantique de détection de boucle "running" qui entre en conflit avec le
+    Runner de pytest-asyncio (`Runner.run() cannot be called from a running
+    event loop`). Le SelectorEventLoop n'a pas ce comportement. Restreint à
+    ce fichier (pas un réglage global en conftest.py) car le SelectorEventLoop
+    ne supporte PAS la création de sous-processus sur Windows — nécessaire
+    aux tests e2e Playwright (tests/e2e/) qui tournent dans la même session.
+    """
+    if sys.platform == "win32":
+        previous = asyncio.get_event_loop_policy()
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+        yield
+        asyncio.set_event_loop_policy(previous)
+    else:
+        yield
+
+
 class TestCircuitBreaker:
     def test_initial_state_is_closed(self):
         cb = CircuitBreaker("test")

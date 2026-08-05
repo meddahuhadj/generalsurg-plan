@@ -1,4 +1,4 @@
-# Caddyfile — reverse proxy HTTPS automatique (Let's Encrypt) pour GeneralSurg Plan.
+# Caddyfile — reverse proxy HTTPS automatique (Let's Encrypt) pour OphtalmoSurg Plan.
 #
 # {$DOMAIN} et {$ACME_EMAIL} viennent de l'environnement (voir .env / .env.example) :
 # Caddy obtient et renouvelle seul le certificat TLS pour ce domaine — aucune

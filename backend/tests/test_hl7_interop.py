@@ -19,7 +19,7 @@ class FakePatient:
     nom = "DUPONT Jean"
     sexe = "M"
     chirurgien = "Dr. Hadj"
-    specialty = "hbp"
+    specialty = "cataracte"
 
 
 @pytest.fixture

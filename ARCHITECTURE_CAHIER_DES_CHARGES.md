@@ -1,4 +1,4 @@
-# GeneralSurg Plan — Plateforme Mondiale de Chirurgie Augmentée
+# OphtalmoSurg Plan — Plateforme Mondiale de Chirurgie Augmentée
 ## Cahier des charges architectural et fonctionnel (v3.0)
 
 **Document de référence** pour la transformation de `GeneralSurgPlan3D_MIMO_enrichi` en plateforme hospitalière de niveau production utilisée quotidiennement par des hôpitaux universitaires, centres de traumatologie, centres de cancérologie et cliniques privées.
@@ -29,7 +29,7 @@
 
 ### 1.1 Vision produit
 
-`GeneralSurg Plan` devient **la plateforme de référence mondiale** qui couvre le continuum complet d'un acte chirurgical :
+`OphtalmoSurg Plan` devient **la plateforme de référence mondiale** qui couvre le continuum complet d'un acte chirurgical :
 
 ```
 Acquisition   →   Planification   →   Simulation   →   Bloc Opératoire   →   Suivi

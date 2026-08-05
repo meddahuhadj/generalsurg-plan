@@ -1,35 +1,35 @@
 services:
   db:
     image: postgres:16-alpine
-    container_name: generalsurg_db
+    container_name: ophtalmosurg_db
     restart: unless-stopped
     environment:
-      POSTGRES_USER: generalsurg
-      # Dev local uniquement (repli "generalsurg" si non défini) — même
+      POSTGRES_USER: ophtalmosurg
+      # Dev local uniquement (repli "ophtalmosurg" si non défini) — même
       # philosophie que JWT_SECRET ci-dessous. Définissez POSTGRES_PASSWORD
       # dans votre environnement pour toute base accessible au-delà de
       # localhost.
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-generalsurg}
-      POSTGRES_DB: generalsurg
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ophtalmosurg}
+      POSTGRES_DB: ophtalmosurg
     ports:
       - "5432:5432"
     volumes:
-      - generalsurg_pgdata:/var/lib/postgresql/data
+      - ophtalmosurg_pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U generalsurg -d generalsurg"]
+      test: ["CMD-SHELL", "pg_isready -U ophtalmosurg -d ophtalmosurg"]
       interval: 5s
       timeout: 5s
       retries: 10
 
   api:
     build: .
-    container_name: generalsurg_api
+    container_name: ophtalmosurg_api
     restart: unless-stopped
     depends_on:
       db:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgresql+psycopg2://generalsurg:${POSTGRES_PASSWORD:-generalsurg}@db:5432/generalsurg
+      DATABASE_URL: postgresql+psycopg2://ophtalmosurg:${POSTGRES_PASSWORD:-ophtalmosurg}@db:5432/ophtalmosurg
       JWT_SECRET: ${JWT_SECRET:-changez-moi-en-production}
       GEMINI_KEY: ${GEMINI_KEY:-}
       GROQ_KEY: ${GROQ_KEY:-}
@@ -41,4 +41,4 @@ services:
              uvicorn main:app --host 0.0.0.0 --port 8000"
 
 volumes:
-  generalsurg_pgdata:
+  ophtalmosurg_pgdata:

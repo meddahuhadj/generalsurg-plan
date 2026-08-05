@@ -25,7 +25,7 @@ API_BASE_URL = "http://localhost:8000/api/v2"
 
 def run_healthcheck():
     print("====================================================================")
-    print("🏥 GeneralSurgPlan3D NextGen — Diagnostic Système & Conformité MDR")
+    print("🏥 OphtalmoSurg Plan NextGen — Diagnostic Système & Conformité MDR")
     print("====================================================================")
     
     all_ok = True

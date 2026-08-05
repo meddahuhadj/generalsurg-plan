@@ -228,7 +228,7 @@ async def get_mdr_fda_compliance_dashboard(db: Session = Depends(get_db)):
         audit_table_available = False
 
     return {
-        "platform_name": "GeneralSurgPlan3D NextGen",
+        "platform_name": "OphtalmoSurg Plan NextGen",
         "version": "2.4.0-Enterprise-MDR (prototype, non certifié)",
         "timestamp_utc": datetime.now(timezone.utc).isoformat(),
         "disclaimer": "PROTOTYPE DE RECHERCHE — non certifié, ne pas utiliser en contexte clinique réel.",
