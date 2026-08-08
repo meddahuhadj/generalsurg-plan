@@ -38,6 +38,9 @@ class HealthResponse(BaseModel):
     pacs_configured: bool
     circuit_breakers: Dict[str, Any]
     uptime_seconds: float
+    app_mode: str = "demo"
+    demo_mode: bool = True
+    disclaimer: str = "Ce logiciel n'est pas destiné à un usage clinique."
 
 
 class ReadyResponse(BaseModel):
@@ -137,7 +140,7 @@ class PatientCreate(BaseModel):
     taille_cm: float = Field(..., ge=30, le=250)
     diagnostic: str = Field(..., min_length=1, max_length=1000)
     chirurgien: str = Field(..., min_length=1, max_length=128)
-    specialty: Specialty = "hbp"
+    specialty: Specialty = "laryngologie"
     urgence: Literal["vert", "orange", "rouge"] = "vert"
     note: Optional[str] = None
 
@@ -174,7 +177,13 @@ class PatientOut(BaseModel):
 
 class SegmentCreate(BaseModel):
     id: str = Field(..., min_length=1, max_length=64)
-    type: Literal["organe", "lesion", "resection", "structure_tubulaire", "ganglion"]
+    # "nerve"/"vessel"/"cartilage"/"bone"/"gland" ajoutés pour la planification ORL
+    # (voir routers/surgical_planning.py : nerve/vessel alimentent le calcul de marge
+    # aux structures critiques, cartilage/bone bloquent la relaxation FEM hyperélastique
+    # — voir twin_biomech_atlas.get_tissue_class). Existent aussi en import manuel via
+    # POST /api/v2/surgical-planning/patients/{id}/critical-structures/import.
+    type: Literal["organe", "lesion", "resection", "structure_tubulaire", "ganglion",
+                  "nerve", "vessel", "cartilage", "bone", "gland"]
     volume_ml: float = Field(..., ge=0)
     label: str = Field(..., min_length=1, max_length=128)
     color_hex: str = Field(default="#ff0000", pattern=r"^#[0-9a-fA-F]{6}$")
@@ -361,7 +370,8 @@ class VolumetrieResponse(BaseModel):
     volume_resection_ml: float
     remnant_pct: float
     margin_cm: float
-    # HBP-specific
+    # Champs hérités (non spécifiques ORL) : conservés pour compatibilité de schéma,
+    # ne sont plus jamais peuplés par /volumetrie depuis le passage à l'ORL.
     tlv_ml: Optional[float] = None
     tv_ml: Optional[float] = None
     flr_pct: Optional[float] = None
@@ -377,7 +387,7 @@ class VolumetrieResponse(BaseModel):
 
 class ChatRequest(BaseModel):
     message: str = Field(..., min_length=1, max_length=4000)
-    specialty: Specialty = "hbp"
+    specialty: Specialty = "laryngologie"
     context: Literal["surgical-planning", "surgical-summary"] = "surgical-planning"
 
 
@@ -429,3 +439,104 @@ class DicomSRExportResponse(BaseModel):
     StudyDate: str
     SurgicalPlan: Dict[str, Any]
     Observations: Optional[str]
+
+
+# ---------------------------------------------------------------------------
+# Planification chirurgicale (boucle Planification → FLR → Plan chirurgical)
+# ---------------------------------------------------------------------------
+
+class ResectionSimulationRequest(BaseModel):
+    """Plan de coupe dessiné sur la MPR + choix matériau. `run_fem=true` exécute
+    la relaxation hyperélastique post-résection (backend/biomech_solver.py) et
+    exporte le maillage déformé ; sinon seul le calcul FLR + marge est effectué
+    (mode rapide, pour le déplacement interactif du plan)."""
+    plane_point: List[float] = Field(..., min_length=3, max_length=3, description="Point du plan de coupe [x, y, z] mm (référentiel du maillage segmenté)")
+    plane_normal: List[float] = Field(..., min_length=3, max_length=3, description="Normale du plan [nx, ny, nz] — côté n·(x-p) > 0 = remnant")
+    tissue_type: str = "liver_parenchyma"
+    model: BiomechModel = "mooney_rivlin"
+    margin_mm: float = Field(5.0, ge=0.0, le=50.0, description="Marge oncologique minimale demandée (mm)")
+    tissue_parameters: Optional[Dict[str, float]] = Field(None, description="Surcharge des paramètres matériau ; sinon défaut de l'atlas (twin_biomech_atlas.py)")
+    run_fem: bool = Field(True, description="Exécuter la relaxation hyperélastique post-résection (plus lent, ~5-15 s)")
+    max_displacement_mm: float = Field(1.5, ge=0.1, le=20.0, description="Amplitude maximale de fermeture du défaut sur la face de coupe")
+
+
+class CriticalStructureMargin(BaseModel):
+    """Marge géométrique entre le plan de coupe et une structure neurovasculaire
+    critique (nerf/vaisseau) du patient — même méthode que la marge oncologique
+    (`biomech_solver.surface_min_distance_to_plane`), mais appliquée à une
+    structure qui doit être PRÉSERVÉE plutôt qu'à une lésion à réséquer avec marge.
+    Voir routers/surgical_planning.py:_resolve_critical_structures."""
+    segment_id: str
+    label: str
+    type: Literal["nerve", "vessel"]
+    tissue_type: Optional[str] = None
+    margin_mm: Optional[float] = None
+
+
+class ResectionMetrics(BaseModel):
+    total_volume_ml: Optional[float] = None
+    resected_volume_ml: Optional[float] = None
+    remnant_volume_ml: Optional[float] = None
+    flr_pct: Optional[float] = None
+    margin_mm: Optional[float] = None
+    margin_ok: Optional[bool] = None
+    # Marges aux structures critiques (nerf/vaisseau) présentes chez le patient —
+    # liste vide si aucun segment nerve/vessel n'a de maillage réel résolvable.
+    critical_structure_margins: List[CriticalStructureMargin] = Field(default_factory=list)
+    # Champs de la simulation FEM (présents seulement si run_fem=true)
+    model: Optional[str] = None
+    strain_energy_kpa_mm3_initial: Optional[float] = None
+    strain_energy_kpa_mm3_final: Optional[float] = None
+    strain_energy_relaxation_pct: Optional[float] = None
+    peak_displacement_mm: Optional[float] = None
+    deformed_volume_ml: Optional[float] = None
+    converged: Optional[bool] = None
+    iterations: Optional[int] = None
+    num_tets_remnant: Optional[int] = None
+
+
+class ResectionSimulationOut(BaseModel):
+    patient_id: str
+    mesh_ref: Optional[str]
+    plane_point: List[float]
+    plane_normal: List[float]
+    metrics: ResectionMetrics
+    deformed_mesh_url: Optional[str] = None
+    warning: Optional[str] = None
+
+
+class ResectionPlanIn(BaseModel):
+    title: str = Field("Plan de résection", min_length=1, max_length=256)
+    plane_point: List[float] = Field(..., min_length=3, max_length=3)
+    plane_normal: List[float] = Field(..., min_length=3, max_length=3)
+    tissue_type: str = "liver_parenchyma"
+    model: BiomechModel = "mooney_rivlin"
+    margin_mm: float = Field(5.0, ge=0.0, le=50.0)
+    run_fem: bool = True
+    max_displacement_mm: float = Field(1.5, ge=0.1, le=20.0)
+
+
+class ResectionPlanUpdateIn(BaseModel):
+    title: Optional[str] = Field(None, min_length=1, max_length=256)
+    status: Optional[Literal["DRAFT", "SELECTED"]] = None
+    plane_point: Optional[List[float]] = Field(None, min_length=3, max_length=3)
+    plane_normal: Optional[List[float]] = Field(None, min_length=3, max_length=3)
+    margin_mm: Optional[float] = Field(None, ge=0.0, le=50.0)
+
+
+class ResectionPlanOut(BaseModel):
+    id: str
+    patient_id: str
+    title: str
+    status: str
+    tissue_type: str
+    model: str
+    mesh_ref: Optional[str] = None
+    plane_point: List[float]
+    plane_normal: List[float]
+    margin_mm: float
+    metrics: ResectionMetrics
+    deformed_mesh_url: Optional[str] = None
+    warning: Optional[str] = None
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
