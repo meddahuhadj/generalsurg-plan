@@ -2,17 +2,25 @@
 """Configuration pytest des tests E2E (Playwright) de l'application SPA OphtalmoSurg Plan.
 
 La suite sert l'application statique (index.html + assets) via ``python -m http.server``
-puis pilote Chromium headless. Aucun backend n'est nécessaire : la SPA tourne en
-« mode démo » (``apiBase`` vide), et c'est précisément ce parcours — celui que voit un
-chirurgien sans backend — qui est validé ici.
+puis pilote Chromium headless. Deux familles de tests :
+
+1. Mode démo (``base_url`` seul) : la SPA tourne sans backend (``apiBase`` vide) — le
+   parcours que voit un chirurgien sans backend est validé ici (tests/test_app_e2e.py).
+2. Mode backend réel (``base_url`` + ``backend_url``) : la SPA est branchée sur un
+   backend FastAPI réel démarré par la fixture ``backend_url`` (base de données SQLite
+   temporaire isolée, secrets dédiés) — c'est le parcours « planification réelle »
+   (tests/test_workflow_e2e.py) : upload DICOM zero-touch, workflow 3-clics, exports.
 
 Lancement ciblé :
-    pytest tests/e2e -q
+    pytest tests/e2e -q            # tout
+    pytest tests/e2e/test_workflow_e2e.py -q   # uniquement le parcours backend réel
 """
 
 import os
+import shutil
 import subprocess
 import sys
+import tempfile
 import time
 import urllib.request
 
@@ -21,6 +29,7 @@ import pytest
 pytest.importorskip("playwright")
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+BACKEND_DIR = os.path.join(REPO_ROOT, "backend")
 
 # Erreurs « bénignes » tolérées en mode démo : le pipeline démo POST parfois vers le
 # backend absent et le serveur statique répond alors 501 (Unsupported method). Ce n'est
@@ -61,6 +70,69 @@ def base_url():
         proc.wait(timeout=5)
     except subprocess.TimeoutExpired:
         proc.kill()
+
+
+@pytest.fixture(scope="session")
+def backend_url(base_url):
+    """Backend FastAPI réel, démarré isolé pour la session et arrêté à la fin.
+
+    - Base SQLite temporaire (jamais le fichier de dev du dépôt) -> tables créées
+      par init_db(), utilisateurs + patients de démo seedés sur base vierge.
+    - Stockages DICOM / workflow redirigés vers le répertoire temporaire.
+    - JWT_SECRET fixe (le frontend récupère son jeton du même process, mais un secret
+      stable rend la session déterministe) et APP_ENV=development (sinon le garde-fou
+      anti-mauvaise-config refuse le démarrage avec les comptes de démo).
+    - ALLOWED_ORIGINS contient l'origine du serveur statique : les appels fetch de la
+      SPA vers ce backend sont légitimes (navigateur), on ne les compte pas en erreur.
+    """
+    port = _free_port()
+    url = "http://127.0.0.1:%d" % port
+    work = tempfile.mkdtemp(prefix="ophtalmo_e2e_")
+    env = os.environ.copy()
+    env.update({
+        "DATABASE_URL": "sqlite:///%s/e2e.db" % work.replace("\\", "/"),
+        "WORKFLOW_STORAGE_DIR": os.path.join(work, "workflows"),
+        "DICOM_STORAGE_DIR": os.path.join(work, "dicom_series"),
+        "JWT_SECRET": "e2e-test-secret-not-for-production",
+        "SEED_DEMO_USERS": "true",
+        "APP_ENV": "development",
+        "WORKFLOW_AUTO_TRIGGER": "true",
+        "ALLOWED_ORIGINS": "%s,http://localhost" % base_url,
+        "LOG_LEVEL": "ERROR",
+    })
+    log_path = os.path.join(work, "backend.log")
+    with open(log_path, "w", encoding="utf-8") as logf:
+        proc = subprocess.Popen(
+            [sys.executable, "-m", "uvicorn", "main:app", "--host", "127.0.0.1",
+             "--port", str(port), "--log-level", "error"],
+            cwd=BACKEND_DIR, env=env, stdout=logf, stderr=subprocess.STDOUT,
+        )
+    ready = False
+    for _ in range(120):
+        if proc.poll() is not None:
+            break
+        try:
+            with urllib.request.urlopen(url + "/health", timeout=1):
+                ready = True
+                break
+        except OSError:
+            time.sleep(0.25)
+    if not ready:
+        tail = ""
+        try:
+            with open(log_path, encoding="utf-8") as lf:
+                tail = lf.read()[-3000:]
+        except OSError:
+            pass
+        proc.kill()
+        pytest.fail("Backend FastAPI non démarré (port %d) :\n%s" % (port, tail))
+    yield url
+    proc.terminate()
+    try:
+        proc.wait(timeout=10)
+    except subprocess.TimeoutExpired:
+        proc.kill()
+    shutil.rmtree(work, ignore_errors=True)
 
 
 @pytest.fixture(scope="session")

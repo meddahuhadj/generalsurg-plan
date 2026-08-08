@@ -24,10 +24,15 @@ import os
 import socket
 import sys
 
-# /app (racine du conteneur) doit être sur sys.path pour `import backend.main`
+# /app/backend doit être sur sys.path : main.py et ses modules importent à plat
+# (from db import ..., import routers.*) — "uvicorn backend.main:app" depuis /app
+# échouerait sinon (ModuleNotFoundError: No module named 'db'). app_dir le
+# garantit sous uvicorn ; ce sys.path direct sert d'appoint pour le reste.
 _APP_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-if _APP_ROOT not in sys.path:
-    sys.path.insert(0, _APP_ROOT)
+_BACKEND_DIR = os.path.dirname(os.path.abspath(__file__))
+for _p in (_BACKEND_DIR, _APP_ROOT):
+    if _p not in sys.path:
+        sys.path.insert(0, _p)
 
 import uvicorn  # noqa: E402
 
@@ -44,7 +49,8 @@ def main() -> None:
     sock.set_inheritable(True)
 
     config = uvicorn.Config(
-        "backend.main:app",
+        "main:app",
+        app_dir=_BACKEND_DIR,
         host="0.0.0.0",
         port=PORT,
         workers=1,

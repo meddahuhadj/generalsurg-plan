@@ -76,5 +76,8 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
     CMD curl -f http://localhost:8000/readyz || exit 1
 
-# Démarrage du serveur Uvicorn haute performance avec workers asynchrones
-CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4", "--proxy-headers"]
+# Démarrage du serveur Uvicorn haute performance avec workers asynchrones.
+# --app-dir /app/backend : le backend utilise des imports à plat (from db import,
+# import routers.*) qui exigent que backend/ soit sur sys.path — sans cela,
+# "uvicorn backend.main:app" échoue avec ModuleNotFoundError: No module named 'db'.
+CMD ["uvicorn", "main:app", "--app-dir", "/app/backend", "--host", "0.0.0.0", "--port", "8000", "--workers", "4", "--proxy-headers"]
