@@ -65,7 +65,7 @@ jobs:
 
     environment:
       name: production
-      url: https://generalsurg-plan-mimo-demo.onrender.com
+      url: https://ophtalmosurg-plan.onrender.com
 
     steps:
       - name: Checkout
@@ -103,7 +103,7 @@ jobs:
           echo "✅ Redéploiement Render déclenché avec succès."
           echo ""
           echo "📋 Suivi : https://dashboard.render.com"
-          echo "🌐 URL   : https://generalsurg-plan-mimo-demo.onrender.com"
+          echo "🌐 URL   : https://ophtalmosurg-plan.onrender.com"
           echo ""
           echo "⏱ Le déploiement prend généralement 2-5 minutes."
           echo "   Sur le plan gratuit, le service peut mettre ~30s à"
