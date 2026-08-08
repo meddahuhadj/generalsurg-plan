@@ -355,6 +355,11 @@
             // JWT ne doit pas survivre à la fermeture de l'onglet sur un poste
             // partagé) — voir loadStoredAuth()/persistAuth() dans app-part3.js.
             auth: { token: null, username: null, expiresAt: null },
+            // Biométrie saisie manuellement par patient (module Cataracte) pour le calcul
+            // réel de puissance de LIO — voir srkIIPower()/computeIOLResult() dans
+            // app-part3.js. Clé = mod.patient.id. Distinct des `metrics` figées de démo
+            // dans MODULES : ceci est une vraie entrée utilisateur, jamais pré-remplie.
+            biometryByPatient: {},
             aiBusy: false,
             mpr: {
               plane: { axial: 0, coronal: 0, sagittal: 0 },

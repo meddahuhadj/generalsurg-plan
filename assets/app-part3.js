@@ -226,6 +226,7 @@
     <div class="psec"><div class="psec-title">${I18N.t('plan.metricsTitle', { specialty: mod.short })}</div>
       ${mod.metrics.map(m => `<div class="metric-row"><span class="k">${m.label}</span><span class="v ${m.st}">${m.val}</span></div>`).join('')}
     </div>
+    ${renderBiometryPanel(mod)}
     <div class="psec"><div class="psec-title">${I18N.t('plan.checklistTitle')}</div>
       ${mod.checklist.map(c => `<div class="checklist-item"><span class="check-icon">${c.done ? '✅' : '⬜'}</span><span class="check-text">${c.text}</span></div>`).join('')}
     </div>
@@ -309,6 +310,140 @@
               if (typeof v === 'number' && !isNaN(v)) { total += v; any = true; }
             });
             return any ? total : null;
+          }
+
+          // ── Calcul de puissance de LIO — formule SRK II (Sanders-Retzlaff-Kraff, 1988) ──
+          //
+          // Choisie plutôt que SRK/T (citée dans les métriques de démo) car SRK/T est une
+          // formule vergence-théorique avec de nombreuses constantes de correction (largeur
+          // et hauteur cornéennes, ACD personnalisée, correction d'épaisseur rétinienne...)
+          // qu'il aurait été risqué de reconstituer de mémoire sans pouvoir les vérifier
+          // contre une source publiée — une constante légèrement fausse produirait une
+          // puissance plausible mais cliniquement fausse, silencieusement. SRK II est une
+          // formule de régression plus ancienne et moins précise sur les yeux très longs/
+          // courts, mais sa structure est simple et sans ambiguïté :
+          //
+          //   P = A1 - 2.5 × AL - 0.9 × K
+          //
+          // où A1 est la constante A du fabricant, ajustée selon la longueur axiale :
+          //   AL < 20.0        → A1 = A + 3.0
+          //   20.0 ≤ AL < 21.0 → A1 = A + 2.0
+          //   21.0 ≤ AL < 22.0 → A1 = A + 1.0
+          //   22.0 ≤ AL < 24.5 → A1 = A + 0.0
+          //   AL ≥ 24.5        → A1 = A − 0.5
+          //
+          // Portée volontairement limitée à la cible réfractive émmétrope (plan 0 D) :
+          // l'ajustement pour une réfraction cible non-nulle varie selon les sources et
+          // n'est pas ajouté ici tant qu'il n'est pas vérifié contre une référence publiée.
+          //
+          // ⚠️ Ce calcul n'est PAS validé cliniquement dans ce dépôt (voir bandeau
+          // "Prototype de démonstration" affiché en permanence dans l'app). Avant de lui
+          // faire confiance : comparez son résultat à celui déjà affiché par votre
+          // biomètre (IOL Master/Lenstar) sur au moins 2-3 patients réels.
+          function srkIIA1(aConstant, axialLengthMm) {
+            if (axialLengthMm < 20.0) return aConstant + 3.0;
+            if (axialLengthMm < 21.0) return aConstant + 2.0;
+            if (axialLengthMm < 22.0) return aConstant + 1.0;
+            if (axialLengthMm < 24.5) return aConstant + 0.0;
+            return aConstant - 0.5;
+          }
+
+          function srkIIPower(aConstant, axialLengthMm, avgKD) {
+            const a1 = srkIIA1(aConstant, axialLengthMm);
+            const power = a1 - 2.5 * axialLengthMm - 0.9 * avgKD;
+            return { power: Math.round(power * 100) / 100, a1 };
+          }
+
+          // Bornes de plausibilité (pas des bornes physiologiques strictes) : au-delà, la
+          // valeur saisie est presque certainement une erreur de frappe/unité (ex. rayon
+          // cornéen en mm au lieu d'une puissance en D) plutôt qu'une vraie mesure extrême.
+          // Le calcul reste possible mais un avertissement est renvoyé, jamais un blocage
+          // silencieux ni un résultat présenté sans réserve.
+          function validateBiometryInputs(aConstant, axialLengthMm, avgKD) {
+            const warnings = [];
+            if (!(axialLengthMm > 0) || axialLengthMm < 15 || axialLengthMm > 40) {
+              return { valid: false, warnings: [`Longueur axiale (${axialLengthMm} mm) hors plage plausible (15-40 mm) — vérifiez la saisie.`] };
+            }
+            if (!(avgKD > 0) || avgKD < 30 || avgKD > 60) {
+              return { valid: false, warnings: [`Kératométrie moyenne (${avgKD} D) hors plage plausible (30-60 D) — vérifiez la saisie (unité : dioptries, pas mm de rayon).`] };
+            }
+            if (!(aConstant > 0) || aConstant < 110 || aConstant > 130) {
+              return { valid: false, warnings: [`Constante A (${aConstant}) hors plage plausible (110-130) — vérifiez la valeur fournie par le fabricant de l'implant.`] };
+            }
+            if (axialLengthMm < 22.0 || axialLengthMm > 26.0) {
+              warnings.push('SRK II est connue pour être moins fiable sur les yeux très courts (<22 mm) ou très longs (>26 mm) — envisager une formule théorique (Hoffer Q, SRK/T, Barrett) pour ces cas.');
+            }
+            return { valid: true, warnings };
+          }
+
+          // Résultat complet pour le patient actif du module Cataracte, à partir de la
+          // biométrie saisie par l'utilisateur (state.biometryByPatient) — jamais pré-
+          // remplie ni déduite des métriques de démo. Retourne null si rien n'a encore
+          // été saisi pour ce patient (l'appelant doit alors afficher le formulaire vide,
+          // pas une valeur calculée par défaut).
+          function computeIOLResult(mod) {
+            const bio = state.biometryByPatient[mod.patient.id];
+            if (!bio || bio.al == null || bio.k == null || bio.a == null) return null;
+            const check = validateBiometryInputs(bio.a, bio.al, bio.k);
+            if (!check.valid) return { error: check.warnings[0] };
+            const { power, a1 } = srkIIPower(bio.a, bio.al, bio.k);
+            return { power, a1, warnings: check.warnings, bio };
+          }
+
+          // Formulaire de saisie biométrie affiché uniquement pour le module Cataracte —
+          // les autres spécialités n'ont pas d'équivalent "calcul LIO" dans cette version.
+          // Rendu séparé du reste de planHtml (conteneur #iol-result dédié) pour pouvoir
+          // rafraîchir uniquement le résultat après calcul, sans reconstruire tout le
+          // panneau droit (qui perdrait le focus/la position de scroll de l'utilisateur).
+          function renderBiometryPanel(mod) {
+            if (mod.id !== 'cataracte') return '';
+            const bio = state.biometryByPatient[mod.patient.id] || {};
+            const val = (v) => (v == null ? '' : v);
+            return `<div class="psec" id="biometrie-panel">
+      <div class="psec-title">Biométrie & calcul LIO (SRK II)</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px">
+        <label style="font-size:9px;color:var(--text3)">Longueur axiale (mm)<input type="number" step="0.01" id="bio-al" value="${val(bio.al)}" style="width:100%" ${state.readOnly ? 'disabled' : ''}></label>
+        <label style="font-size:9px;color:var(--text3)">Constante A implant<input type="number" step="0.1" id="bio-a" value="${val(bio.a)}" style="width:100%" ${state.readOnly ? 'disabled' : ''}></label>
+        <label style="font-size:9px;color:var(--text3)">Kératométrie K1 (D)<input type="number" step="0.01" id="bio-k1" value="${val(bio.k1)}" style="width:100%" ${state.readOnly ? 'disabled' : ''}></label>
+        <label style="font-size:9px;color:var(--text3)">Kératométrie K2 (D)<input type="number" step="0.01" id="bio-k2" value="${val(bio.k2)}" style="width:100%" ${state.readOnly ? 'disabled' : ''}></label>
+      </div>
+      <button class="btn btn-secondary" style="width:100%" onclick="calculateIOL()" ${state.readOnly ? 'disabled' : ''}>Calculer la puissance LIO</button>
+      <div id="iol-result" style="margin-top:6px">${renderIOLResultHtml(computeIOLResult(mod))}</div>
+    </div>`;
+          }
+
+          function renderIOLResultHtml(result) {
+            if (!result) {
+              return `<div style="font-size:9px;color:var(--text3)">Saisissez la biométrie réelle du patient pour calculer une puissance de LIO — aucune valeur par défaut, contrairement à la métrique de démo ci-dessus.</div>`;
+            }
+            if (result.error) {
+              return `<div style="font-size:10px;color:#ef4444">⚠️ ${result.error}</div>`;
+            }
+            const warnHtml = result.warnings.length
+              ? `<div style="font-size:9px;color:#eab308;margin-top:4px">⚠️ ${result.warnings.join(' ')}</div>` : '';
+            return `<div class="metric-row"><span class="k">Puissance LIO (SRK II, cible plan 0 D)</span><span class="v ok">${result.power.toFixed(2)} D</span></div>
+    <div style="font-size:9px;color:var(--text3)">Calculé — non validé cliniquement dans ce dépôt : comparez à votre biomètre (IOL Master/Lenstar) avant tout usage réel.</div>
+    ${warnHtml}`;
+          }
+
+          function calculateIOL() {
+            if (guardReadOnly('calcul de puissance LIO')) return;
+            const mod = MODULES[state.mod];
+            const al = parseFloat(document.getElementById('bio-al').value);
+            const k1 = parseFloat(document.getElementById('bio-k1').value);
+            const k2 = parseFloat(document.getElementById('bio-k2').value);
+            const a = parseFloat(document.getElementById('bio-a').value);
+            if ([al, k1, k2, a].some(v => isNaN(v))) {
+              notify('Renseignez les 4 champs (longueur axiale, K1, K2, constante A) avant de calculer.', 'warn');
+              return;
+            }
+            const k = Math.round(((k1 + k2) / 2) * 100) / 100;
+            state.biometryByPatient[mod.patient.id] = { al, k1, k2, k, a };
+            const result = computeIOLResult(mod);
+            const el = document.getElementById('iol-result');
+            if (el) el.innerHTML = renderIOLResultHtml(result);
+            if (result && result.error) notify(result.error, 'warn');
+            else notify('Puissance LIO recalculée.', 'ok');
           }
 
           function computeAnalysis() {

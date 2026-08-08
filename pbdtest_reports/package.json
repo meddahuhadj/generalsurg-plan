@@ -1,0 +1,4 @@
+{
+  "type": "commonjs",
+  "_comment": "Surcharge le 'type: module' du package.json racine (ajouté pour Vite) : les scripts de ce dossier utilisent require()/CommonJS, comme documenté dans le README (code réel extrait de assets/app-part*.js et rejoué dans Node). Sans ce fichier, `node pbdtest_reports/run_test_*.js` échoue avec 'require is not defined in ES module scope'."
+}
