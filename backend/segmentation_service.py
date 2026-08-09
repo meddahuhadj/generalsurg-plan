@@ -69,7 +69,7 @@ from fastapi import APIRouter, File, HTTPException, UploadFile
 from pydantic import BaseModel
 
 from logging_config import get_logger
-import segmentation_specialties as spec
+import specialties as spec  # noqa: F401  # importé pour exposition future des spécialités
 
 logger = get_logger(__name__)
 
