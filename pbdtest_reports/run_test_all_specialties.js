@@ -4,7 +4,7 @@ const code = fs.readFileSync(__dirname + '/extracted_pbd.js', 'utf8');
 global.state = { mod: 'hbp' };
 eval(code);
 
-const specialties = ['hbp','colorectal','gastrique','thyroide','thoracique','cardiaque','urologie'];
+const specialties = ['hbp','colorectal','gastrique','thyroide','thoracique','cardiaque','urologie','anesthesie_reanimation'];
 console.log('Spécialités testées:', specialties.join(', '));
 console.log();
 

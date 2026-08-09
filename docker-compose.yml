@@ -52,6 +52,15 @@ services:
       - DATABASE_URL=postgresql://surguser:${POSTGRES_PASSWORD:?Définissez POSTGRES_PASSWORD dans un fichier .env à la racine (voir .env.example) avant de lancer ce stack}@postgres:5432/ophtalmosurg_db
       - JWT_SECRET=${JWT_SECRET:?Définissez JWT_SECRET (ex. `openssl rand -hex 32`) dans .env avant la mise en production}
       - SEED_DEMO_USERS=false
+      # Premier compte admin réel — requis au tout premier démarrage (base vide),
+      # sans quoi personne ne peut se connecter (SEED_DEMO_USERS=false ci-dessus).
+      # Sans effet sur les démarrages suivants (base déjà peuplée) : une fois le
+      # compte créé, vous pouvez vider ces deux valeurs dans .env par hygiène
+      # (ne pas garder un mot de passe en clair indéfiniment) et gérer les
+      # comptes suivants via POST /users (admin) — voir DEPLOYMENT.md.
+      - BOOTSTRAP_ADMIN_USERNAME=${BOOTSTRAP_ADMIN_USERNAME:?Définissez BOOTSTRAP_ADMIN_USERNAME dans .env avant le premier déploiement — voir DEPLOYMENT.md}
+      - BOOTSTRAP_ADMIN_PASSWORD=${BOOTSTRAP_ADMIN_PASSWORD:?Définissez BOOTSTRAP_ADMIN_PASSWORD dans .env avant le premier déploiement — voir DEPLOYMENT.md}
+      - ALLOW_SELF_REGISTRATION=false
       - ALLOWED_ORIGINS=https://${DOMAIN:?}
       - ORTHANC_URL=http://orthanc:8042
       - MESH_STORAGE_DIR=/tmp/storage/meshes_v2

@@ -73,6 +73,78 @@ CREATE TABLE segments (
     created_at      TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- Table: preanesthesia_assessments (dossier & évaluation pré-anesthésique — un par patient)
+CREATE TABLE preanesthesia_assessments (
+    id                          VARCHAR(36) PRIMARY KEY,
+    patient_id                  VARCHAR(32) UNIQUE REFERENCES patients(id) ON DELETE CASCADE,
+    asa_score                   INTEGER CHECK (asa_score BETWEEN 1 AND 5),
+    asa_urgence                 BOOLEAN DEFAULT FALSE,
+    mallampati_score            INTEGER CHECK (mallampati_score BETWEEN 1 AND 4),
+    antecedents                 TEXT,
+    allergies                   TEXT,
+    traitement_chronique        TEXT,
+    jeune_solide_h               REAL,
+    jeune_liquide_h              REAL,
+    intubation_difficile_prevue BOOLEAN DEFAULT FALSE,
+    intubation_difficile_notes  TEXT,
+    checklist                   JSONB DEFAULT '[]',
+    anesthesiste                VARCHAR(128),
+    conclusion                  TEXT,
+    created_at                  TIMESTAMPTZ DEFAULT NOW(),
+    updated_at                  TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Table: icu_followups (suivi réanimation/USI — plusieurs évaluations par patient dans le temps)
+CREATE TABLE icu_followups (
+    id                     VARCHAR(36) PRIMARY KEY,
+    patient_id             VARCHAR(32) REFERENCES patients(id) ON DELETE CASCADE,
+    recorded_at            TIMESTAMPTZ DEFAULT NOW(),
+    sofa_respiration       INTEGER CHECK (sofa_respiration BETWEEN 0 AND 4),
+    sofa_coagulation       INTEGER CHECK (sofa_coagulation BETWEEN 0 AND 4),
+    sofa_hepatique         INTEGER CHECK (sofa_hepatique BETWEEN 0 AND 4),
+    sofa_cardiovasculaire  INTEGER CHECK (sofa_cardiovasculaire BETWEEN 0 AND 4),
+    sofa_neurologique      INTEGER CHECK (sofa_neurologique BETWEEN 0 AND 4),
+    sofa_renal             INTEGER CHECK (sofa_renal BETWEEN 0 AND 4),
+    sofa_total             INTEGER,
+    apache2_score          INTEGER CHECK (apache2_score BETWEEN 0 AND 71),
+    glasgow_oculaire       INTEGER CHECK (glasgow_oculaire BETWEEN 1 AND 4),
+    glasgow_verbale        INTEGER CHECK (glasgow_verbale BETWEEN 1 AND 5),
+    glasgow_motrice        INTEGER CHECK (glasgow_motrice BETWEEN 1 AND 6),
+    glasgow_total          INTEGER,
+    rass_score             INTEGER CHECK (rass_score BETWEEN -5 AND 4),
+    vent_mode              VARCHAR(32),
+    vent_fio2_pct          REAL,
+    vent_peep_cmh2o        REAL,
+    vent_vt_ml             REAL,
+    vent_fr_rpm            REAL,
+    bilan_entrees_ml       REAL,
+    bilan_sorties_ml       REAL,
+    bilan_net_ml           REAL,
+    notes                  TEXT,
+    auteur                 VARCHAR(128),
+    created_at             TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Table: twin_biomech (propriétés mécaniques par tissu, jumeau numérique déformable)
+-- Une ligne par (patient, tissue_type) : défaut littérature (source='literature_atlas',
+-- voir backend/twin_biomech_atlas.py) ou valeur patiente réelle une fois l'élastographie
+-- disponible (source='patient_elastography'/'clinician_override'). Voir feuille de route
+-- "Jumeau numérique réel" (ARCHITECTURE_CAHIER_DES_CHARGES.md §2.2.1/§3.3).
+CREATE TABLE twin_biomech (
+    id                      VARCHAR(36) PRIMARY KEY,
+    patient_id              VARCHAR(32) REFERENCES patients(id) ON DELETE CASCADE,
+    tissue_type             VARCHAR(32) NOT NULL,
+    model                   VARCHAR(32) NOT NULL DEFAULT 'mooney_rivlin' CHECK (model IN ('linear','mooney_rivlin','ogden','neo_hookean')),
+    parameters              JSONB NOT NULL DEFAULT '{}',
+    source                  VARCHAR(32) NOT NULL DEFAULT 'literature_atlas' CHECK (source IN ('literature_atlas','patient_elastography','clinician_override')),
+    validation_dataset_ref  TEXT,
+    created_at              TIMESTAMPTZ DEFAULT NOW(),
+    updated_at              TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE (patient_id, tissue_type)
+);
+
+CREATE INDEX idx_twin_biomech_patient ON twin_biomech(patient_id);
+
 -- Table: dicom_series
 CREATE TABLE dicom_series (
     id                  UUID PRIMARY KEY DEFAULT uuid_generate_v4(),

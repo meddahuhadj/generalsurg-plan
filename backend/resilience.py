@@ -27,6 +27,7 @@ Utilisé par main.py pour /chat, /ws/chat-stream, et par pacs_client.py.
 from __future__ import annotations
 
 import asyncio
+import os
 import time
 from dataclasses import dataclass, field
 from typing import Awaitable, Callable, Optional, TypeVar
@@ -141,9 +142,20 @@ class RateLimiter:
         self._hits[key] = timestamps
 
 
-# 10 tentatives / minute / IP sur l'authentification — assez large pour un usage légitime
-# (2FA compris) mais coupe un brute-force en boucle serrée.
-AUTH_RATE_LIMITER = RateLimiter(name="auth_token", max_attempts=10, window_seconds=60.0)
+# 10 tentatives / minute / IP (par défaut, voir AUTH_RATE_LIMIT_PER_MINUTE) sur
+# l'authentification — assez large pour un usage légitime (2FA compris) mais
+# coupe un brute-force en boucle serrée.
+_AUTH_RATE_LIMIT = int(os.getenv("AUTH_RATE_LIMIT_PER_MINUTE", "10"))
+AUTH_RATE_LIMITER = RateLimiter(name="auth_token", max_attempts=_AUTH_RATE_LIMIT, window_seconds=60.0)
+
+# 10 tentatives / minute / IP sur la vérification du code 2FA — un code TOTP a
+# 6 chiffres (1 million de combinaisons) : sans cette limite, seule l'étape
+# mot de passe de /auth/token était protégée, pas l'étape 2FA elle-même.
+TWOFA_VERIFY_RATE_LIMITER = RateLimiter(name="2fa_verify", max_attempts=10, window_seconds=60.0)
+
+# 5 inscriptions / minute / IP — protège contre la création de masse de comptes
+# quand ALLOW_SELF_REGISTRATION=true (démo publique ; désactivé pour un pilote réel).
+REGISTER_RATE_LIMITER = RateLimiter(name="register", max_attempts=5, window_seconds=60.0)
 
 # 30 requêtes / minute / IP sur le chat IA — protège contre les abus tout en
 # laissant une marge pour un usage clinique normal (questions rapides en OR).

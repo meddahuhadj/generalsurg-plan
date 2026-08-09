@@ -68,11 +68,12 @@ def client():
 
 @pytest.fixture(autouse=True)
 def _reset_auth_rate_limiter():
-    """`resilience.AUTH_RATE_LIMITER` est un singleton en mémoire du process
-    (backend/resilience.py), partagé par toute la session de test puisque
-    `client` est session-scoped. Le vider avant chaque test évite qu'un test
-    qui multiplie les tentatives de connexion (ex. test du rate limiting
-    lui-même) ne fasse échouer un autre test avec un 429 imprévisible.
+    """`resilience.AUTH_RATE_LIMITER`/`TWOFA_VERIFY_RATE_LIMITER`/`REGISTER_RATE_LIMITER`
+    sont des singletons en mémoire du process (backend/resilience.py), partagés
+    par toute la session de test puisque `client` est session-scoped. Les vider
+    avant chaque test évite qu'un test qui multiplie les tentatives (ex. le test
+    du rate limiting lui-même) ne fasse échouer un autre test avec un 429
+    imprévisible.
 
     Import volontairement en `import resilience` (nom court, pas
     `backend.resilience`) : c'est exactement ainsi que `backend/main.py`
@@ -82,4 +83,6 @@ def _reset_auth_rate_limiter():
     """
     import resilience
     resilience.AUTH_RATE_LIMITER._hits.clear()
+    resilience.TWOFA_VERIFY_RATE_LIMITER._hits.clear()
+    resilience.REGISTER_RATE_LIMITER._hits.clear()
     yield

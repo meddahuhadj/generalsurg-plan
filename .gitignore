@@ -23,6 +23,7 @@ backend/storage/dicom_series/*
 backend/storage/meshes/*
 backend/storage/meshes_v2/*
 backend/storage/exports_v2/*
+backend/storage/tetmeshes/*
 !backend/storage/**/.gitkeep
 storage/*
 !storage/.gitkeep

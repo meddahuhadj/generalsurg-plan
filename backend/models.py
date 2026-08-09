@@ -7,7 +7,7 @@ import uuid
 from datetime import datetime, timezone
 
 from sqlalchemy import (
-    Column, String, Integer, Float, Boolean, Text, DateTime, ForeignKey, JSON
+    Column, String, Integer, Float, Boolean, Text, DateTime, ForeignKey, JSON, UniqueConstraint
 )
 from sqlalchemy.orm import relationship
 
@@ -95,6 +95,106 @@ class Segment(Base):
     created_at = Column(DateTime, default=_utcnow)
 
     patient = relationship("Patient", back_populates="segments")
+
+
+class PreanesthesiaAssessment(Base):
+    """Dossier & évaluation pré-anesthésique — un dossier courant par patient."""
+    __tablename__ = "preanesthesia_assessments"
+
+    id = Column(String(36), primary_key=True, default=_uuid)
+    patient_id = Column(String(32), ForeignKey("patients.id", ondelete="CASCADE"), nullable=False, unique=True)
+    asa_score = Column(Integer, nullable=True)
+    asa_urgence = Column(Boolean, default=False)
+    mallampati_score = Column(Integer, nullable=True)
+    antecedents = Column(Text, nullable=True)
+    allergies = Column(Text, nullable=True)
+    traitement_chronique = Column(Text, nullable=True)
+    jeune_solide_h = Column(Float, nullable=True)
+    jeune_liquide_h = Column(Float, nullable=True)
+    intubation_difficile_prevue = Column(Boolean, default=False)
+    intubation_difficile_notes = Column(Text, nullable=True)
+    checklist_json = Column("checklist", JSON, default=list)
+    anesthesiste = Column(String(128), nullable=True)
+    conclusion = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    patient = relationship("Patient")
+
+
+class IcuFollowUp(Base):
+    """Suivi réanimation/USI — un patient peut avoir plusieurs évaluations dans le temps
+    (contrairement au dossier pré-anesthésique, qui est un état courant unique)."""
+    __tablename__ = "icu_followups"
+
+    id = Column(String(36), primary_key=True, default=_uuid)
+    patient_id = Column(String(32), ForeignKey("patients.id", ondelete="CASCADE"), nullable=False)
+    recorded_at = Column(DateTime, default=datetime.utcnow)
+
+    # SOFA — 6 sous-scores 0-4 (Sepsis-related Organ Failure Assessment), total calculé serveur
+    sofa_respiration = Column(Integer, nullable=True)
+    sofa_coagulation = Column(Integer, nullable=True)
+    sofa_hepatique = Column(Integer, nullable=True)
+    sofa_cardiovasculaire = Column(Integer, nullable=True)
+    sofa_neurologique = Column(Integer, nullable=True)
+    sofa_renal = Column(Integer, nullable=True)
+    sofa_total = Column(Integer, nullable=True)
+
+    # APACHE II — score total renseigné (0-71) ; non recalculé ici à partir des variables
+    # physiologiques brutes (formule complète non implémentée dans ce prototype).
+    apache2_score = Column(Integer, nullable=True)
+
+    # Glasgow (GCS) — 3 sous-scores, total calculé serveur
+    glasgow_oculaire = Column(Integer, nullable=True)
+    glasgow_verbale = Column(Integer, nullable=True)
+    glasgow_motrice = Column(Integer, nullable=True)
+    glasgow_total = Column(Integer, nullable=True)
+
+    # RASS — Richmond Agitation-Sedation Scale (-5 à +4)
+    rass_score = Column(Integer, nullable=True)
+
+    # Ventilation mécanique
+    vent_mode = Column(String(32), nullable=True)
+    vent_fio2_pct = Column(Float, nullable=True)
+    vent_peep_cmh2o = Column(Float, nullable=True)
+    vent_vt_ml = Column(Float, nullable=True)
+    vent_fr_rpm = Column(Float, nullable=True)
+
+    # Bilan entrées/sorties (ml), bilan net calculé serveur
+    bilan_entrees_ml = Column(Float, nullable=True)
+    bilan_sorties_ml = Column(Float, nullable=True)
+    bilan_net_ml = Column(Float, nullable=True)
+
+    notes = Column(Text, nullable=True)
+    auteur = Column(String(128), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    patient = relationship("Patient")
+
+
+class TwinBiomech(Base):
+    """Propriétés mécaniques d'un tissu pour le jumeau numérique déformable —
+    voir feuille de route "Jumeau numérique réel" (README/ARCHITECTURE_CAHIER_DES_CHARGES
+    §2.2.1 twin-service, §3.3 TwinBiomech). Une ligne par (patient, tissue_type) :
+    soit une valeur par défaut issue de la littérature (source="literature_atlas",
+    voir twin_biomech_atlas.py), soit une valeur réelle patiente (source=
+    "patient_elastography" ou "clinician_override") saisie une fois l'élastographie
+    disponible — non implémenté ici, cette table ne fait qu'ouvrir la place.
+    """
+    __tablename__ = "twin_biomech"
+    __table_args__ = (UniqueConstraint("patient_id", "tissue_type", name="uq_twin_biomech_patient_tissue"),)
+
+    id = Column(String(36), primary_key=True, default=_uuid)
+    patient_id = Column(String(32), ForeignKey("patients.id", ondelete="CASCADE"), nullable=False)
+    tissue_type = Column(String(32), nullable=False)   # ex. "liver_parenchyma", "liver_tumor", "vessel_wall"
+    model = Column(String(32), nullable=False, default="mooney_rivlin")  # linear | mooney_rivlin | ogden | neo_hookean
+    parameters_json = Column("parameters", JSON, default=dict)  # ex. {"C10_kpa": 2.1, "C01_kpa": 0.3}
+    source = Column(String(32), nullable=False, default="literature_atlas")
+    validation_dataset_ref = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    patient = relationship("Patient")
 
 
 class DicomSeries(Base):

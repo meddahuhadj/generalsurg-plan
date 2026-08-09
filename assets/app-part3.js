@@ -1078,6 +1078,18 @@
             ].join('\n');
           }
 
+          // Référence patient PSEUDONYMISÉE pour tout texte envoyé à une IA cloud
+          // externe (Gemini/Groq — direct avec la clé de l'utilisateur, ou via le
+          // proxy backend, les deux cas de figure) : remplace le nom réel par
+          // l'identifiant de dossier interne, jamais transmis à un tiers hors de ce
+          // système. Voir aussi backend/phi_filter.py (deuxième ligne de défense,
+          // best-effort, côté serveur — celle-ci est la protection principale, car
+          // elle s'applique aussi au chemin "clé API directe" qui ne passe jamais
+          // par le backend et qu'aucun filtre serveur ne peut donc intercepter).
+          function pseudonymPatientRef(patient) {
+            return `Dossier ${patient.id}`;
+          }
+
           function liveSystemPrompt() {
             const mod = MODULES[state.mod];
             const warn = mod.metrics.filter(m => m.st === 'warn').map(m => `${m.label}: ${m.val}`).join(', ') || 'aucune';
@@ -1085,7 +1097,7 @@
               `Tu es "OphtalmoSurg Live", l'assistant chirurgical vocal intégré au poste de planification ${mod.name}.`,
               `Tu participes à une conversation ORALE CONTINUE en temps réel avec un chirurgien pendant sa préparation opératoire — pas à un échange écrit formel.`,
               ``,
-              `Contexte patient actif : ${mod.patient.nom}, ${mod.patient.age} ans, ${mod.patient.sexe}, diagnostic "${mod.patient.diag}", niveau d'urgence: ${mod.patient.urg}.`,
+              `Contexte patient actif : ${pseudonymPatientRef(mod.patient)}, ${mod.patient.age} ans, ${mod.patient.sexe}, diagnostic "${mod.patient.diag}", niveau d'urgence: ${mod.patient.urg}.`,
               `Métriques hors cible actuellement affichées : ${warn}.`,
               ``,
               SPECIALTY_PROMPTS[state.mod] || '',
@@ -1161,6 +1173,7 @@
                       'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token
                     }, body: JSON.stringify({ message, specialty: state.mod, context: 'surgical-planning' })
                   });
+                  if (await handleUnauthorized(r)) { throw new Error('Session expirée — reconnectez-vous puis reposez votre question.'); }
                   if (!r.ok) throw new Error('Backend: ' + r.status);
                   const data = await r.json();
                   const text = data.reply || 'Réponse vide.';
@@ -1570,7 +1583,7 @@
               if (setupResolve) setupResolve(true);
               setTimeout(() => setGeminiLiveStatus('listening'), 400);
               const mod = MODULES[state.mod];
-              sendGeminiLiveText(`Bonjour, je suis prêt à planifier le cas de ${mod.patient.nom}. Présente-toi brièvement en une phrase et confirme que tu es prêt.`, true);
+              sendGeminiLiveText(`Bonjour, je suis prêt à planifier le cas du ${pseudonymPatientRef(mod.patient)}. Présente-toi brièvement en une phrase et confirme que tu es prêt.`, true);
               return;
             }
             if (data.serverContent) {
@@ -1756,6 +1769,22 @@
           window.addEventListener('beforeunload', () => { if (gl.active) disconnectGeminiLive(); });
 
 
+          // Aide partagée pour les appels authentifiés : sur 401, efface la session
+          // (système d'authentification unique, voir "AUTHENTIFICATION BACKEND"
+          // ci-dessous) et réaffiche l'écran de connexion — NE relance PAS
+          // automatiquement l'appel d'origine (le risque de doublon, ex. démarrer
+          // 2x le même job de segmentation, l'emporte sur un retry silencieux) ;
+          // l'appelant décide.
+          async function handleUnauthorized(response) {
+            if (response.status !== 401) return false;
+            state.auth = { token: null, username: null, expiresAt: null };
+            persistAuth();
+            refreshLoginStatusUI();
+            showLoginGateIfNeeded();
+            notify('Session expirée — reconnectez-vous.', 'warn');
+            return true;
+          }
+
           // ════════════════════════════════════════════════
           //  AI ENGINE — chat du panneau droit (réponse ponctuelle, sans mémoire de session)
           //  Priorité : clé Gemini client → clé Groq client → backend proxy → réponse hors-ligne
@@ -1906,7 +1935,7 @@
             // I18N : la langue de réponse suit la langue active de l'interface (I18N.currentLocale()),
             // pas "français" codé en dur — voir I18N.t('ai.respondInLanguage').
             const system = `Tu es l'assistant chirurgical IA OphtalmoSurg Plan, spécialisé en ${mod.name}. ` +
-              `Patient en cours: ${mod.patient.nom}, ${mod.patient.age} ans, diagnostic: ${mod.patient.diag}. ` +
+              `Patient en cours: ${pseudonymPatientRef(mod.patient)}, ${mod.patient.age} ans, diagnostic: ${mod.patient.diag}. ` +
               `${I18N.t('ai.respondInLanguage', { language: I18N.languageName() })} Réponse concise (3-5 phrases max) et cliniquement pertinente. ` +
               `Rappelle que la décision finale reste au chirurgien.` +
               '\n' + voiceCommandInstructions();
@@ -1953,6 +1982,7 @@
                     'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token
                   }, body: JSON.stringify({ message, specialty: state.mod, context: 'surgical-planning' })
                 });
+                if (await handleUnauthorized(r)) { throw new Error('Session expirée — reconnectez-vous puis reposez votre question.'); }
                 if (!r.ok) throw new Error('Backend: ' + r.status);
                 const data = await r.json();
                 return data.reply || 'Réponse vide.';
@@ -1982,7 +2012,7 @@
             // Repli : point de situation dynamique basé sur les métriques réelles du patient actif
             const m = mod.metrics.find(x => x.st === 'warn') || mod.metrics[0];
             return `Je n'ai pas de fiche pré-calculée correspondant exactement à cette question en mode hors-ligne. ` +
-              `Point de situation disponible : ${m.label} = ${m.val} pour ${mod.patient.nom}. ` +
+              `Point de situation disponible : ${m.label} = ${m.val} pour ${pseudonymPatientRef(mod.patient)}. ` +
               `Essayez l'une des questions rapides ci-contre, ou reconnectez une clé IA dans ⚙ Paramètres pour une réponse libre.` +
               '<br><span style="opacity:.5;font-size:9px">📚 Mode hors-ligne certifié — ' + mod.short + '</span>';
           }
@@ -2124,13 +2154,279 @@
                   chirurgien: state.settings.chirurgien, specialty: state.mod, urgence: p.urg || 'vert'
                 };
                 let r = await fetch(base + '/patients/' + p.id, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }, body: JSON.stringify(body) });
+                if (await handleUnauthorized(r)) { notify('Session expirée — reconnectez-vous puis enregistrez à nouveau.', 'warn'); return; }
                 if (r.status === 404) {
                   r = await fetch(base + '/patients', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }, body: JSON.stringify(body) });
+                  if (await handleUnauthorized(r)) { notify('Session expirée — reconnectez-vous puis enregistrez à nouveau.', 'warn'); return; }
                 }
                 if (r.ok) notify('Synchronisé avec le backend', 'ok');
                 else notify('Backend: échec de synchronisation (' + r.status + ')', 'warn');
               } catch (e) { notify('Backend indisponible: ' + e.message, 'warn'); }
             }
+          }
+
+          // ── Dossier & évaluation pré-anesthésique (transverse à tous les modules) ──
+          const DEFAULT_PREANESTHESIE_CHECKLIST = [
+            { done: false, text: 'Identité du patient vérifiée' },
+            { done: false, text: 'Consentement éclairé signé' },
+            { done: false, text: 'Jeûne respecté (solide ≥ 6h / liquide clair ≥ 2h)' },
+            { done: false, text: 'Allergies vérifiées' },
+            { done: false, text: 'Site opératoire marqué' },
+            { done: false, text: "Matériel d'intubation difficile disponible si prévu" }
+          ];
+
+          function renderPreanesthesieChecklist(items) {
+            const box = document.getElementById('pa-checklist');
+            box.innerHTML = items.map((it, i) => `
+      <label style="display:flex;align-items:center;gap:8px;padding:4px 0;font-size:11px">
+        <input type="checkbox" ${it.done ? 'checked' : ''} onchange="togglePreanesthesieChecklistItem(${i})">
+        <span>${it.text}</span>
+      </label>`).join('');
+          }
+
+          function togglePreanesthesieChecklistItem(i) {
+            const mod = MODULES[state.mod];
+            const rec = state.preanesthesie[mod.patient.id];
+            if (!rec) return;
+            rec.checklist[i].done = !rec.checklist[i].done;
+            renderPreanesthesieChecklist(rec.checklist);
+          }
+
+          async function loadPreanesthesieForm() {
+            const mod = MODULES[state.mod];
+            const p = mod.patient;
+            document.getElementById('preanesthesie-patient-label').textContent =
+              `Patient : ${p.nom} (${mod.short})`;
+
+            let rec = state.preanesthesie[p.id];
+            if (!rec && state.settings.apiBase) {
+              try {
+                const token = await getBackendToken();
+                const base = state.settings.apiBase.replace(/\/+$/, '');
+                const r = await fetch(base + '/patients/' + p.id + '/preanesthesie', {
+                  headers: { 'Authorization': 'Bearer ' + token }
+                });
+                if (r.ok) {
+                  const data = await r.json();
+                  rec = {
+                    asa_score: data.asa_score, asa_urgence: data.asa_urgence,
+                    mallampati_score: data.mallampati_score, antecedents: data.antecedents,
+                    allergies: data.allergies, traitement_chronique: data.traitement_chronique,
+                    jeune_solide_h: data.jeune_solide_h, jeune_liquide_h: data.jeune_liquide_h,
+                    intubation_difficile_prevue: data.intubation_difficile_prevue,
+                    checklist: data.checklist && data.checklist.length ? data.checklist : DEFAULT_PREANESTHESIE_CHECKLIST.map(x => ({ ...x })),
+                    anesthesiste: data.anesthesiste, conclusion: data.conclusion
+                  };
+                  state.preanesthesie[p.id] = rec;
+                }
+              } catch (e) { /* backend indisponible : on retombe sur le formulaire vide/local */ }
+            }
+            if (!rec) {
+              rec = state.preanesthesie[p.id] = {
+                asa_score: '', asa_urgence: false, mallampati_score: '', antecedents: '',
+                allergies: '', traitement_chronique: '', jeune_solide_h: '', jeune_liquide_h: '',
+                intubation_difficile_prevue: false,
+                checklist: DEFAULT_PREANESTHESIE_CHECKLIST.map(x => ({ ...x })),
+                anesthesiste: '', conclusion: ''
+              };
+            }
+
+            document.getElementById('pa-asa').value = rec.asa_score || '';
+            document.getElementById('pa-asa-urgence').checked = !!rec.asa_urgence;
+            document.getElementById('pa-mallampati').value = rec.mallampati_score || '';
+            document.getElementById('pa-intub-diff').checked = !!rec.intubation_difficile_prevue;
+            document.getElementById('pa-jeune-solide').value = rec.jeune_solide_h ?? '';
+            document.getElementById('pa-jeune-liquide').value = rec.jeune_liquide_h ?? '';
+            document.getElementById('pa-antecedents').value = rec.antecedents || '';
+            document.getElementById('pa-allergies').value = rec.allergies || '';
+            document.getElementById('pa-traitement').value = rec.traitement_chronique || '';
+            document.getElementById('pa-anesthesiste').value = rec.anesthesiste || '';
+            document.getElementById('pa-conclusion').value = rec.conclusion || '';
+            renderPreanesthesieChecklist(rec.checklist);
+          }
+
+          async function savePreanesthesieForm() {
+            if (guardReadOnly('modification du dossier pré-anesthésique')) return;
+            const mod = MODULES[state.mod];
+            const p = mod.patient;
+            const rec = state.preanesthesie[p.id];
+
+            rec.asa_score = document.getElementById('pa-asa').value ? parseInt(document.getElementById('pa-asa').value) : null;
+            rec.asa_urgence = document.getElementById('pa-asa-urgence').checked;
+            rec.mallampati_score = document.getElementById('pa-mallampati').value ? parseInt(document.getElementById('pa-mallampati').value) : null;
+            rec.intubation_difficile_prevue = document.getElementById('pa-intub-diff').checked;
+            rec.jeune_solide_h = document.getElementById('pa-jeune-solide').value ? parseFloat(document.getElementById('pa-jeune-solide').value) : null;
+            rec.jeune_liquide_h = document.getElementById('pa-jeune-liquide').value ? parseFloat(document.getElementById('pa-jeune-liquide').value) : null;
+            rec.antecedents = document.getElementById('pa-antecedents').value.trim();
+            rec.allergies = document.getElementById('pa-allergies').value.trim();
+            rec.traitement_chronique = document.getElementById('pa-traitement').value.trim();
+            rec.anesthesiste = document.getElementById('pa-anesthesiste').value.trim();
+            rec.conclusion = document.getElementById('pa-conclusion').value.trim();
+
+            notify('Dossier pré-anesthésique mis à jour (local)', 'ok');
+
+            if (state.settings.apiBase) {
+              try {
+                const token = await getBackendToken();
+                const base = state.settings.apiBase.replace(/\/+$/, '');
+                const r = await fetch(base + '/patients/' + p.id + '/preanesthesie', {
+                  method: 'PUT',
+                  headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                  body: JSON.stringify({
+                    asa_score: rec.asa_score, asa_urgence: rec.asa_urgence,
+                    mallampati_score: rec.mallampati_score, antecedents: rec.antecedents,
+                    allergies: rec.allergies, traitement_chronique: rec.traitement_chronique,
+                    jeune_solide_h: rec.jeune_solide_h, jeune_liquide_h: rec.jeune_liquide_h,
+                    intubation_difficile_prevue: rec.intubation_difficile_prevue,
+                    checklist: rec.checklist, anesthesiste: rec.anesthesiste, conclusion: rec.conclusion
+                  })
+                });
+                if (r.ok) notify('Synchronisé avec le backend', 'ok');
+                else notify('Backend: échec de synchronisation (' + r.status + ')', 'warn');
+              } catch (e) { notify('Backend indisponible: ' + e.message, 'warn'); }
+            }
+          }
+
+          // ── Suivi réanimation / USI (transverse, historique par patient) ──
+          function _sumInputs(ids) {
+            const vals = ids.map(id => document.getElementById(id).value).filter(v => v !== '');
+            if (!vals.length) return null;
+            return vals.reduce((a, v) => a + parseInt(v), 0);
+          }
+
+          function updateSofaTotal() {
+            const total = _sumInputs(['icu-sofa-resp', 'icu-sofa-coag', 'icu-sofa-hep', 'icu-sofa-cardio', 'icu-sofa-neuro', 'icu-sofa-renal']);
+            document.getElementById('icu-sofa-total').textContent = total === null ? '—' : total + ' / 24';
+          }
+
+          function updateGlasgowTotal() {
+            const total = _sumInputs(['icu-gcs-eye', 'icu-gcs-verbal', 'icu-gcs-motor']);
+            document.getElementById('icu-gcs-total').textContent = total === null ? '—' : total + ' / 15';
+          }
+
+          function updateBilanNet() {
+            const e = document.getElementById('icu-bilan-entrees').value;
+            const s = document.getElementById('icu-bilan-sorties').value;
+            if (e === '' && s === '') { document.getElementById('icu-bilan-net').textContent = '—'; return; }
+            const net = (parseFloat(e) || 0) - (parseFloat(s) || 0);
+            document.getElementById('icu-bilan-net').textContent = (net >= 0 ? '+' : '') + net;
+          }
+
+          function renderIcuFollowupHistory(items) {
+            const box = document.getElementById('icu-followup-history');
+            if (!items.length) {
+              box.innerHTML = `<div style="padding:10px;font-size:10px;color:var(--text3)">Aucune évaluation enregistrée pour ce patient.</div>`;
+              return;
+            }
+            box.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:10px">
+      <tr style="border-bottom:1px solid var(--border);color:var(--text3);text-transform:uppercase;font-size:8.5px">
+        <th style="text-align:left;padding:5px 8px">Date</th><th style="text-align:left;padding:5px 8px">SOFA</th>
+        <th style="text-align:left;padding:5px 8px">Glasgow</th><th style="text-align:left;padding:5px 8px">RASS</th>
+        <th style="text-align:left;padding:5px 8px">Ventilation</th><th style="text-align:left;padding:5px 8px">Bilan net</th>
+        <th></th>
+      </tr>` + items.map(it => `
+      <tr style="border-bottom:1px solid rgba(255,255,255,.03)">
+        <td style="padding:5px 8px;font:9px var(--mono)">${new Date(it.recorded_at).toLocaleString()}</td>
+        <td style="padding:5px 8px">${it.sofa_total ?? '—'}</td>
+        <td style="padding:5px 8px">${it.glasgow_total ?? '—'}</td>
+        <td style="padding:5px 8px">${it.rass_score ?? '—'}</td>
+        <td style="padding:5px 8px">${it.vent_mode || '—'}</td>
+        <td style="padding:5px 8px">${it.bilan_net_ml ?? '—'}</td>
+        <td style="padding:5px 8px"><button class="btn-icon" style="width:20px;height:20px;font-size:10px" onclick="deleteIcuFollowup('${it.id}')" title="Supprimer">🗑</button></td>
+      </tr>`).join('');
+          }
+
+          async function loadIcuFollowups() {
+            const mod = MODULES[state.mod];
+            const p = mod.patient;
+            document.getElementById('icu-followup-patient-label').textContent = `Patient : ${p.nom} (${mod.short})`;
+
+            let items = state.icuFollowups[p.id] || [];
+            if (state.settings.apiBase) {
+              try {
+                const token = await getBackendToken();
+                const base = state.settings.apiBase.replace(/\/+$/, '');
+                const r = await fetch(base + '/patients/' + p.id + '/icu-followups', {
+                  headers: { 'Authorization': 'Bearer ' + token }
+                });
+                if (r.ok) { items = await r.json(); state.icuFollowups[p.id] = items; }
+              } catch (e) { /* backend indisponible : on retombe sur le cache local */ }
+            }
+            renderIcuFollowupHistory(items);
+
+            // Réinitialise le formulaire d'ajout
+            ['icu-sofa-resp', 'icu-sofa-coag', 'icu-sofa-hep', 'icu-sofa-cardio', 'icu-sofa-neuro', 'icu-sofa-renal',
+              'icu-apache2', 'icu-rass', 'icu-gcs-eye', 'icu-gcs-verbal', 'icu-gcs-motor', 'icu-vent-mode',
+              'icu-vent-fio2', 'icu-vent-peep', 'icu-vent-fr', 'icu-vent-vt', 'icu-bilan-entrees', 'icu-bilan-sorties',
+              'icu-notes', 'icu-auteur'].forEach(id => { document.getElementById(id).value = ''; });
+            updateSofaTotal(); updateGlasgowTotal(); updateBilanNet();
+          }
+
+          async function addIcuFollowup() {
+            if (guardReadOnly('ajout d\'une évaluation réanimation/USI')) return;
+            const mod = MODULES[state.mod];
+            const p = mod.patient;
+            const num = id => { const v = document.getElementById(id).value; return v === '' ? null : parseFloat(v); };
+            const int_ = id => { const v = document.getElementById(id).value; return v === '' ? null : parseInt(v); };
+            const str_ = id => document.getElementById(id).value.trim() || null;
+
+            const body = {
+              sofa_respiration: int_('icu-sofa-resp'), sofa_coagulation: int_('icu-sofa-coag'),
+              sofa_hepatique: int_('icu-sofa-hep'), sofa_cardiovasculaire: int_('icu-sofa-cardio'),
+              sofa_neurologique: int_('icu-sofa-neuro'), sofa_renal: int_('icu-sofa-renal'),
+              apache2_score: int_('icu-apache2'), rass_score: int_('icu-rass'),
+              glasgow_oculaire: int_('icu-gcs-eye'), glasgow_verbale: int_('icu-gcs-verbal'), glasgow_motrice: int_('icu-gcs-motor'),
+              vent_mode: str_('icu-vent-mode'), vent_fio2_pct: num('icu-vent-fio2'), vent_peep_cmh2o: num('icu-vent-peep'),
+              vent_fr_rpm: num('icu-vent-fr'), vent_vt_ml: num('icu-vent-vt'),
+              bilan_entrees_ml: num('icu-bilan-entrees'), bilan_sorties_ml: num('icu-bilan-sorties'),
+              notes: str_('icu-notes'), auteur: str_('icu-auteur')
+            };
+
+            let saved = null;
+            if (state.settings.apiBase) {
+              try {
+                const token = await getBackendToken();
+                const base = state.settings.apiBase.replace(/\/+$/, '');
+                const r = await fetch(base + '/patients/' + p.id + '/icu-followups', {
+                  method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                  body: JSON.stringify(body)
+                });
+                if (r.ok) { saved = await r.json(); notify('Évaluation enregistrée et synchronisée', 'ok'); }
+                else notify('Backend: échec de synchronisation (' + r.status + ')', 'warn');
+              } catch (e) { notify('Backend indisponible: ' + e.message, 'warn'); }
+            }
+            if (!saved) {
+              const sofaVals = [body.sofa_respiration, body.sofa_coagulation, body.sofa_hepatique, body.sofa_cardiovasculaire, body.sofa_neurologique, body.sofa_renal].filter(v => v !== null);
+              const gcsVals = [body.glasgow_oculaire, body.glasgow_verbale, body.glasgow_motrice].filter(v => v !== null);
+              saved = Object.assign({}, body, {
+                id: 'local-' + Date.now(), patient_id: p.id, recorded_at: new Date().toISOString(),
+                sofa_total: sofaVals.length ? sofaVals.reduce((a, v) => a + v, 0) : null,
+                glasgow_total: gcsVals.length ? gcsVals.reduce((a, v) => a + v, 0) : null,
+                bilan_net_ml: (body.bilan_entrees_ml !== null || body.bilan_sorties_ml !== null) ? (body.bilan_entrees_ml || 0) - (body.bilan_sorties_ml || 0) : null
+              });
+              notify('Évaluation enregistrée (local)', 'ok');
+            }
+
+            if (!state.icuFollowups[p.id]) state.icuFollowups[p.id] = [];
+            state.icuFollowups[p.id].unshift(saved);
+            renderIcuFollowupHistory(state.icuFollowups[p.id]);
+          }
+
+          async function deleteIcuFollowup(id) {
+            if (guardReadOnly('suppression d\'une évaluation réanimation/USI')) return;
+            const mod = MODULES[state.mod];
+            const p = mod.patient;
+            if (state.settings.apiBase && !id.startsWith('local-')) {
+              try {
+                const token = await getBackendToken();
+                const base = state.settings.apiBase.replace(/\/+$/, '');
+                await fetch(base + '/patients/' + p.id + '/icu-followups/' + id, {
+                  method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token }
+                });
+              } catch (e) { notify('Backend indisponible: ' + e.message, 'warn'); }
+            }
+            state.icuFollowups[p.id] = (state.icuFollowups[p.id] || []).filter(it => it.id !== id);
+            renderIcuFollowupHistory(state.icuFollowups[p.id]);
           }
 
           // ── Notifications ──

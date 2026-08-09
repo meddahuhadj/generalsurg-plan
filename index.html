@@ -172,6 +172,10 @@
           title="Paramètres techniques (Gemini, backend) — réservé au mode recherche/maintenance">⚙</button>
         <button class="btn-icon" onclick="openModal('patients')" data-i18n-title="nav.patientsToggle"
           title="Patients">📋</button>
+        <button class="btn-icon" onclick="openModal('preanesthesie');loadPreanesthesieForm()"
+          data-i18n-title="nav.preanesthesieToggle" title="Dossier pré-anesthésique">🩺</button>
+        <button class="btn-icon" onclick="openModal('icu-followup');loadIcuFollowups()"
+          data-i18n-title="nav.icuFollowupToggle" title="Suivi réanimation / USI">🛌</button>
         <div id="lang-selector" class="lang-selector">
           <button class="btn-icon lang-selector-toggle" onclick="toggleLangMenu()" data-i18n-title="lang.selectorLabel"
             title="Langue">
@@ -774,6 +778,252 @@
       <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('patients')"
           data-i18n="common.close">Fermer</button><button class="btn btn-primary" onclick="togglePatientEditForm()"
           data-i18n="patients.editCurrent">✎ Éditer patient courant</button></div>
+    </div>
+  </div>
+
+  <!-- ── Dossier & évaluation pré-anesthésique ── transverse à toutes les spécialités :
+     s'applique au patient du module actif, quel que soit ce module (un patient HBP a
+     aussi une consultation d'anesthésie). Persisté via PUT/GET /patients/{id}/preanesthesie
+     si un backend est configuré, sinon conservé localement dans state.preanesthesie. -->
+  <div class="modal-overlay" id="modal-preanesthesie">
+    <div class="modal" style="min-width:560px;max-width:92vw">
+      <div class="modal-hdr"><span class="modal-title" data-i18n="preanesthesia.title">🩺 Dossier
+          pré-anesthésique</span><button class="modal-close"
+          onclick="closeModal('preanesthesie')">✕</button></div>
+      <div class="modal-body">
+        <div style="font-size:10px;color:var(--text3);margin-bottom:10px" id="preanesthesie-patient-label"
+          data-i18n="preanesthesia.forPatient">Patient du module actif</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div class="form-row">
+            <div class="form-label" data-i18n="preanesthesia.asaScore">Score ASA</div>
+            <select class="form-control" id="pa-asa">
+              <option value="">—</option>
+              <option value="1">ASA I</option>
+              <option value="2">ASA II</option>
+              <option value="3">ASA III</option>
+              <option value="4">ASA IV</option>
+              <option value="5">ASA V</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <div class="form-label" data-i18n="preanesthesia.asaUrgence">Urgence (U)</div>
+            <label style="display:flex;align-items:center;gap:6px;height:28px"><input type="checkbox"
+                id="pa-asa-urgence"> <span data-i18n="common.yes">Oui</span></label>
+          </div>
+          <div class="form-row">
+            <div class="form-label" data-i18n="preanesthesia.mallampati">Score de Mallampati</div>
+            <select class="form-control" id="pa-mallampati">
+              <option value="">—</option>
+              <option value="1">Classe I</option>
+              <option value="2">Classe II</option>
+              <option value="3">Classe III</option>
+              <option value="4">Classe IV</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <div class="form-label" data-i18n="preanesthesia.intubationDifficile">Intubation difficile prévue</div>
+            <label style="display:flex;align-items:center;gap:6px;height:28px"><input type="checkbox"
+                id="pa-intub-diff"> <span data-i18n="common.yes">Oui</span></label>
+          </div>
+          <div class="form-row">
+            <div class="form-label" data-i18n="preanesthesia.jeuneSolide">Jeûne solide (h)</div>
+            <input class="form-control" id="pa-jeune-solide" type="number" min="0" step="0.5">
+          </div>
+          <div class="form-row">
+            <div class="form-label" data-i18n="preanesthesia.jeuneLiquide">Jeûne liquide clair (h)</div>
+            <input class="form-control" id="pa-jeune-liquide" type="number" min="0" step="0.5">
+          </div>
+        </div>
+        <div class="form-row"><div class="form-label" data-i18n="preanesthesia.antecedents">Antécédents</div>
+          <textarea class="form-control" id="pa-antecedents" rows="2"></textarea>
+        </div>
+        <div class="form-row"><div class="form-label" data-i18n="preanesthesia.allergies">Allergies</div>
+          <textarea class="form-control" id="pa-allergies" rows="2"></textarea>
+        </div>
+        <div class="form-row"><div class="form-label" data-i18n="preanesthesia.traitement">Traitement chronique
+          </div>
+          <textarea class="form-control" id="pa-traitement" rows="2"></textarea>
+        </div>
+        <div class="form-row"><div class="form-label" data-i18n="preanesthesia.checklist">Checklist bloc</div>
+          <div id="pa-checklist"></div>
+        </div>
+        <div class="form-row"><div class="form-label" data-i18n="preanesthesia.anesthesiste">Anesthésiste</div>
+          <input class="form-control" id="pa-anesthesiste">
+        </div>
+        <div class="form-row"><div class="form-label" data-i18n="preanesthesia.conclusion">Conclusion / conduite à
+            tenir</div>
+          <textarea class="form-control" id="pa-conclusion" rows="2"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('preanesthesie')"
+          data-i18n="common.close">Fermer</button><button class="btn btn-primary"
+          onclick="savePreanesthesieForm()" data-i18n="common.save">💾 Enregistrer</button></div>
+    </div>
+  </div>
+
+  <!-- ── Suivi réanimation / USI ── transverse, plusieurs évaluations dans le temps par patient
+     (contrairement au dossier pré-anesthésique qui est un état courant unique). SOFA et Glasgow
+     sont calculés automatiquement (client, puis recalculés côté serveur comme source de vérité) ;
+     l'APACHE II est renseigné manuellement (score total connu), sa formule complète à partir des
+     variables physiologiques brutes n'étant pas implémentée dans ce prototype. -->
+  <div class="modal-overlay" id="modal-icu-followup">
+    <div class="modal" style="min-width:640px;max-width:94vw">
+      <div class="modal-hdr"><span class="modal-title" data-i18n="icuFollowup.title">🛌 Suivi
+          réanimation / USI</span><button class="modal-close"
+          onclick="closeModal('icu-followup')">✕</button></div>
+      <div class="modal-body">
+        <div style="font-size:10px;color:var(--text3);margin-bottom:10px" id="icu-followup-patient-label"
+          data-i18n="icuFollowup.forPatient">Patient du module actif</div>
+
+        <div id="icu-followup-history"
+          style="max-height:130px;overflow:auto;border:1px solid var(--border);border-radius:6px;margin-bottom:14px"
+        ></div>
+
+        <div style="font-size:11px;color:var(--text2);font-weight:600;margin-bottom:6px"
+          data-i18n="icuFollowup.newEntry">+ Nouvelle évaluation</div>
+
+        <div style="font-size:9px;color:var(--text3);text-transform:uppercase;margin-bottom:4px">SOFA</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+          <div class="form-row"><div class="form-label" data-i18n="icuFollowup.sofaRespiration">Respiration</div>
+            <select class="form-control sofa-input" id="icu-sofa-resp" onchange="updateSofaTotal()">
+              <option value="">—</option><option value="0">0</option><option value="1">1</option>
+              <option value="2">2</option><option value="3">3</option><option value="4">4</option>
+            </select>
+          </div>
+          <div class="form-row"><div class="form-label" data-i18n="icuFollowup.sofaCoagulation">Coagulation</div>
+            <select class="form-control sofa-input" id="icu-sofa-coag" onchange="updateSofaTotal()">
+              <option value="">—</option><option value="0">0</option><option value="1">1</option>
+              <option value="2">2</option><option value="3">3</option><option value="4">4</option>
+            </select>
+          </div>
+          <div class="form-row"><div class="form-label" data-i18n="icuFollowup.sofaHepatique">Hépatique</div>
+            <select class="form-control sofa-input" id="icu-sofa-hep" onchange="updateSofaTotal()">
+              <option value="">—</option><option value="0">0</option><option value="1">1</option>
+              <option value="2">2</option><option value="3">3</option><option value="4">4</option>
+            </select>
+          </div>
+          <div class="form-row"><div class="form-label" data-i18n="icuFollowup.sofaCardio">Cardiovasculaire</div>
+            <select class="form-control sofa-input" id="icu-sofa-cardio" onchange="updateSofaTotal()">
+              <option value="">—</option><option value="0">0</option><option value="1">1</option>
+              <option value="2">2</option><option value="3">3</option><option value="4">4</option>
+            </select>
+          </div>
+          <div class="form-row"><div class="form-label" data-i18n="icuFollowup.sofaNeuro">Neurologique</div>
+            <select class="form-control sofa-input" id="icu-sofa-neuro" onchange="updateSofaTotal()">
+              <option value="">—</option><option value="0">0</option><option value="1">1</option>
+              <option value="2">2</option><option value="3">3</option><option value="4">4</option>
+            </select>
+          </div>
+          <div class="form-row"><div class="form-label" data-i18n="icuFollowup.sofaRenal">Rénal</div>
+            <select class="form-control sofa-input" id="icu-sofa-renal" onchange="updateSofaTotal()">
+              <option value="">—</option><option value="0">0</option><option value="1">1</option>
+              <option value="2">2</option><option value="3">3</option><option value="4">4</option>
+            </select>
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--accent);margin:2px 0 10px" data-i18n="icuFollowup.sofaTotal">
+          SOFA total : <b id="icu-sofa-total">—</b>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div class="form-row"><div class="form-label" data-i18n="icuFollowup.apache2">Score APACHE II (0-71)
+            </div>
+            <input class="form-control" id="icu-apache2" type="number" min="0" max="71">
+          </div>
+          <div class="form-row"><div class="form-label" data-i18n="icuFollowup.rass">RASS</div>
+            <select class="form-control" id="icu-rass">
+              <option value="">—</option>
+              <option value="-5">-5 — Non réveillable</option>
+              <option value="-4">-4 — Sédation profonde</option>
+              <option value="-3">-3 — Sédation modérée</option>
+              <option value="-2">-2 — Somnolent</option>
+              <option value="-1">-1 — Éveil diminué</option>
+              <option value="0">0 — Éveillé, calme</option>
+              <option value="1">+1 — Agité</option>
+              <option value="2">+2 — Très agité</option>
+              <option value="3">+3 — Agité, tire sondes/cathéters</option>
+              <option value="4">+4 — Combatif</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="font-size:9px;color:var(--text3);text-transform:uppercase;margin:8px 0 4px">Glasgow (GCS)</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+          <div class="form-row"><div class="form-label" data-i18n="icuFollowup.gcsEye">Oculaire (1-4)</div>
+            <select class="form-control gcs-input" id="icu-gcs-eye" onchange="updateGlasgowTotal()">
+              <option value="">—</option><option value="1">1</option><option value="2">2</option>
+              <option value="3">3</option><option value="4">4</option>
+            </select>
+          </div>
+          <div class="form-row"><div class="form-label" data-i18n="icuFollowup.gcsVerbal">Verbale (1-5)</div>
+            <select class="form-control gcs-input" id="icu-gcs-verbal" onchange="updateGlasgowTotal()">
+              <option value="">—</option><option value="1">1</option><option value="2">2</option>
+              <option value="3">3</option><option value="4">4</option><option value="5">5</option>
+            </select>
+          </div>
+          <div class="form-row"><div class="form-label" data-i18n="icuFollowup.gcsMotor">Motrice (1-6)</div>
+            <select class="form-control gcs-input" id="icu-gcs-motor" onchange="updateGlasgowTotal()">
+              <option value="">—</option><option value="1">1</option><option value="2">2</option>
+              <option value="3">3</option><option value="4">4</option><option value="5">5</option>
+              <option value="6">6</option>
+            </select>
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--accent);margin:2px 0 10px" data-i18n="icuFollowup.gcsTotal">
+          Glasgow total : <b id="icu-gcs-total">—</b>
+        </div>
+
+        <div style="font-size:9px;color:var(--text3);text-transform:uppercase;margin:8px 0 4px"
+          data-i18n="icuFollowup.ventilation">Ventilation mécanique</div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
+          <div class="form-row"><div class="form-label" data-i18n="icuFollowup.ventMode">Mode</div>
+            <select class="form-control" id="icu-vent-mode">
+              <option value="">—</option>
+              <option value="VC">VC</option>
+              <option value="PC">PC</option>
+              <option value="VSAI/PS">VSAI/PS</option>
+              <option value="VNI">VNI</option>
+              <option value="Air ambiant">Air ambiant / off</option>
+            </select>
+          </div>
+          <div class="form-row"><div class="form-label">FiO2 (%)</div>
+            <input class="form-control" id="icu-vent-fio2" type="number" min="21" max="100">
+          </div>
+          <div class="form-row"><div class="form-label">PEEP (cmH2O)</div>
+            <input class="form-control" id="icu-vent-peep" type="number" min="0" max="30">
+          </div>
+          <div class="form-row"><div class="form-label">Fr (/min)</div>
+            <input class="form-control" id="icu-vent-fr" type="number" min="0" max="60">
+          </div>
+        </div>
+        <div class="form-row"><div class="form-label">Vt (ml)</div>
+          <input class="form-control" id="icu-vent-vt" type="number" min="0" max="1000" style="max-width:160px">
+        </div>
+
+        <div style="font-size:9px;color:var(--text3);text-transform:uppercase;margin:8px 0 4px"
+          data-i18n="icuFollowup.bilan">Bilan entrées/sorties</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div class="form-row"><div class="form-label" data-i18n="icuFollowup.entrees">Entrées (ml)</div>
+            <input class="form-control" id="icu-bilan-entrees" type="number" min="0" oninput="updateBilanNet()">
+          </div>
+          <div class="form-row"><div class="form-label" data-i18n="icuFollowup.sorties">Sorties (ml)</div>
+            <input class="form-control" id="icu-bilan-sorties" type="number" min="0" oninput="updateBilanNet()">
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--accent);margin:2px 0 10px" data-i18n="icuFollowup.bilanNet">
+          Bilan net : <b id="icu-bilan-net">—</b> ml
+        </div>
+
+        <div class="form-row"><div class="form-label" data-i18n="icuFollowup.notes">Notes</div>
+          <textarea class="form-control" id="icu-notes" rows="2"></textarea>
+        </div>
+        <div class="form-row"><div class="form-label" data-i18n="icuFollowup.auteur">Auteur</div>
+          <input class="form-control" id="icu-auteur">
+        </div>
+      </div>
+      <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('icu-followup')"
+          data-i18n="common.close">Fermer</button><button class="btn btn-primary"
+          onclick="addIcuFollowup()" data-i18n="icuFollowup.add">+ Ajouter l'évaluation</button></div>
     </div>
   </div>
 

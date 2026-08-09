@@ -126,8 +126,12 @@ cp .env.example .env
 | `ACME_EMAIL` | Email de contact Let's Encrypt (alertes d'expiration de certificat) |
 | `POSTGRES_PASSWORD` | Mot de passe PostgreSQL — générez-en un avec `openssl rand -hex 24` |
 | `JWT_SECRET` | Secret de signature des jetons — générez-en un avec `openssl rand -hex 32` |
+| `BOOTSTRAP_ADMIN_USERNAME` | Identifiant du premier compte admin réel (pas un compte de démo) |
+| `BOOTSTRAP_ADMIN_PASSWORD` | Mot de passe de ce compte — générez-en un avec `openssl rand -hex 16` |
 
-**N'utilisez jamais les valeurs d'exemple en production.** Sans ces 4 variables définies, `docker compose up` refuse de démarrer (garde-fous explicites dans `docker-compose.yml` et dans `backend/main.py`).
+**N'utilisez jamais les valeurs d'exemple en production.** Sans ces 6 variables définies, `docker compose up` refuse de démarrer (garde-fous explicites dans `docker-compose.yml` et dans `backend/main.py`).
+
+⚠️ **Fixez toujours `BOOTSTRAP_ADMIN_USERNAME`/`BOOTSTRAP_ADMIN_PASSWORD` dès le tout premier déploiement.** `docker-compose.yml` fixe `SEED_DEMO_USERS=false` et `ALLOW_SELF_REGISTRATION=false` en dur (pas de comptes de démo, pas d'auto-inscription) — sans ce compte de bootstrap, une base vide ne laisse plus personne se connecter, y compris vous-même. Une fois ce premier compte créé (au premier démarrage, base non vide), provisionnez les comptes suivants via `POST /users` (réservé au rôle admin, voir `backend/routers/users.py`) plutôt que de recréer un bootstrap — vous pouvez alors vider ces 2 valeurs dans `.env` par hygiène.
 
 ## 2. Lancer la stack
 
@@ -237,8 +241,12 @@ cp .env.example .env
 | `ACME_EMAIL` | Email de contact Let's Encrypt (alertes d'expiration de certificat) |
 | `POSTGRES_PASSWORD` | Mot de passe PostgreSQL — générez-en un avec `openssl rand -hex 24` |
 | `JWT_SECRET` | Secret de signature des jetons — générez-en un avec `openssl rand -hex 32` |
+| `BOOTSTRAP_ADMIN_USERNAME` | Identifiant du premier compte admin réel (pas un compte de démo) |
+| `BOOTSTRAP_ADMIN_PASSWORD` | Mot de passe de ce compte — générez-en un avec `openssl rand -hex 16` |
 
-**N'utilisez jamais les valeurs d'exemple en production.** Sans ces 4 variables définies, `docker compose up` refuse de démarrer (garde-fous explicites dans `docker-compose.yml` et dans `backend/main.py`).
+**N'utilisez jamais les valeurs d'exemple en production.** Sans ces 6 variables définies, `docker compose up` refuse de démarrer (garde-fous explicites dans `docker-compose.yml` et dans `backend/main.py`).
+
+⚠️ **Fixez toujours `BOOTSTRAP_ADMIN_USERNAME`/`BOOTSTRAP_ADMIN_PASSWORD` dès le tout premier déploiement.** `docker-compose.yml` fixe `SEED_DEMO_USERS=false` et `ALLOW_SELF_REGISTRATION=false` en dur (pas de comptes de démo, pas d'auto-inscription) — sans ce compte de bootstrap, une base vide ne laisse plus personne se connecter, y compris vous-même. Une fois ce premier compte créé (au premier démarrage, base non vide), provisionnez les comptes suivants via `POST /users` (réservé au rôle admin, voir `backend/routers/users.py`) plutôt que de recréer un bootstrap — vous pouvez alors vider ces 2 valeurs dans `.env` par hygiène.
 
 ## 2. Lancer la stack
 

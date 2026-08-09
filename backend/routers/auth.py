@@ -11,6 +11,7 @@ Endpoints exposés :
     POST /auth/register
 """
 
+import os
 from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -30,6 +31,13 @@ from schemas import (
 )
 
 router = APIRouter(tags=["auth"])
+
+# Auto-inscription publique (POST /auth/register) : activée par défaut pour ne
+# rien casser sur la démo publique existante. Un déploiement pilote réel doit
+# positionner ALLOW_SELF_REGISTRATION=false — les comptes se créent alors
+# uniquement via POST /users (admin), avec un rôle explicite. Lu une seule
+# fois à l'import, comme SEED_DEMO_USERS/APP_ENV dans main.py.
+ALLOW_SELF_REGISTRATION = os.getenv("ALLOW_SELF_REGISTRATION", "true").strip().lower() == "true"
 
 
 @router.post("/auth/token")
@@ -58,6 +66,11 @@ async def login(request: Request, form: OAuth2PasswordRequestForm = Depends(), d
 
 @router.post("/auth/2fa/verify", response_model=TokenResponse)
 async def verify_2fa(req: TwoFAVerifyRequest, request: Request, db: Session = Depends(get_db)):
+    # Rate limiting (un code TOTP n'a que 6 chiffres — sans cette limite, seule
+    # l'étape mot de passe de /auth/token était protégée contre le brute-force).
+    client_ip = request.client.host if request.client else "unknown"
+    resilience.TWOFA_VERIFY_RATE_LIMITER.check(client_ip)
+
     try:
         payload = sec.decode_token(req.pre_auth_token)
         if payload.get("scope") != "2fa_pending":
@@ -132,7 +145,13 @@ async def disable_2fa(req: TwoFADisableRequest, request: Request,
 
 
 @router.post("/auth/register", response_model=RegisterResponse)
-async def register(creds: UserRegisterRequest, db: Session = Depends(get_db)):
+async def register(creds: UserRegisterRequest, request: Request, db: Session = Depends(get_db)):
+    if not ALLOW_SELF_REGISTRATION:
+        raise HTTPException(403, "L'auto-inscription est désactivée sur ce déploiement. "
+                                  "Contactez un administrateur pour la création de votre compte.")
+    client_ip = request.client.host if request.client else "unknown"
+    resilience.REGISTER_RATE_LIMITER.check(client_ip)
+
     if db.query(models.User).filter(models.User.username == creds.username).first():
         raise HTTPException(400, "Utilisateur déjà existant.")
     if len(creds.password) < 8:

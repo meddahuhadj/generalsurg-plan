@@ -52,7 +52,12 @@ _jwt_secret_from_env = os.getenv("JWT_SECRET", "")
 JWT_SECRET_EXPLICITLY_CONFIGURED = bool(_jwt_secret_from_env)
 if _jwt_secret_from_env:
     JWT_SECRET = _jwt_secret_from_env
-    _JWT_SECRET_IS_DEFAULT = False
+    # Bug corrigé (audit tests de production) : cette branche renvoyait
+    # auparavant `False` sans condition, donc le garde-fou APP_ENV=production
+    # de main.py ne détectait JAMAIS un JWT_SECRET explicitement laissé à sa
+    # valeur par défaut publique — seul le cas "variable absente" était couvert
+    # (via JWT_SECRET_EXPLICITLY_CONFIGURED, un contrôle différent).
+    _JWT_SECRET_IS_DEFAULT = (_jwt_secret_from_env == _default_secret)
 else:
     import secrets as _secrets
     JWT_SECRET = _secrets.token_hex(32)

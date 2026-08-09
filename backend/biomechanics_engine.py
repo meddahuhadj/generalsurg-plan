@@ -7,15 +7,18 @@ biomechanics_engine.py — Modèles biomécaniques simplifiés, non validés cli
       cinématiques paramétriques simples (fonctions déterministes de la phase respiratoire / de la
       pression CO2 fournie). Ce ne sont PAS des solveurs FEM/Mooney-Rivlin réels, juste des
       approximations illustratives non calibrées sur un patient réel ni validées cliniquement.
-    - `/elastic-registration` était auparavant le pire cas : il renvoyait des constantes fixes
-      (`final_rms_mm = 0.34`, 18 itérations) SANS TENIR COMPTE du nuage de points fourni en entrée
-      — aucun recalage n'était réellement exécuté. Corrigé ci-dessous pour le dire explicitement au
-      lieu de simuler un résultat de solveur.
+    - `/elastic-registration` calcule désormais un VRAI recalage (ICP rigide + FFD B-spline non-rigide,
+      voir registration.py) sur les deux nuages de points fournis — ce n'était pas le cas avant
+      (anciennes constantes fixes `final_rms_mm = 0.34`, puis un statut honnête "not_implemented" qui ne
+      calculait toujours rien). Reste néanmoins JAMAIS validé sur un vrai flux peropératoire ni sur
+      fantôme dans cet environnement — voir l'avertissement en tête de registration.py.
 
 Fonctionnalités (état réel) :
-    1. Pas de simulation hyperélastique FEM réelle — formules paramétriques simples uniquement.
+    1. Pas de simulation hyperélastique FEM réelle — formules paramétriques simples uniquement
+       (/respiratory-displacement, /simulate-pneumoperitoneum).
     2. Modélisation cinématique simplifiée du cycle respiratoire (fonction sinusoïdale de la phase).
-    3. `/elastic-registration` : AUCUN recalage n'est réellement calculé (voir avertissement ci-dessus).
+    3. `/elastic-registration` : recalage RÉEL (ICP + FFD B-spline, voir registration.py), mais non
+       validé sur données peropératoires réelles ni sur fantôme (voir son avertissement dédié).
     4. Formule paramétrique simple pour l'effet du pneumopéritoine (pas de FEM).
 """
 
@@ -31,11 +34,13 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
+import numpy as np
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
+import registration
 from db import get_db
 import security as sec
 
@@ -49,11 +54,18 @@ class ElasticRegistrationRequest(BaseModel):
     twin_id: str = Field(..., description="ID unique du jumeau numérique préopératoire")
     intraop_point_cloud: List[List[float]] = Field(
         ...,
-        description="Nuage de points 3D peropératoire capturé par échographie trackée ou stéréovision AR",
+        description="Nuage de points 3D peropératoire (source à recaler) capturé par échographie trackée ou stéréovision AR",
         json_schema_extra={"example": [[10.2, 24.5, -5.1], [12.0, 25.1, -4.8], [15.4, 22.0, -6.2]]},
     )
-    stiffness_regularization: float = Field(0.05, description="Facteur de régularisation d'énergie de déformation (alpha)")
-    max_iterations: int = Field(50, description="Nombre maximal d'itérations pour le solveur d'optimisation non-linéaire")
+    preop_point_cloud: List[List[float]] = Field(
+        ...,
+        description="Nuage de points 3D préopératoire (cible), ex. échantillonné sur la surface du "
+                    "maillage du jumeau numérique (voir mesh_export.py) — résoudre `twin_id` vers ce "
+                    "nuage automatiquement n'est pas fait ici, à la charge de l'appelant pour l'instant.",
+    )
+    grid_spacing_mm: float = Field(10.0, gt=0, description="Espacement de la grille de contrôle FFD (mm) — plus petit = déformation plus locale/fine, plus d'itérations nécessaires")
+    stiffness_regularization: float = Field(0.3, ge=0.0, le=1.0, description="Facteur de lissage laplacien de la grille de contrôle FFD (régularisation — voir avertissement de registration.py)")
+    max_iterations: int = Field(20, ge=1, le=200, description="Nombre d'itérations du raffinement FFD (l'ICP rigide préalable a son propre critère de convergence)")
 
 class PneumoSimulationRequest(BaseModel):
     twin_id: str = Field(..., description="ID du jumeau numérique hépatique")
@@ -114,43 +126,72 @@ async def compute_elastic_non_rigid_registration(
     db: Session = Depends(get_db)
 ):
     """
-    ⚠️ AUCUN recalage n'est réellement exécuté par cet endpoint. Il ne fait qu'accuser réception du
-    nuage de points fourni (compte les points) et renvoie un statut "non implémenté" honnête, au lieu
-    des anciennes constantes fixes (`final_rms_mm = 0.34`) qui ne dépendaient jamais de l'entrée.
+    Recalage RÉEL en deux étapes (voir registration.py) : ICP rigide (Besl & McKay
+    1992) puis raffinement non-rigide par FFD B-spline cubique (Rueckert et al.
+    1999) — remplace l'ancien stub "not_implemented" qui ne calculait rien.
 
-    Pour un vrai recalage élastique, il faudrait un solveur TPS/FFD réel (ex. `scipy`, `SimpleITK`,
-    ou une bibliothèque dédiée), non implémenté ici.
+    ⚠️ Jamais validé sur un vrai flux peropératoire ni sur fantôme dans cet
+    environnement (testé uniquement sur nuages de points synthétiques, voir
+    backend/tests/test_registration.py) — voir l'avertissement complet en tête
+    de registration.py avant tout usage clinique.
     """
-    num_points = len(payload.intraop_point_cloud)
+    source = np.asarray(payload.intraop_point_cloud, dtype=np.float64)
+    target = np.asarray(payload.preop_point_cloud, dtype=np.float64)
+    if source.ndim != 2 or source.shape[1] != 3 or len(source) == 0:
+        raise HTTPException(422, "intraop_point_cloud doit être une liste non vide de points [x,y,z].")
+    if target.ndim != 2 or target.shape[1] != 3 or len(target) == 0:
+        raise HTTPException(422, "preop_point_cloud doit être une liste non vide de points [x,y,z].")
+
+    icp_result = registration.rigid_icp(source, target)
+    ffd_result = registration.bspline_ffd_register(
+        icp_result.aligned_source, target,
+        grid_spacing_mm=payload.grid_spacing_mm,
+        iterations=payload.max_iterations,
+        smoothing=payload.stiffness_regularization,
+    )
+
+    rigid_rms_mm = icp_result.rms_history[-1] if icp_result.rms_history else None
+    final_rms_mm = ffd_result.rms_history[-1] if ffd_result.rms_history else None
 
     try:
         log_id = str(uuid.uuid4())
-        log_hash = hashlib.sha256(f"ELASTIC_REG_NOT_IMPLEMENTED_{twin_id}_{num_points}".encode()).hexdigest()
+        details = {
+            "num_points_intraop": len(source), "num_points_preop": len(target),
+            "rigid_rms_mm": rigid_rms_mm, "final_rms_mm": final_rms_mm,
+            "icp_iterations": icp_result.iterations, "ffd_iterations": ffd_result.iterations,
+        }
+        log_hash = hashlib.sha256(f"ELASTIC_REG_{twin_id}_{final_rms_mm}".encode()).hexdigest()
         db.execute(text("""
             INSERT INTO audit_logs (id, action_type, target_resource, resource_id, details, cryptographic_hash)
-            VALUES (:id, 'ELASTIC_REGISTRATION_REQUEST_NOT_IMPLEMENTED', 'digital_twins', :res_id, :details, :hash)
-        """), {
-            "id": log_id,
-            "res_id": twin_id,
-            "details": json.dumps({
-                "num_points_received": num_points,
-                "stiffness_alpha": payload.stiffness_regularization,
-                "note": "no_real_registration_computed"
-            }),
-            "hash": log_hash
-        })
+            VALUES (:id, 'ELASTIC_REGISTRATION_COMPUTED', 'digital_twins', :res_id, :details, :hash)
+        """), {"id": log_id, "res_id": twin_id, "details": json.dumps(details), "hash": log_hash})
         db.commit()
     except Exception:
         db.rollback()
 
     return {
-        "status": "not_implemented",
+        "status": "computed",
         "twin_id": twin_id,
-        "num_points_received": num_points,
-        "message": "Le recalage élastique non-rigide (TPS/FFD) n'est pas implémenté dans ce prototype. "
-                    "Les anciennes réponses de cet endpoint renvoyaient des métriques de convergence "
-                    "fixes indépendantes de l'entrée fournie — c'était fabriqué, pas calculé. Aucun "
-                    "résultat de recalage n'est donc renvoyé ici.",
+        "num_points_intraop": len(source),
+        "num_points_preop": len(target),
+        "rigid_transform": {
+            "rotation_matrix": icp_result.rotation.tolist(),
+            "translation_mm": icp_result.translation.tolist(),
+            "converged": icp_result.converged,
+            "iterations": icp_result.iterations,
+            "rms_mm": rigid_rms_mm,
+        },
+        "non_rigid_refinement": {
+            "grid_spacing_mm": payload.grid_spacing_mm,
+            "iterations": ffd_result.iterations,
+            "rms_mm": final_rms_mm,
+            "rms_history_mm": ffd_result.rms_history,
+        },
+        "registered_points": ffd_result.deformed_source.tolist(),
+        "note": "Recalage réellement calculé (ICP + FFD B-spline, voir registration.py) sur les nuages "
+                "de points fournis — mais jamais validé sur un vrai flux peropératoire ni sur fantôme "
+                "(TRE) dans cet environnement. Ne pas utiliser pour un guidage chirurgical réel sans "
+                "cette validation.",
     }
 
 @router.post("/twins/{twin_id}/simulate-pneumoperitoneum")

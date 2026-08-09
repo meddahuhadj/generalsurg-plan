@@ -23,6 +23,10 @@ fast-simplification>=0.1.7
 # Index spatial requis par trimesh.proximity (marge oncologique tumeur<->vaisseaux,
 # distance surface-a-surface reelle) — voir segmentation_service.py:/segmentation/margin
 rtree>=1.0.0
+# Tétraédrisation (mesh_export.mask_to_tetmesh) — déjà une dépendance transitive de
+# scikit-image, mais listée explicitement car utilisée directement (scipy.spatial.Delaunay),
+# première brique de la feuille de route "Jumeau numérique réel" (Mooney-Rivlin/XPBD).
+scipy>=1.10.0
 # Connecteur PACS réel (DICOMweb QIDO-RS/WADO-RS) — priorité 4 de la feuille de route
 dicomweb-client>=0.61.0
 pydicom>=3.0.0

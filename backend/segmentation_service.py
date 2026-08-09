@@ -69,6 +69,7 @@ from fastapi import APIRouter, File, HTTPException, UploadFile
 from pydantic import BaseModel
 
 from logging_config import get_logger
+import segmentation_specialties as spec
 
 logger = get_logger(__name__)
 
@@ -177,6 +178,14 @@ def _maybe_build_mesh(job_id: str, nifti_path: Path, label_value: int, name: str
         out_path = MESH_STORAGE / job_id / f"{name}.glb"
         info = nifti_label_to_glb(nifti_path, label_value=label_value, out_path=out_path, color_rgba=color)
         job.setdefault("mesh_info", {})[name] = info
+        # Retient (chemin NIfTI, valeur de label) par structure nommée — nécessaire
+        # pour reconstruire un maillage VOLUMIQUE (tétraédrique) à la demande plus
+        # tard (voir twin_pipeline.build_tetmesh_for_structure), sans redemander une
+        # nouvelle inférence. mesh_info ne garde que les métadonnées du GLB (surface),
+        # pas de quoi retrouver le masque source.
+        job.setdefault("label_sources", {})[name] = {
+            "nifti_path": str(nifti_path), "label_value": label_value,
+        }
         return f"/meshes/{job_id}/{name}.glb"
     except Exception as e:  # noqa: BLE001
         logger.error("Échec de génération du maillage '%s' (label %s): %s", name, label_value, e)
@@ -204,7 +213,23 @@ def _maybe_build_lowpoly_twin_mesh(job_id: str, target_faces: int = 1500) -> Opt
 # ------------------------------------------------------------------
 # Job de segmentation réel (exécuté dans le thread pool)
 # ------------------------------------------------------------------
-def _run_segmentation_job(job_id: str, nifti_input: Path, patient_id: str) -> None:
+def _run_segmentation_job(job_id: str, nifti_input: Path, patient_id: str,
+                          specialty: str = "hbp") -> None:
+    """Point d'entrée du job, avec dispatch par spécialité :
+      - hbp → pipeline dédié (segments de Couinaud + vaisseaux + tumeur)
+      - autres spécialités chirurgicales → pipeline générique task="total"
+        (+ tâches dédiées ex. kidney_vessels pour l'urologie)
+    anesthesie_reanimation n'a pas de segmentation organique : l'endpoint
+    le refuse proprement en amont."""
+    job = _JOBS[job_id]
+    job["progress"] = f"Pipeline de segmentation pour la spécialité '{specialty}'..."
+    if specialty in spec.GENERIC_SPECIALTIES:
+        _run_generic_specialty_job(job_id, nifti_input, patient_id, specialty)
+    else:
+        _run_liver_job(job_id, nifti_input, patient_id)
+
+
+def _run_liver_job(job_id: str, nifti_input: Path, patient_id: str) -> None:
     job = _JOBS[job_id]
     t0 = time.time()
     try:
@@ -322,15 +347,94 @@ def _run_segmentation_job(job_id: str, nifti_input: Path, patient_id: str) -> No
         traceback.print_exc()
 
 
+def _run_generic_specialty_job(job_id: str, nifti_input: Path, patient_id: str, specialty: str) -> None:
+    """Pipeline générique multi-spécialités : une inférence `total` (roi_subset)
+    par spécialité + les tâches dédiées éventuelles (ex. kidney_vessels pour
+    l'urologie). Produit le même contrat de résultat que le pipeline HBP :
+    segments[], vessels[], volumes réels en mL, maillages .glb par structure."""
+    job = _JOBS[job_id]
+    t0 = time.time()
+    try:
+        from totalsegmentator.python_api import totalsegmentator
+        from totalsegmentator.map_to_binary import class_map
+
+        job_dir = WORKDIR / job_id
+        job_dir.mkdir(parents=True, exist_ok=True)
+
+        label_to_value: Dict[str, int] = {}
+        volumes: Dict[str, float] = {}
+        groups = spec.group_by_task(specialty)
+
+        for task, labels in groups.items():
+            job["progress"] = f"Segmentation '{task}' — {', '.join(labels)}..."
+            out = job_dir / f"{task}.nii.gz"
+            totalsegmentator(
+                input=str(nifti_input), output=str(out),
+                task=task, ml=True, output_type="nifti",
+                device=DEVICE, fast=(task == "total" and FAST_MODE),
+                roi_subset=labels, quiet=True,
+            )
+            task_map = class_map.get(task, {})
+            value_by_name = {v: k for k, v in task_map.items()}
+            selected = {name: value_by_name[name] for name in labels if name in value_by_name}
+            volumes.update(_label_volumes_ml(out, selected))
+            label_to_value.update(selected)
+
+        def _mesh_builder(label: str) -> Optional[str]:
+            info = spec.structure_info(label)
+            value = label_to_value.get(label)
+            if value is None:
+                return None
+            return _maybe_build_mesh(
+                job_id, job_dir / f"{info['task']}.nii.gz",
+                label_value=value, name=label, color=info["color"], job=job,
+            )
+
+        segments = spec.build_generic_segments_payload(specialty, volumes, _mesh_builder)
+        vessels = spec.build_generic_vessels_payload(specialty, volumes, _mesh_builder)
+        total_ml = round(sum(v for v in volumes.values() if v and v > 0), 1)
+
+        result = {
+            "patient_id": patient_id,
+            "specialty": specialty,
+            "segments": segments,
+            "vessels": vessels,
+            "total_ml": total_ml,
+            "model": "TotalSegmentator (nnU-Net) — task: total"
+                     + (" (+ kidney_vessels)" if "kidney_vessels" in groups else ""),
+            "processing_time_s": round(time.time() - t0, 1),
+            "note": (
+                f"Segmentation générique pour la spécialité '{specialty}' : une "
+                "inférence task='total' (roi_subset) par spécialité, sans tâche "
+                "dédiée au foie. Volumes calculés depuis le nombre de voxels réel "
+                "du masque × résolution du CT (mm3 -> mL)."
+            ),
+        }
+
+        job["status"] = "done"
+        job["progress"] = "Terminé."
+        job["result"] = result
+
+    except Exception as e:  # noqa: BLE001
+        job["status"] = "error"
+        job["error"] = f"{type(e).__name__}: {e}"
+        job["progress"] = "Échec."
+        traceback.print_exc()
+
+
 # ------------------------------------------------------------------
 # Endpoints
 # ------------------------------------------------------------------
-def start_job_from_dicom_dir(dicom_dir: Path, patient_id: str) -> str:
+def start_job_from_dicom_dir(dicom_dir: Path, patient_id: str, specialty: str = "hbp") -> str:
     """Démarre un job de segmentation à partir d'un dossier de fichiers .dcm
     DÉJÀ PRÉSENTS SUR DISQUE (ex. une série importée depuis un PACS et
     sauvegardée par pacs_router.py), sans passer par un nouvel upload de
     fichiers. Retourne le job_id — mêmes GET /status/{job_id} et
     /result/{job_id} que pour un job démarré via POST /segmentation/auto.
+
+    `specialty` choisit le pipeline : "hbp" (défaut, segments de Couinaud +
+    vaisseaux + tumeur) ou une autre spécialité chirurgicale (pipeline
+    générique task="total" + tâches dédiées).
 
     Factorisé pour que start_segmentation() (upload direct) et le nouvel
     endpoint « segmenter cette série déjà importée » partagent EXACTEMENT
@@ -339,6 +443,12 @@ def start_job_from_dicom_dir(dicom_dir: Path, patient_id: str) -> str:
     """
     if not dicom_dir.is_dir() or not any(dicom_dir.iterdir()):
         raise ValueError(f"Dossier DICOM vide ou introuvable : {dicom_dir}")
+
+    if specialty not in spec.GENERIC_SPECIALTIES and specialty != "hbp":
+        raise ValueError(
+            f"Spécialité '{specialty}' sans pipeline de segmentation. "
+            f"Pipelines disponibles : hbp + {', '.join(spec.GENERIC_SPECIALTIES)}."
+        )
 
     job_id = uuid.uuid4().hex[:12]
     job_dir = WORKDIR / job_id
@@ -353,7 +463,7 @@ def start_job_from_dicom_dir(dicom_dir: Path, patient_id: str) -> str:
         _JOBS[job_id]["error"] = f"Conversion DICOM->NIfTI échouée: {e}"
         raise
 
-    EXECUTOR.submit(_run_segmentation_job, job_id, nifti_path, patient_id)
+    EXECUTOR.submit(_run_segmentation_job, job_id, nifti_path, patient_id, specialty)
     return job_id
 
 
@@ -383,20 +493,41 @@ async def capabilities():
         "gpu": has_gpu,
         "ready_for_real_segmentation": _has("totalsegmentator") and _has("dicom2nifti") and _has("nibabel"),
         "ready_for_mesh_export": _has("skimage") and _has("trimesh") and _has("nibabel"),
+        # Depuis la généralisation multi-spécialités : le pipeline réel couvre
+        # désormais toutes les spécialités chirurgicales (hbp via liver_segments/
+        # liver_vessels, les autres via task="total" + tâches dédiées).
+        "supported_specialties": ["hbp"] + spec.GENERIC_SPECIALTIES,
+        "specialty_pipelines": {
+            "hbp": "liver_segments + liver_vessels + total/liver (Couinaud I-VIII)",
+            **{s: ", ".join(spec.valid_specialty_structures(s))
+               for s in spec.GENERIC_SPECIALTIES},
+        },
     }
 
 
 @router.post("/auto", status_code=202)
-async def start_segmentation(patient_id: str, files: List[UploadFile] = File(...)):
+async def start_segmentation(patient_id: str, specialty: str = "hbp",
+                             files: List[UploadFile] = File(...)):
     """
     Démarre un job de segmentation réel. Accepte soit :
       - plusieurs fichiers .dcm (une série DICOM complète), soit
       - un seul fichier .nii / .nii.gz déjà reconstruit.
+    `specialty` (par défaut "hbp") choisit le pipeline : hbp = segments de
+    Couinaud + vaisseaux + tumeur ; colorectal/gastrique/thyroide/thoracique/
+    cardiaque/urologie = pipeline générique task="total" (roi_subset) + tâches
+    dédiées (ex. kidney_vessels pour l'urologie).
     Retourne immédiatement un job_id (HTTP 202) — le calcul tourne en
     tâche de fond, le front doit sonder GET /segmentation/status/{job_id}.
     """
     if not files:
         raise HTTPException(400, "Aucun fichier reçu.")
+
+    if specialty not in spec.GENERIC_SPECIALTIES and specialty != "hbp":
+        raise HTTPException(
+            400,
+            f"Spécialité '{specialty}' sans pipeline de segmentation. "
+            f"Pipelines disponibles : hbp + {', '.join(spec.GENERIC_SPECIALTIES)}.",
+        )
 
     first_name = (files[0].filename or "").lower()
     try:
@@ -408,7 +539,7 @@ async def start_segmentation(patient_id: str, files: List[UploadFile] = File(...
             nifti_path = job_dir / "input.nii.gz"
             with open(nifti_path, "wb") as f:
                 f.write(await files[0].read())
-            EXECUTOR.submit(_run_segmentation_job, job_id, nifti_path, patient_id)
+            EXECUTOR.submit(_run_segmentation_job, job_id, nifti_path, patient_id, specialty)
             return {"job_id": job_id, "status": "pending"}
         else:
             # Dossier de réception temporaire, DISTINCT du job_id final : la
@@ -425,7 +556,7 @@ async def start_segmentation(patient_id: str, files: List[UploadFile] = File(...
                 # Réutilise EXACTEMENT le même chemin que « segmenter une
                 # série déjà importée » : évite que les deux points d'entrée
                 # divergent silencieusement avec le temps.
-                job_id = start_job_from_dicom_dir(staging_dir, patient_id)
+                job_id = start_job_from_dicom_dir(staging_dir, patient_id, specialty)
                 return {"job_id": job_id, "status": "pending"}
             finally:
                 shutil.rmtree(staging_dir, ignore_errors=True)
@@ -453,6 +584,27 @@ async def get_result(job_id: str):
     if job["status"] != "done":
         raise HTTPException(409, f"Job pas encore terminé (status={job['status']}).")
     return job["result"]
+
+
+@router.post("/{job_id}/tetmesh")
+async def build_tetmesh(job_id: str, structure: str):
+    """
+    Construit un maillage VOLUMIQUE (tétraédrique) pour `structure` (déjà
+    segmentée dans ce job — voir GET /segmentation/result/{job_id} pour la
+    liste des noms disponibles) et le stocke sur disque. Préalable
+    indispensable au solveur biomécanique réel du jumeau numérique
+    (POST /patients/{patient_id}/twin/deform, voir routers/twin.py) : jusqu'ici
+    ce solveur n'avait été validé que sur des formes synthétiques de test
+    (backend/tests/test_twin_solver.py), pas sur un vrai maillage patient.
+    """
+    try:
+        import twin_pipeline
+        info = twin_pipeline.build_tetmesh_for_structure(job_id, structure)
+    except KeyError as e:
+        raise HTTPException(404, str(e)) from e
+    except (ValueError, FileNotFoundError) as e:
+        raise HTTPException(409, str(e)) from e
+    return {"job_id": job_id, "structure": structure, **info}
 
 
 @router.get("/margin/{job_id}")
