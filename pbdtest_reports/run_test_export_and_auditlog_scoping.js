@@ -42,19 +42,19 @@ function assert(cond, msg) {
 
 // ── Mocks minimaux ──
 global.MODULES = {
-  hbp: { patient: { id: 'PAT-A-HBP', nom: 'Patient A' } },
-  colorectal: { patient: { id: 'PAT-B-COLORECTAL', nom: 'Patient B' } },
+  laryngologie: { patient: { id: 'PAT-A-LARYNGOLOGIE', nom: 'Patient A' } },
+  otologie: { patient: { id: 'PAT-B-OTOLOGIE', nom: 'Patient B' } },
 };
 global.state = {
-  mod: 'hbp',
+  mod: 'laryngologie',
   settings: { chirurgien: 'Dr. Test' },
   auditLog: [],
   mpr: {
     spacing: { x: 1, y: 1, z: 1 },
     segments: { tumor: { voxels: new Set([1, 2]) } },
     measurements: [],
-    lastFLR: { totalML: 1450, resectedML: 700, flrPct: 51.7 },
-    _stagingData: { T: 'T2', N: 'N0', M: 'M0', bclc: 'A' },
+    lastFLR: { totalML: 15, resectedML: 7, flrPct: 53.3 },
+    _stagingData: { T: 'T2', N: 'N0', M: 'M0', cordMobility: 'Mobile' },
   },
 };
 let downloaded = null;
@@ -68,33 +68,33 @@ const code = [
 ].join('\n\n');
 eval(code);
 
-// ── 1) logAudit() sur le patient HBP, puis changement (simulé) vers Colorectal ──
+// ── 1) logAudit() sur le patient Laryngologie, puis changement (simulé) vers Otologie ──
 logAudit('segment_wand', { seg: 'tumor' });
-assert(state.auditLog.length === 1 && state.auditLog[0].patientId === 'PAT-A-HBP',
-  'logAudit() tague bien chaque entrée avec le patientId actif (PAT-A-HBP)');
+assert(state.auditLog.length === 1 && state.auditLog[0].patientId === 'PAT-A-LARYNGOLOGIE',
+  'logAudit() tague bien chaque entrée avec le patientId actif (PAT-A-LARYNGOLOGIE)');
 
-state.mod = 'colorectal';
+state.mod = 'otologie';
 logAudit('staging_update', { T: 'T3' });
-assert(state.auditLog.length === 2 && state.auditLog[1].patientId === 'PAT-B-COLORECTAL',
-  'logAudit() tague la nouvelle entrée avec le patientId du nouveau module (PAT-B-COLORECTAL)');
+assert(state.auditLog.length === 2 && state.auditLog[1].patientId === 'PAT-B-OTOLOGIE',
+  'logAudit() tague la nouvelle entrée avec le patientId du nouveau module (PAT-B-OTOLOGIE)');
 
-const scopedToColorectal = currentPatientAuditLog();
-assert(scopedToColorectal.length === 1 && scopedToColorectal[0].patientId === 'PAT-B-COLORECTAL',
-  "currentPatientAuditLog() ne renvoie QUE les entrées du patient actif (pas l'entrée du patient HBP précédent)");
+const scopedToOtologie = currentPatientAuditLog();
+assert(scopedToOtologie.length === 1 && scopedToOtologie[0].patientId === 'PAT-B-OTOLOGIE',
+  "currentPatientAuditLog() ne renvoie QUE les entrées du patient actif (pas l'entrée du patient Laryngologie précédent)");
 
 // ── 2) generateDicomSR()/generateFhirR5() ne doivent plus lever d'exception ──
 let threwDicom = false;
 try { generateDicomSR(); } catch (e) { threwDicom = true; console.error('   détail:', e.message); }
 assert(!threwDicom, 'generateDicomSR() ne plante plus (state.staging/state.patient inexistants avant correctif)');
-assert(downloaded && downloaded.content.PatientID === 'PAT-B-COLORECTAL',
-  'generateDicomSR() exporte bien le patient ACTUELLEMENT actif (Colorectal), pas un patient fantôme');
+assert(downloaded && downloaded.content.PatientID === 'PAT-B-OTOLOGIE',
+  'generateDicomSR() exporte bien le patient ACTUELLEMENT actif (Otologie), pas un patient fantôme');
 assert(downloaded.content.StagingSummary.TNM === '???' || typeof downloaded.content.StagingSummary.TNM === 'string',
   'generateDicomSR() produit un TNM (chaîne), pas un crash, même sans _stagingData pour ce module simulé');
 
 let threwFhir = false;
 try { generateFhirR5(); } catch (e) { threwFhir = true; console.error('   détail:', e.message); }
 assert(!threwFhir, 'generateFhirR5() ne plante plus non plus');
-assert(downloaded.content.entry[0].resource.subject.reference === 'Patient/PAT-B-COLORECTAL',
+assert(downloaded.content.entry[0].resource.subject.reference === 'Patient/PAT-B-OTOLOGIE',
   'generateFhirR5() référence bien le patient actif dans le bundle FHIR');
 
 console.log('\nTerminé.');

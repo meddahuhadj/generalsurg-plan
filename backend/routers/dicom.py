@@ -32,7 +32,7 @@ from deps import get_current_user, write_audit
 from schemas import DicomMetadata, DicomUploadResponse, SegmentationStartResponse
 
 router = APIRouter(tags=["dicom"])
-logger = logging.getLogger("generalsurg.dicom")
+logger = logging.getLogger("orlsurgplan3d.dicom")
 
 # Dossier où sont réellement sauvegardés les fichiers .dcm des séries
 # importées (upload manuel, PACS DICOMweb, PACS DIMSE). Jusqu'à cette session,

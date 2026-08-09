@@ -1,4 +1,4 @@
-# GeneralSurg Plan MIMO — enrichi
+# ORLSurgPlan3D — enrichi
 
 Plateforme chirurgicale modulaire multi-spécialités (HBP, Colorectal, Gastrique,
 Thyroïde, Thoracique, Cardiaque), portée au même niveau de complétude que
@@ -36,11 +36,14 @@ connectée, analyse prédictive calculée, backend FastAPI générique.
    auto-authentification JWT) → réponse hors-ligne clairement étiquetée comme
    telle. Partagé par le chat du panneau droit et la barre « Gemini Live ».
 
-5. **Onglet Analyse** (nouveau, 4ᵉ onglet du panneau droit) — volumétrie calculée
+5. **Onglet Analyse** (4ᵉ onglet du panneau droit) — volumétrie calculée
    à partir du volume voxel réel (pas une constante), score de risque calculé à
    partir des métriques `warn/ok` du module + âge + urgence du patient, et
-   3 scénarios prédictifs. Bouton d'export du plan (JSON local, ou DICOM SR via
-   le backend si configuré).
+   3 scénarios prédictifs. Bouton d'export du plan : si un **plan chirurgical
+   retenu** existe côté backend, l'export passe par le vrai endpoint
+   DICOM SR du plan calculé sur le maillage segmenté ; sinon, fallback honnête
+   en JSON local clairement étiqueté « estimation procédurale » (jamais
+   présenté comme une mesure clinique validée).
 
 6. **Fiche patient éditable** — dans la modale « Base Patients », un formulaire
    permet d'éditer le patient du module actif ; si un backend est configuré,
@@ -51,6 +54,20 @@ connectée, analyse prédictive calculée, backend FastAPI générique.
    segments anatomiques génériques, upload DICOM, volumétrie (générique +
    calcul FLR/TLV spécifique quand `specialty=hbp`), proxy IA Gemini/Groq,
    chat streaming en WebSocket, export DICOM SR.
+
+8. **Onglet « Plan chir. »** (nouveau, pont vers la planification chirurgicale
+   réelle du backend `/api/v2/surgical-planning/...`) — au lieu de simples
+   estimations procédurales, le frontend appelle maintenant le solveur réel :
+   FLR (découpage tétraédrique du maillage segmenté), marge oncologique
+   tumeur↔plan, relaxation hyperélastique post-résection (FEM Mooney-Rivlin /
+   Ogden / néo-hookéen, ~5-15 s), persistance des plans, sélection du plan
+   chirurgical retenu (SELECTED) et export PDF / DICOM SR. L'onglet affiche
+   honnêtement la source de l'anatomie (segmentation IA réelle vs organe
+   synthétique de démo, distingués via `mesh_ref`) et rappelle que le solveur
+   n'est pas validé cliniquement et que le plan de coupe est exprimé dans le
+   référentiel du maillage segmenté (mm), pas dans le référentiel DICOM.
+   Le patient affiché est synchronisé avec le backend (`PUT` puis `POST` si
+   404) avant toute simulation.
 
 ## Démarrer le backend
 
@@ -117,7 +134,7 @@ renseignez :
 
 ### 2. Persistance PostgreSQL avec migrations
 - Modèles SQLAlchemy dans `backend/models.py` (miroir de `migrations/schema.sql`).
-- Dev rapide : SQLite zero-config (`./generalsurg.db`), tables créées automatiquement
+- Dev rapide : SQLite zero-config (`./orlsurgplan3d.db`), tables créées automatiquement
   au démarrage — aucune installation requise.
 - Production : PostgreSQL via `docker compose up -d db`, puis
   `alembic -c migrations/alembic.ini upgrade head`. Voir `backend/migrations/README.md`.
@@ -385,10 +402,18 @@ sur le maillage réel que sur l'anatomie procédurale (régression), fallback
   l'ouverture réelle du fichier — en particulier le nouveau chemin "maillage
   réel", qui nécessite un backend avec TotalSegmentator installé (non
   disponible dans ce sandbox) pour être testé de bout en bout.
-- **Évolution Clinique Prioritaire (De la Démo à l'Aide à la Décision OR)** : Le prototype JS actuel illustre une déformation PBD basique, sans propriétés tissulaires réelles. Pour combler l'écart avec les exigences de l'architecture de production (`twin-service`, Section 2.2.1) et les tests unitaires déjà spécifiés (`Mooney-Rivlin energy`, Section 11.3.2), la feuille de route technique priorise l'implémentation clinique validée :
-  1. **Propriétés tissulaires hyperélastiques réelles** : Intégration du modèle d'énergie de **Mooney-Rivlin** via un solveur XPBD/FEM certifié, calibré sur l'élastographie IRM/ultrasonore du patient.
-  2. **Collisions Organe-Instrument & Feedback Haptique** : Détection continue des collisions en temps réel (OBB-SDF à 60-100 Hz) calculant la contrainte mécanique exercée sur le parenchyme lors d'une traction ou d'un écartement et restituant un retour de force chirurgical.
-  3. **Découpe & Coagulation Peropératoires** : Simulation de résection par re-triangulation topologique dynamique (algorithme de Sust-Vilanova) avec mise à jour instantanée des marges tumorales et des volumes restants (FLR). Sans cette trinité biomécanique, le jumeau reste une visualisation et non un dispositif médical d'aide à la décision au bloc.
+- **[MIS À JOUR] Le solveur FEM Mooney-Rivlin décrit ci-dessous comme travail futur est désormais implémenté côté serveur** — voir
+  `## Backend — Planification de coupe réelle (biomécanique FEM)` plus bas. Ce
+  paragraphe historique (PBD client pur, sans propriétés tissulaires réelles)
+  décrivait l'état du jumeau numérique *avant* l'ajout de
+  `backend/biomech_solver.py` : il reste vrai pour le jumeau PBD "exploration
+  rapide" (`enterDigitalTwin()`), mais la planification de coupe validée passe
+  désormais par le vrai solveur FEM serveur (Mooney-Rivlin / Ogden / Néo-Hookéen,
+  scipy L-BFGS-B), pas par une extrapolation JS côté client. Les points 2
+  (collisions/haptique) et 3 (retriangulation topologique dynamique) restent
+  non implémentés — hors périmètre de la planification de coupe actuelle, qui
+  travaille par découpe-et-relaxation d'un maillage tétraédrique plutôt que par
+  retriangulation en temps réel peropératoire.
 - Résolution volontairement basse pour tenir 60 img/s en JavaScript pur sans
   GPU compute — visuellement moins détaillé que l'organe "Plan" (qui n'est pas
   déformable) : ~90 sommets pour l'anatomie procédurale, ~750 pour le vrai
@@ -398,6 +423,59 @@ sur le maillage réel que sur l'anatomie procédurale (régression), fallback
   le même problème que "Jumeau Num." avant correction : ils ne font que se
   surligner, aucun panneau ne s'affiche. Non corrigés dans cette session
   (hors du périmètre demandé) — à signaler si besoin.
+
+## Backend — Planification de coupe réelle (biomécanique FEM)
+
+Modules cliniquement pertinents ajoutés au backend : segmentation, PACS/
+interopérabilité et **biomécanique de résection réelle** — pas une simulation
+locale JS, un vrai solveur par éléments finis côté serveur.
+
+- **`backend/biomech_solver.py`** — solveur FEM réel (scipy L-BFGS-B) sur
+  maillage tétraédrique. Modèles hyperélastiques supportés : `mooney_rivlin`
+  (paramètres `C10_kpa`/`C01_kpa`/`D1`), `ogden` (`mu`/`alpha`/`D1`),
+  `neo_hookean` (cas particulier de Mooney-Rivlin, `C01=0`). Pipeline :
+  tétraédrisation du maillage `.glb` de l'organe → découpe par plan →
+  relaxation énergétique du reliquat (ancrage du pédicule + contraction de la
+  face de coupe) → export du maillage déformé en `.glb`.
+- **`backend/routers/surgical_planning.py`** (`/api/v2/surgical-planning/...`)
+  — expose le solveur : `POST /patients/{id}/resection/simulate` (calcul FLR +
+  marge oncologique + FEM optionnel), CRUD complet de plans de résection
+  persistés (`GET/POST/PUT/DELETE /patients/{id}/resection/plans[/{plan_id}]`,
+  `POST .../select` pour marquer un plan comme retenu), et export
+  `GET .../plans/{plan_id}/export?format=pdf|dicom-sr`. Le calcul repose sur un
+  vrai maillage de segmentation (`models.Segment.mesh_ref`) — sans maillage
+  réel pour le patient, l'endpoint renvoie une erreur 400 explicite plutôt
+  qu'une simulation inventée.
+- **`backend/compliance_status.py`** (`GET /api/v2/compliance/mdr-fda-status`)
+  — statut réglementaire réel côté serveur (CE MDR/FDA 510(k)/HIPAA, tous
+  `NOT_CERTIFIED`/`NOT_SUBMITTED`/`NOT_AUDITED` à ce stade, intégrité de
+  l'audit trail) — endpoint d'audit/infra, pas de modale dédiée côté
+  interface (voir plus bas, la mention "prototype non certifié" en pied de
+  page suffit côté utilisateur).
+- Testé de bout en bout : `backend/tests/test_biomech_solver.py` (solveur pur)
+  et `tests/test_surgical_planning.py` (API complète, y compris FLR, marge,
+  FEM, CRUD de plans, export PDF/DICOM-SR).
+
+### Deux versions du logiciel
+
+`backend/main.py` distingue déjà les deux versions demandées, via une seule
+variable d'environnement — pas un second dépôt à maintenir en parallèle :
+
+- **Version Clinique / Production** (`APP_MODE=clinical`) : seuls les modules
+  cliniquement pertinents sont chargés — Segmentation (TotalSegmentator),
+  PACS/Interopérabilité (DICOMweb, FHIR, HL7), Biomécanique (planification de
+  coupe FEM ci-dessus), Visualisation. Aucun module de `demo/` n'est chargé.
+- **Version Recherche / Démo** (par défaut, `DEMO_MODE=true`) : identique à la
+  version clinique, plus les générateurs de données de démonstration
+  (`demo/demo_patient_dicom_mesh_service.py`, `demo/demo_synthetic_organ_service.py`
+  — patients fictifs et organes synthétiques pour tester le pipeline sans PACS
+  réel), sous le préfixe `/api/v2/demo/...`, clairement distinct des
+  endpoints cliniques. `/health` renvoie `app_mode`/`demo_mode` et un
+  `disclaimer` explicite selon le mode actif.
+- Les anciens modules spéculatifs ("recherche" au sens jalons M21-M40 :
+  interfaces cerveau-machine, essaims nanorobotiques, bio-impression 4D,
+  etc.) ont été supprimés du code source — ils n'existent plus, ni cachés
+  derrière un flag ni dans `demo/`.
 
 ## Frontend — Les 3 autres onglets non fonctionnels, corrigés
 
@@ -841,3 +919,116 @@ pu être exécutés ici. À vérifier sur un poste réel avec Chrome/Edge 113+.
   moteur JS ne survit pas à un F5) — seul le téléchargement des poids est
   mis en cache par le navigateur, l'utilisateur doit recliquer "Charger" à
   chaque session (rapide après le premier téléchargement).
+
+## Backend — Marges aux structures critiques (nerf/vaisseau) pour la planification ORL réelle
+
+### Constat de départ
+Le solveur de planification de résection (`biomech_solver.py` +
+`routers/surgical_planning.py`) était entièrement calqué sur le paradigme
+hépatique : FLR (Future Liver Remnant), marge **tumorale** uniquement, et
+relaxation hyperélastique appliquée sans distinction de tissu. Or en ORL,
+l'enjeu de planification n'est presque jamais « quel volume de reliquat mou »
+mais **la marge aux structures nobles** (nerf facial en parotidectomie/
+otologie, nerf récurrent laryngé en thyroïdectomie/chirurgie laryngée, nerf
+hypoglosse/spinal en curage cervical, axe carotido-jugulaire), et une partie
+des tissus concernés (cartilage laryngé, os temporal) sont **rigides** — la
+physique hyperélastique du solveur (calibrée en kPa pour un continuum mou) ne
+s'applique pas à ces tissus, même si rien dans le code ne l'empêchait
+jusqu'ici.
+
+### Ce qui a été construit
+- **`twin_biomech_atlas.py`** — 5 nouvelles entrées de tissu ORL
+  (`nerve_epineurium`, `cartilage_hyaline`, `bone_cortical`, `gland_soft`,
+  `muscle_skeletal`), chacune avec une `tissue_class`
+  (`soft_deformable` / `rigid_non_deformable` / `neurovascular_critical`) et
+  un ordre de grandeur (littérature d'élastographie) honnêtement annoté comme
+  approximatif — `bone_cortical` n'a délibérément **aucune** valeur kPa
+  (l'os cortical est ~1000x plus rigide que le foie, hors échelle du
+  solveur : un chiffre kPa aurait été trompeur). Deux nouvelles fonctions,
+  `get_tissue_class()` et `is_fem_eligible()`.
+- **Marge aux structures critiques** — `routers/surgical_planning.py`
+  reconnaît désormais les segments `type=nerve`/`type=vessel` d'un patient et
+  calcule, à chaque simulation, la distance plan de coupe ↔ chaque structure
+  (même méthode `surface_min_distance_to_plane` que la marge tumorale
+  existante), exposée dans `metrics.critical_structure_margins` (liste, un
+  élément par structure importée) — dans la simulation interactive, les plans
+  persistés, l'export PDF et l'export DICOM SR (nouveau container SR par
+  structure).
+- **Garde-fou de rigidité avant la FEM** — `run_fem=true` avec un
+  `tissue_type` dont la classe est `rigid_non_deformable` (cartilage/os) est
+  désormais **refusé** (400 explicite : « solveur calibré pour un continuum
+  mou, pas pour un tissu rigide ») plutôt que de produire silencieusement une
+  déformation non physique. Le calcul géométrique (FLR + marges) reste
+  disponible avec `run_fem=false`.
+- **`POST /api/v2/surgical-planning/patients/{id}/critical-structures/import`**
+  — endpoint d'upload multipart (.glb/.stl/.obj) pour une structure critique
+  segmentée **manuellement ailleurs** (3D Slicer, ITK-SNAP, Mimics...). Choix
+  assumé plutôt qu'une fausse promesse d'IA : **aucun modèle de segmentation
+  automatique open-source ne couvre le nerf facial intra-parotidien, le nerf
+  récurrent laryngé ou la chaîne ossiculaire** — contrairement au foie
+  (TotalSegmentator), il n'existe pas d'équivalent public entraîné pour ces
+  structures. Le pont réaliste vers une planification ORL réelle passe donc
+  par l'import d'une segmentation manuelle déjà faite, pas par une inférence
+  qui n'existe pas. Le maillage uploadé est validé (chargement `trimesh`,
+  rejet si vide ou format non supporté), ré-exporté en `.glb` coloré par
+  convention (nerf = jaune, vaisseau = rouge), et enregistré comme `Segment`
+  — immédiatement pris en compte par `.../resection/simulate` sans étape
+  supplémentaire.
+
+### Testé réellement (pytest, pas seulement à la lecture)
+`tests/test_surgical_planning.py` (8 nouveaux tests, anatomie synthétique
+trimesh comme le reste du fichier) : marge nerf calculée et cohérente
+géométriquement (icosphère à distance connue du plan de coupe), liste vide
+sans structure critique importée (non-régression), FEM refusée pour
+`cartilage_hyaline` avec message explicite tout en gardant le calcul
+géométrique disponible, FEM inchangée pour le foie (non-régression), upload
+multipart bout en bout (glb réel généré par `trimesh`, endpoint → `Segment`
+créé → visible dans `GET /segments` → immédiatement intégré au calcul de
+marge suivant), rejet d'un format non supporté (.txt) et d'un
+`structure_type` invalide (422 de validation `Form(pattern=...)`),
+authentification requise. Suite complète du dépôt rejouée sans régression
+(201 tests passent, y compris ces 8 nouveaux).
+
+### Deux échecs préexistants trouvés en testant (non introduits par ce travail, signalés ici par honnêteté)
+En lançant la suite complète, deux tests **déjà présents avant cette
+session** échouent, sur du code que ce travail n'a pas touché :
+- `tests/test_surgical_planning.py::test_simulate_with_fem_end_to_end`
+  attend une relaxation d'énergie ≥95 % et obtient 93,3 % (de façon stable,
+  pas aléatoire) — seuil de convergence du solveur `biomech_solver.py`
+  probablement calibré sur un autre environnement scipy/numpy ; pas causé
+  par ce travail (`biomech_solver.py` n'a pas été modifié ici).
+- `backend/tests/test_mllp.py::test_connection_refused_raises_fast` attend
+  un échec de connexion refusée en <2 s et met ~2,02 s — flakiness de timing
+  réseau sur cette machine, sans rapport avec la planification chirurgicale.
+
+Ni l'un ni l'autre n'a été corrigé dans cette session (hors périmètre
+« planification ORL réelle » demandé) — à investiguer séparément.
+
+### Limites honnêtes
+- **Toujours aucune segmentation automatique tête-et-cou.** Cette session
+  ferme la boucle *aval* (marge, garde-fou physique, export) mais ne résout
+  pas le trou *amont* : pour un patient ORL réel, l'organe lui-même
+  (larynx, os temporal, parotide...) n'a toujours pas de pipeline
+  d'inférence automatique — seul un import manuel (organe ou structure
+  critique) permet une planification avec anatomie patient-spécifique
+  aujourd'hui. Le prochain chantier à plus fort impact reste l'intégration
+  d'un modèle de segmentation tête-et-cou (voir limites de
+  `segmentation_service.py` plus haut).
+- **`nerve_epineurium` n'est pas une calibration par nerf nommé** — un ordre
+  de grandeur générique de nerf périphérique, pas une valeur spécifique au
+  nerf facial ou au nerf récurrent laryngé (aucune littérature de ce niveau
+  de granularité n'a été utilisée ici). Ces paramètres ne servent de toute
+  façon pas à déformer le nerf (jamais réséqué par le solveur), seulement à
+  la cohérence du schéma de données.
+- **La marge structure critique est calculée pour TOUTES les structures
+  nerf/vaisseau du patient à chaque simulation**, sans notion de criticité
+  relative ni de seuil clinique par procédure (ex. 2 mm autour du nerf
+  facial n'a pas la même gravité que 2 mm autour d'une veine accessoire) —
+  la valeur numérique est retournée brute, l'interprétation clinique reste
+  entièrement à la charge du chirurgien.
+- **Pas encore câblé côté frontend** — l'onglet « Plan chir. » de
+  `index.html`/`assets/app-part3.js` n'affiche pas encore
+  `critical_structure_margins` ni de formulaire d'import de structure
+  critique ; ce travail s'est concentré sur le backend (logique clinique +
+  tests), le câblage UI est un prochain pas raisonnable, pas fait ici faute
+  de navigateur dans ce sandbox pour le vérifier visuellement.

@@ -1,4 +1,4 @@
-# Déploiement — GeneralSurg Plan MIMO
+# Déploiement — ORLSurgPlan3D
 
 Guide pour déployer la stack complète (reverse proxy HTTPS + backend + PostgreSQL + PACS Orthanc) sur un serveur que vous contrôlez (VPS, serveur hospitalier on-prem...).
 
@@ -16,7 +16,7 @@ Le moyen le plus rapide pour une démo publique sans infrastructure. Utilise `re
 2. Connecter votre dépôt GitHub
 3. Render détecte `render.yaml` automatiquement → cliquer **Apply**
 4. Attendre la fin du premier build (~5 min)
-5. L'app est disponible sur `https://generalsurg-plan-demo.onrender.com`
+5. L'app est disponible sur `https://orlsurgplan3d-demo.onrender.com`
 
 > ⚠️ Sur le plan gratuit, le service s'endort après 15 min d'inactivité et met ~30s à répondre au premier accès (cold start). Normal pour une démo.
 
@@ -113,8 +113,8 @@ Guide pour déployer la stack complète (reverse proxy HTTPS + backend + Postgre
 ## 1. Cloner le dépôt et configurer les secrets
 
 ```bash
-git clone <url-de-votre-remote> generalsurg-plan
-cd generalsurg-plan
+git clone <url-de-votre-remote> orlsurgplan3d
+cd orlsurgplan3d
 cp .env.example .env
 ```
 
@@ -122,7 +122,7 @@ cp .env.example .env
 
 | Variable | Description |
 |---|---|
-| `DOMAIN` | Le nom de domaine qui pointe vers ce serveur, ex. `generalsurg.mondomaine.fr` |
+| `DOMAIN` | Le nom de domaine qui pointe vers ce serveur, ex. `orlsurgplan3d.mondomaine.fr` |
 | `ACME_EMAIL` | Email de contact Let's Encrypt (alertes d'expiration de certificat) |
 | `POSTGRES_PASSWORD` | Mot de passe PostgreSQL — générez-en un avec `openssl rand -hex 24` |
 | `JWT_SECRET` | Secret de signature des jetons — générez-en un avec `openssl rand -hex 32` |
@@ -171,10 +171,10 @@ La donnée qui compte vraiment vit dans deux volumes Docker :
 
 ```bash
 # Sauvegarde de la base PostgreSQL
-docker compose exec postgres pg_dump -U surguser generalsurg_db | gzip > backup-$(date +%Y%m%d).sql.gz
+docker compose exec postgres pg_dump -U surguser orlsurgplan3d_db | gzip > backup-$(date +%Y%m%d).sql.gz
 
 # Sauvegarde des fichiers DICOM/maillages (volume surg_storage)
-docker run --rm -v generalsurg-plan_surg_storage:/data -v "$PWD":/backup alpine \
+docker run --rm -v orlsurgplan3d_surg_storage:/data -v "$PWD":/backup alpine \
   tar czf /backup/surg_storage-$(date +%Y%m%d).tar.gz /data
 ```
 
@@ -200,8 +200,8 @@ Les conteneurs `postgres` et `orthanc` ne sont pas reconstruits (seule l'image `
 À chaque déploiement, mettez à jour la constante `CACHE_VERSION` dans `sw.js` (ligne ~29) :
 
 ```js
-// Format : generalsurg-shell-v2-YYYYMMDD
-const CACHE_VERSION = 'generalsurg-shell-v2-20260801';
+// Format : orlsurgplan3d-shell-v2-YYYYMMDD
+const CACHE_VERSION = 'orlsurgplan3d-shell-v2-20260801';
 ```
 
 Cette clé force la purge du cache chez tous les utilisateurs et déclenche le toast « Mise à jour disponible — Actualiser ? » dans l'interface. Sans cette mise à jour, les utilisateurs continuent de voir l'ancienne version depuis leur cache local.
@@ -212,7 +212,7 @@ Cette clé force la purge du cache chez tous les utilisateurs et déclenche le t
 - name: Mettre à jour la version du cache SW
   run: |
     $ts = Get-Date -Format "yyyyMMddHHmmss"
-    (Get-Content sw.js) -replace 'generalsurg-shell-v2-\d+', "generalsurg-shell-v2-$ts" |
+    (Get-Content sw.js) -replace 'orlsurgplan3d-shell-v2-\d+', "orlsurgplan3d-shell-v2-$ts" |
       Set-Content sw.js
 ```
 
@@ -228,8 +228,8 @@ Voir aussi [ADMIN_MANUAL_PACS_HL7.md](ADMIN_MANUAL_PACS_HL7.md) pour la configur
 ## 1. Cloner le dépôt et configurer les secrets
 
 ```bash
-git clone <url-de-votre-remote> generalsurg-plan
-cd generalsurg-plan
+git clone <url-de-votre-remote> orlsurgplan3d
+cd orlsurgplan3d
 cp .env.example .env
 ```
 
@@ -237,7 +237,7 @@ cp .env.example .env
 
 | Variable | Description |
 |---|---|
-| `DOMAIN` | Le nom de domaine qui pointe vers ce serveur, ex. `generalsurg.mondomaine.fr` |
+| `DOMAIN` | Le nom de domaine qui pointe vers ce serveur, ex. `orlsurgplan3d.mondomaine.fr` |
 | `ACME_EMAIL` | Email de contact Let's Encrypt (alertes d'expiration de certificat) |
 | `POSTGRES_PASSWORD` | Mot de passe PostgreSQL — générez-en un avec `openssl rand -hex 24` |
 | `JWT_SECRET` | Secret de signature des jetons — générez-en un avec `openssl rand -hex 32` |
@@ -286,10 +286,10 @@ La donnée qui compte vraiment vit dans deux volumes Docker :
 
 ```bash
 # Sauvegarde de la base PostgreSQL
-docker compose exec postgres pg_dump -U surguser generalsurg_db | gzip > backup-$(date +%Y%m%d).sql.gz
+docker compose exec postgres pg_dump -U surguser orlsurgplan3d_db | gzip > backup-$(date +%Y%m%d).sql.gz
 
 # Sauvegarde des fichiers DICOM/maillages (volume surg_storage)
-docker run --rm -v generalsurg-plan_surg_storage:/data -v "$PWD":/backup alpine \
+docker run --rm -v orlsurgplan3d_surg_storage:/data -v "$PWD":/backup alpine \
   tar czf /backup/surg_storage-$(date +%Y%m%d).tar.gz /data
 ```
 

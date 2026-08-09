@@ -3,15 +3,13 @@
 
 from typing import Literal
 
-Specialty = Literal["hbp", "colorectal", "gastrique", "thyroide", "thoracique", "cardiaque", "urologie", "anesthesie_reanimation"]
+Specialty = Literal["laryngologie", "otologie", "rhinologie", "cervicofacial", "pediatrique", "anesthesie_reanimation"]
 
 SPECIALTY_LABELS = {
-    "hbp": "Chirurgie Hépato-Bilio-Pancréatique",
-    "colorectal": "Chirurgie Colorectale",
-    "gastrique": "Chirurgie Gastrique",
-    "thyroide": "Chirurgie Thyroïdienne",
-    "thoracique": "Chirurgie Thoracique",
-    "cardiaque": "Chirurgie Cardiaque",
-    "urologie": "Chirurgie Urologique",
+    "laryngologie": "Chirurgie Laryngée & VADS",
+    "otologie": "Chirurgie Otologique",
+    "rhinologie": "Chirurgie Rhino-Sinusienne",
+    "cervicofacial": "Chirurgie Cervico-Faciale",
+    "pediatrique": "ORL Pédiatrique",
     "anesthesie_reanimation": "Anesthésie-Réanimation",
 }

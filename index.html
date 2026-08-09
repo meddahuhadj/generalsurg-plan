@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GeneralSurg Plan | Plateforme Chirurgicale Modulaire</title>
+  <title>ORLSurgPlan3D | Plateforme Chirurgicale Modulaire</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link
     href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
@@ -19,10 +19,10 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="GeneralSurg Plan">
+  <meta name="apple-mobile-web-app-title" content="ORLSurgPlan3D">
 </head>
 
-<body data-mod="hbp">
+<body data-mod="laryngologie">
 
   <!-- ═══════════════════════════════════════════════════════
      HUB DE DÉMARRAGE — Sélection de spécialité
@@ -36,7 +36,7 @@
       <div class="hub-logo">
         <div class="hub-logo-icon">🏥</div>
         <div class="hub-logo-text">
-          <h1>GeneralSurg Plan</h1>
+          <h1>ORLSurgPlan3D</h1>
           <p>Plateforme chirurgicale modulaire</p>
         </div>
       </div>
@@ -70,8 +70,8 @@
       <div class="brand">
         <div class="brand-icon">🏥</div>
         <div class="brand-text">
-          <div class="brand-name">GeneralSurg Plan</div>
-          <div class="brand-sub" id="brand-sub">HBP</div>
+          <div class="brand-name">ORLSurgPlan3D</div>
+          <div class="brand-sub" id="brand-sub">Laryngologie</div>
         </div>
       </div>
       <div class="top-nav">
@@ -92,37 +92,15 @@
             data-i18n="nav.surgvoice">Assistant</span></button>
         <button data-view="mdr-fda" style="color:#ec4899;font-weight:600">🛡️ <span data-i18n="nav.mdrFda">Conformité
             MDR</span></button>
-        <button class="nav-explore" data-view="webxr" style="color:#06b6d4;font-weight:600">🥽 WebXR Immersif</button>
-        <button class="nav-explore" data-view="robotic" style="color:#a855f7;font-weight:600">🤖 Robotique RAS</button>
-        <button class="nav-explore" data-view="genai-complications" style="color:#f43f5e;font-weight:600">🧬 GenAI
-          Complications</button>
-        <button class="nav-explore" data-view="pqc-bioprint" style="color:#10b981;font-weight:600">🛰️ Téléchirurgie PQC
-          & Bio-4D</button>
-        <button class="nav-explore" data-view="bci-haptic" style="color:#8b5cf6;font-weight:600">🧠 Interface BCI &
-          Cortex</button>
-        <button class="nav-explore" data-view="nano-swarm" style="color:#0ea5e9;font-weight:600">🔬 Essaim
-          Nanorobotique</button>
-        <button class="nav-explore" data-view="auto-laser" style="color:#eab308;font-weight:600">🤖⚡ Autonomie L5 &
-          Laser</button>
-        <button class="nav-explore" data-view="epi-sono" style="color:#22c55e;font-weight:600">🧬✨ Reprogrammation &
-          Sonogénétique</button>
-        <button class="nav-explore" data-view="raman-plasma" style="color:#06b6d4;font-weight:600">⚡🔬 Spectrométrie
-          Raman & Plasma CAP</button>
-        <button class="nav-explore" data-view="cryo-bnct" style="color:#38bdf8;font-weight:600">❄️☢️ Cryo-IRE & BNCT
-          Neutrons</button>
-        <button class="nav-explore" data-view="organoid-4d" style="color:#10b981;font-weight:600">🧬🌱 Organoïdes 4D &
-          Micro-Vaisseaux</button>
-        <button class="nav-explore" data-view="iknife-ac225" style="color:#f43f5e;font-weight:600">🔬💨 iKnife REIMS &
-          Ac-225</button>
         <button id="btn-or-exit" style="display:none;color:var(--red)" onclick="toggleOR()">✕ <span
             data-i18n="nav.exitOr">Sortir Mode OR</span></button>
         <button id="btn-dash-exit" style="display:none;color:var(--accent)" onclick="toggleDashboard()">✕ <span
             data-i18n="nav.exitDash">Sortir Tableau de Bord</span></button>
       </div>
       <div class="top-actions">
-        <button class="btn-icon" id="btn-research-toggle" onclick="toggleResearchMode()"
-          data-i18n-title="nav.researchToggle"
-          title="Mode Recherche — révèle les modules exploratoires non validés cliniquement (Jalons M21-M40)">🔬</button>
+        <button class="btn-icon" id="btn-advanced-toggle" onclick="toggleAdvancedMode()"
+          data-i18n-title="nav.advancedToggle"
+          title="Paramètres avancés — affiche les réglages techniques réservés à la maintenance">🔧</button>
         <button class="btn-icon" id="btn-dash-toggle" onclick="toggleDashboard()" data-i18n-title="nav.dashToggle"
           title="Tableau de Bord Bloc (OR Dashboard)">📊 Dash</button>
         <button class="btn-icon" id="btn-or-toggle" onclick="toggleOR()" data-i18n-title="nav.orToggle"
@@ -166,10 +144,6 @@
         <div class="status-dot"></div>
       </div>
     </div>
-
-    <!-- Bannière Mode Recherche -->
-    <div class="research-banner">🔬 MODE RECHERCHE ACTIVÉ — les modules affichés ci-dessus sont exploratoires (Jalons
-      M21-M40), non validés cliniquement, et ne doivent pas être utilisés pour la prise de décision au bloc.</div>
 
     <!-- Stepper de workflow clinique -->
     <div class="workflow-stepper" id="workflow-stepper"></div>
@@ -449,9 +423,9 @@
           <select id="mpr-seg-selector" onchange="state.mpr.activeSegment=this.value"
             style="font-size:8px;background:var(--bg2);color:var(--text1);border:1px solid var(--border);border-radius:4px;padding:2px 4px;cursor:pointer">
             <option value="tumor">🔴 Tumeur</option>
-            <option value="portal_vein">🔵 Veine porte</option>
-            <option value="hepatic_vein">🟣 VS-Hépatiques</option>
-            <option value="bile_duct">🟡 Voies bil.</option>
+            <option value="vessel">🔵 Vaisseau à risque</option>
+            <option value="nerve">🟣 Nerf à risque</option>
+            <option value="duct">🟡 Canal/conduit</option>
             <option value="gtv">🟠 GTV</option>
             <option value="ctv">🟤 CTV</option>
           </select>
@@ -497,6 +471,7 @@
           <button class="rtab" data-tab="implants" onclick="setTab('implants')">Implants</button>
           <button class="rtab" data-tab="ia" onclick="setTab('ia')">IA Chat</button>
           <button class="rtab" data-tab="analyse" onclick="setTab('analyse')">Analyse</button>
+          <button class="rtab" data-tab="planchir" onclick="setTab('planchir')">🩺 Plan chir.</button>
         </div>
         <div class="rtab-body" id="rtab-body"></div>
       </div>
@@ -510,11 +485,11 @@
         <div class="dash-info-row"><span class="dash-info-lbl">Patient:</span> <span class="dash-info-val"
             id="dash-pat-name">Jean Dupont (PAT-2026-001)</span></div>
         <div class="dash-info-row"><span class="dash-info-lbl">Chirurgien:</span> <span class="dash-info-val">Dr. Martin
-            (HBP)</span></div>
+            (ORL)</span></div>
         <div class="dash-info-row"><span class="dash-info-lbl">Anesthésiste:</span> <span class="dash-info-val">Dr.
             Dubois</span></div>
         <div class="dash-info-row"><span class="dash-info-lbl">Intervention:</span> <span
-            class="dash-info-val">Hépatectomie droite (Robotique)</span></div>
+            class="dash-info-val">Chirurgie trans-orale robotique (TORS)</span></div>
 
         <div
           style="margin-top: 30px; text-align: center; background: rgba(0,0,0,0.2); padding: 20px; border-radius: 8px;">
@@ -536,18 +511,18 @@
           <div
             style="display:flex; justify-content:space-between; color: var(--text3); cursor:pointer; padding: 8px; border-radius: 8px; transition: background 0.2s;"
             onmouseover="this.style.background='rgba(255,255,255,0.05)'"
-            onmouseout="this.style.background='transparent'" onclick="loadSurgeryFromSchedule('thyroide')"><span>08:00 -
-              10:00</span> <span>Martin, S. (Thyroïdectomie)</span></div>
+            onmouseout="this.style.background='transparent'" onclick="loadSurgeryFromSchedule('otologie')"><span>08:00 -
+              10:00</span> <span>Lefèvre, C. (Tympanoplastie)</span></div>
           <div
             style="display:flex; justify-content:space-between; color: var(--accent); font-weight: bold; background: rgba(var(--accent-rgb), 0.1); padding: 12px; border-radius: 8px; border: 1px solid rgba(var(--accent-rgb), 0.3); cursor:pointer; transition: background 0.2s;"
             onmouseover="this.style.background='rgba(var(--accent-rgb), 0.2)'"
-            onmouseout="this.style.background='rgba(var(--accent-rgb), 0.1)'" onclick="loadSurgeryFromSchedule('hbp')">
-            <span>10:30 - 14:30</span> <span>Benali, K. (Hépatectomie D.)</span></div>
+            onmouseout="this.style.background='rgba(var(--accent-rgb), 0.1)'" onclick="loadSurgeryFromSchedule('laryngologie')">
+            <span>10:30 - 14:30</span> <span>Haddad, O. (Laryngectomie Part.)</span></div>
           <div
             style="display:flex; justify-content:space-between; color: var(--text2); cursor:pointer; padding: 8px; border-radius: 8px; transition: background 0.2s;"
             onmouseover="this.style.background='rgba(255,255,255,0.05)'"
-            onmouseout="this.style.background='transparent'" onclick="loadSurgeryFromSchedule('colorectal')"><span>15:00
-              - 18:00</span> <span>Dubois, M. (Résection Rectum)</span></div>
+            onmouseout="this.style.background='transparent'" onclick="loadSurgeryFromSchedule('rhinologie')"><span>15:00
+              - 18:00</span> <span>Fontaine, R. (CEES Bilatérale)</span></div>
         </div>
       </div>
 
@@ -795,7 +770,7 @@
   </div>
 
   <!-- ── Dossier & évaluation pré-anesthésique ── transverse à toutes les spécialités :
-     s'applique au patient du module actif, quel que soit ce module (un patient HBP a
+     s'applique au patient du module actif, quel que soit ce module (un patient ORL a
      aussi une consultation d'anesthésie). Persisté via PUT/GET /patients/{id}/preanesthesie
      si un backend est configuré, sinon conservé localement dans state.preanesthesie. -->
   <div class="modal-overlay" id="modal-preanesthesie">
@@ -1336,9 +1311,9 @@
               </tr>
               <tr style="border-bottom:1px solid var(--border)">
                 <td style="padding:6px;font-weight:600">Salle 2</td>
-                <td>HBP (Patient actuel)</td>
+                <td>ORL (Patient actuel)</td>
                 <td style="color:var(--green)">🟢 Installation stérile — Incision dans 12m</td>
-                <td>Boîte Hépatectomie #4 RFID UHF ✅</td>
+                <td>Boîte Laryngectomie #4 RFID UHF ✅</td>
               </tr>
               <tr>
                 <td style="padding:6px;font-weight:600">Salle 3</td>
@@ -1724,796 +1699,6 @@
       </div>
     </div>
 
-    <!-- ── Modale Navigation Immersive WebXR (Vision Pro / Quest 3 - Jalons M15 & M16) ── -->
-    <div class="modal-overlay" id="modal-webxr">
-      <div class="modal" style="min-width:660px">
-        <div class="modal-hdr"><span class="modal-title" style="color:#06b6d4">🥽 WebXR Spatial Computing — Apple Vision
-            Pro & Meta Quest 3</span><button class="modal-close" onclick="closeModal('webxr')">✕</button></div>
-        <div class="modal-body" style="font-size:11px;line-height:1.6">
-          <div
-            style="background:rgba(6,182,212,.1);border:1px solid rgba(6,182,212,.3);padding:10px;border-radius:6px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">
-            <div><strong>🥽 Streaming Stéréoscopique 120 Hz :</strong> Jumeau Numérique holographique en mode AR
-              Pass-Through à très basse latence (< 9 ms Motion-to-Photon) pour chirurgie guidée.</div>
-                <span class="badge green" style="padding:4px 8px;background:#06b6d4;color:#fff">LiDAR + Eye-Tracking
-                  👁️</span>
-            </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-              <div style="background:var(--bg2);padding:10px;border-radius:6px;border:1px solid var(--border2)">
-                <div style="font-weight:700;color:#06b6d4;margin-bottom:6px">📡 Télémétrie & Calibration Spatiale</div>
-                <div>• Casque connecté : <strong id="webxr-device-val" style="color:var(--text1)">Apple Vision Pro
-                    (visionOS 2.0)</strong></div>
-                <div>• Tracking spatial : <strong>NDI Polaris + ARKit Markerless</strong></div>
-                <div>• Erreur d'alignement RMS : <strong style="color:var(--green)">0.35 mm (Sub-mm 🎯)</strong></div>
-                <div>• Rendu fovéal : <strong>Eye-Tracking Pro Dynamique ✅</strong></div>
-                <button class="btn btn-secondary"
-                  style="font-size:10px;margin-top:8px;width:100%;border-color:rgba(6,182,212,.5)"
-                  onclick="notify('✨ Calibration spatiale WebXR scellée dans audit_logs (SHA-256 signé)','ok')">📍
-                  Re-calibrer Alignement Patient (42 points)</button>
-              </div>
-              <div style="background:var(--bg2);padding:10px;border-radius:6px;border:1px solid var(--border2)">
-                <div style="font-weight:700;color:var(--accent);margin-bottom:6px">🖐 Simulation Gestuelle Mains-Libres
-                  (26 DOF)</div>
-                <div style="display:flex;flex-direction:column;gap:6px">
-                  <button class="btn btn-secondary" style="text-align:left;font-size:10px"
-                    onclick="simulateWebXRGesture('Pinch 2 Doigts', '🔄 Rotation stéréoscopique fluide de l\'organe à 360°')">🤏
-                    Tester Pincement (Pinch) : Rotation 3D</button>
-                  <button class="btn btn-secondary" style="text-align:left;font-size:10px"
-                    onclick="simulateWebXRGesture('Index Raycast', '✂️ Incision ultrasonique CUSA guidée par pointeur virtuel')">👆
-                    Tester Raycast Index : Découpe CUSA</button>
-                  <button class="btn btn-secondary" style="text-align:left;font-size:10px"
-                    onclick="simulateWebXRGesture('Grab & Hold', '🖐 Écartement atraumatique des bords du parenchyme')">✊
-                    Tester Saisie (Grab) : Écartement PBD</button>
-                </div>
-                <div
-                  style="margin-top:8px;padding:6px;background:var(--bg0);border-radius:4px;border-left:3px solid #06b6d4;font-size:10px"
-                  id="webxr-gesture-output">
-                  En attente de détection gestuelle par les caméras infrarouges...
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button class="btn btn-primary" style="background:#06b6d4;border-color:#06b6d4"
-              onclick="notify('🥽 Mode Immersif WebXR stéréoscopique activé dans le casque Vision Pro !','ok');closeModal('webxr')">🚀
-              Lancer Navigation Immersive</button>
-            <button class="btn btn-secondary" onclick="closeModal('webxr')">Fermer</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- ── Modale Console Robotique RAS & Télé-opération Haptique (Jalons M17 & M18) ── -->
-      <div class="modal-overlay" id="modal-robotic">
-        <div class="modal" style="min-width:680px">
-          <div class="modal-hdr"><span class="modal-title" style="color:#a855f7">🤖 Console Robotique RAS — Intuitive Da
-              Vinci 5 & Medtronic Hugo</span><button class="modal-close" onclick="closeModal('robotic')">✕</button>
-          </div>
-          <div class="modal-body" style="font-size:11px;line-height:1.6">
-            <div
-              style="background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.3);padding:10px;border-radius:6px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">
-              <div><strong>🤖 Télé-opération Haptique (1000 Hz) :</strong> Télémétrie 7-DOF cinématique et calcul de
-                résistance en Newtons en direct sur le Jumeau Numérique PBD.</div>
-              <span class="badge green" style="padding:4px 8px;background:#a855f7;color:#fff">Fibre Optique Latence 0.8
-                ms ⚡</span>
-            </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-              <div style="background:var(--bg2);padding:10px;border-radius:6px;border:1px solid var(--border2)">
-                <div style="font-weight:700;color:#a855f7;margin-bottom:6px">🦾 Télémétrie des 4 Bras Robotiques</div>
-                <table style="width:100%;border-collapse:collapse;font-size:10px">
-                  <tr style="border-bottom:1px solid var(--border);color:var(--text3);text-align:left">
-                    <th style="padding:2px">Bras</th>
-                    <th style="padding:2px">Instrument (RFID)</th>
-                    <th style="padding:2px">Force</th>
-                    <th style="padding:2px">Statut</th>
-                  </tr>
-                  <tr style="border-bottom:1px solid var(--border)">
-                    <td style="font-weight:600">Bras 1 (Droit)</td>
-                    <td>Fenestrated Grasper #882</td>
-                    <td style="color:#38bdf8">1.2 N</td>
-                    <td>🟢 Actif</td>
-                  </tr>
-                  <tr style="border-bottom:1px solid var(--border)">
-                    <td style="font-weight:600">Bras 2 (Gauche)</td>
-                    <td>CUSA Shears #441</td>
-                    <td style="color:#38bdf8">0.4 N</td>
-                    <td>🟢 Actif</td>
-                  </tr>
-                  <tr style="border-bottom:1px solid var(--border)">
-                    <td style="font-weight:600">Bras 3 (Caméra)</td>
-                    <td>3D Laparoscope 30°</td>
-                    <td>0.0 N</td>
-                    <td>🔵 Fixe</td>
-                  </tr>
-                  <tr>
-                    <td style="font-weight:600">Bras 4 (Aux)</td>
-                    <td>ProGrasp Forceps #110</td>
-                    <td style="color:#eab308">2.1 N</td>
-                    <td>🟡 Maintien</td>
-                  </tr>
-                </table>
-                <button class="btn btn-secondary"
-                  style="font-size:10px;margin-top:8px;width:100%;border-color:rgba(168,85,247,.5)"
-                  onclick="notify('🔄 Calibrage cinématique Denavit-Hartenberg effectué et scellé (SHA-256)','ok')">⚙️
-                  Recalibrer Zéro Cinématique (7-DOF)</button>
-              </div>
-              <div style="background:var(--bg2);padding:10px;border-radius:6px;border:1px solid var(--border2)">
-                <div style="font-weight:700;color:var(--accent);margin-bottom:6px">⚡ Simulation Retour Haptique &
-                  Sécurité</div>
-                <div style="display:flex;flex-direction:column;gap:6px">
-                  <button class="btn btn-secondary"
-                    style="text-align:left;font-size:10px;border-color:rgba(34,197,94,.4)"
-                    onclick="simulateRoboticHaptic('Préhension Légère', 1.4, '🟢 Résistance normale — Parenchyme hépatique intact.')">🟢
-                    Simuler Préhension Légère (1.4 N)</button>
-                  <button class="btn btn-secondary"
-                    style="text-align:left;font-size:10px;border-color:rgba(234,179,8,.4)"
-                    onclick="simulateRoboticHaptic('Traction Modérée', 3.2, '🟡 Résistance élevée — Tension élastique maximale atteinte.')">🟡
-                    Simuler Traction Modérée (3.2 N)</button>
-                  <button class="btn btn-secondary"
-                    style="text-align:left;font-size:10px;border-color:rgba(239,68,68,.4)"
-                    onclick="simulateRoboticHaptic('Surcharge Critique', 4.8, '🛑 ALERTE DÉCHIRURE ! Seuil 4.5 N dépassé. Verrouillage Interlock déclenché !')">🔴
-                    Simuler Surcharge Critique (4.8 N - Interlock)</button>
-                </div>
-                <div
-                  style="margin-top:8px;padding:6px;background:var(--bg0);border-radius:4px;border-left:3px solid #a855f7;font-size:10px"
-                  id="robotic-haptic-output">
-                  Système haptique armé en attente de sollicitation tissulaire...
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button class="btn btn-primary" style="background:#a855f7;border-color:#a855f7"
-              onclick="notify('🤖 Console Da Vinci 5 couplée en temps réel au Jumeau Numérique PBD !','ok');closeModal('robotic')">🚀
-              Activer Télé-Opération Console</button>
-            <button class="btn btn-secondary" onclick="closeModal('robotic')">Fermer</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- ── Modale Prédictions GenAI & Micro-Chirurgie Robotique (Jalons M19 & M20) ── -->
-      <div class="modal-overlay" id="modal-genai-complications">
-        <div class="modal" style="min-width:680px">
-          <div class="modal-hdr"><span class="modal-title" style="color:#f43f5e">🧬 GenAI Complications Predictor &
-              Micro-Chirurgie Robotique (50:1)</span><button class="modal-close"
-              onclick="closeModal('genai-complications')">✕</button></div>
-          <div class="modal-body" style="font-size:11px;line-height:1.6">
-            <div
-              style="background:rgba(244,63,94,.1);border:1px solid rgba(244,63,94,.3);padding:10px;border-radius:6px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">
-              <div><strong>🧬 Spatio-Temporal Video Transformer (70B) :</strong> Prédiction vidéo à horizon de 15 sec
-                des risques peropératoires (ruptures vasculaires, fuites biliaires) et filtrage du tremblement
-                micro-robotique (&lt; 5 &micro;m).</div>
-              <span class="badge green" style="padding:4px 8px;background:#f43f5e;color:#fff">52 400 Vidéos OR &bull;
-                Echelle 50:1 🎯</span>
-            </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-              <div style="background:var(--bg2);padding:10px;border-radius:6px;border:1px solid var(--border2)">
-                <div style="font-weight:700;color:#f43f5e;margin-bottom:6px">🔬 Micro-Chirurgie Robotique (Symani /
-                  Zeiss)</div>
-                <div>&bull; Console micro-robotique : <strong style="color:var(--text1)">Symani Surgical System
-                    (MMI)</strong></div>
-                <div>&bull; Démultiplication cinématique : <strong>50:1 (10 mm &rarr; 0.2 mm)</strong></div>
-                <div>&bull; Filtrage tremblement RMS : <strong style="color:var(--green)">&lt; 3.2 &micro;m (Sub-micron
-                    ✨)</strong></div>
-                <div>&bull; Optique stéréoscopique : <strong>Zeiss KINEVO 40x 3D 4K</strong></div>
-                <button class="btn btn-secondary"
-                  style="font-size:10px;margin-top:8px;width:100%;border-color:rgba(244,63,94,.5)"
-                  onclick="notify('✨ Démultiplication micro-robotique 50:1 calibrée et scellée dans audit_logs (SHA-256)','ok')">⚖️
-                  Calibrer Échelle Mouvement Microvasculaire (50:1)</button>
-              </div>
-              <div style="background:var(--bg2);padding:10px;border-radius:6px;border:1px solid var(--border2)">
-                <div style="font-weight:700;color:var(--accent);margin-bottom:6px">🔮 Simuler Prédiction GenAI
-                  peropératoire</div>
-                <div style="display:flex;flex-direction:column;gap:6px">
-                  <button class="btn btn-secondary"
-                    style="text-align:left;font-size:10px;border-color:rgba(244,63,94,.4)"
-                    onclick="simulateGenAIPrediction('NEUROSURGERY', '💥 Rupture Anévrisme Willis', 84.2, '🛑 ALERTE CRITIQUE (84%) : Tension pariétale excessive ! Action IA : Clamper clip carotide proximal.')">🧠
-                    Simuler Neuro : Rupture Anévrisme Willis (84%)</button>
-                  <button class="btn btn-secondary"
-                    style="text-align:left;font-size:10px;border-color:rgba(234,179,8,.4)"
-                    onclick="simulateGenAIPrediction('HBP_HEPATIC', '🌊 Brèche Biliaire Canal Droit', 88.5, '🔴 ALERTE FUITE BILIAIRE (88%) : Transection trop proche du hile ! Action IA : Visualiser ICG AR WebXR.')">🫀
-                    Simuler Foie : Brèche Biliaire Canal Droit (88%)</button>
-                  <button class="btn btn-secondary"
-                    style="text-align:left;font-size:10px;border-color:rgba(34,197,94,.4)"
-                    onclick="simulateGenAIPrediction('OPHTHALMOLOGY', '👁️ Anastomose Rétinienne', 12.0, '🟢 TRAJECTOIRE SÉCURISÉE (12%) : Tremblement filtré à 3.2 µm — Anastomose stable.')">👁️
-                    Simuler Rétine : Anastomose Stable (12%)</button>
-                </div>
-                <div
-                  style="margin-top:8px;padding:6px;background:var(--bg0);border-radius:4px;border-left:3px solid #f43f5e;font-size:10px"
-                  id="genai-prediction-output">
-                  Modèle GenAI Transformer armé — Surveillance du flux vidéo OR et FEM en cours...
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button class="btn btn-primary" style="background:#f43f5e;border-color:#f43f5e"
-              onclick="notify('🧬 Modèle GenAI Spatio-Temporal et Micro-Robotique activés en direct sur le Jumeau !','ok');closeModal('genai-complications')">🚀
-              Activer Surveillance GenAI & Micro-Chirurgie</button>
-            <button class="btn btn-secondary" onclick="closeModal('genai-complications')">Fermer</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- ── Modale Téléchirurgie PQC & Bio-Impression 4D Peropératoire (Jalons M21 & M22) ── -->
-      <div class="modal-overlay" id="modal-pqc-bioprint">
-        <div class="modal" style="min-width:700px">
-          <div class="modal-hdr"><span class="modal-title" style="color:#10b981">🛰️ Téléchirurgie PQC (Post-Quantique)
-              & Bio-Impression 4D Peropératoire</span><button class="modal-close"
-              onclick="closeModal('pqc-bioprint')">✕</button></div>
-          <div class="modal-body" style="font-size:11px;line-height:1.6">
-            <div
-              style="background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3);padding:10px;border-radius:6px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">
-              <div><strong>🛰️ Réseau LEO 6G Quantum & Bio-4D :</strong> Télé-opération intercontinentale inviolable
-                (NIST CRYSTALS-Kyber/Dilithium) et impression in-situ de greffons cellulaires vascularisés à 37°C.</div>
-              <span class="badge green" style="padding:4px 8px;background:#10b981;color:#fff">Latence 14.2 ms &bull;
-                BioX 6-Axes ✨</span>
-            </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-              <div style="background:var(--bg2);padding:10px;border-radius:6px;border:1px solid var(--border2)">
-                <div style="font-weight:700;color:#10b981;margin-bottom:6px">🔒 Télémétrie Quantique & Liaison Satellite
-                  6G</div>
-                <div>&bull; Encapsulation clé : <strong style="color:var(--text1)">NIST ML-KEM-1024 (Kyber)</strong>
-                </div>
-                <div>&bull; Signature digitale : <strong>NIST ML-DSA-87 (Dilithium)</strong></div>
-                <div>&bull; Liaison intercontinentale : <strong style="color:var(--green)">Paris &harr; Tokyo (6G LEO
-                    Mesh)</strong></div>
-                <div>&bull; Latence & Jitter : <strong>14.2 ms / &plusmn;0.08 ms (Zéro gigue ⚡)</strong></div>
-                <button class="btn btn-secondary"
-                  style="font-size:10px;margin-top:8px;width:100%;border-color:rgba(16,185,129,.5)"
-                  onclick="notify('✨ Session téléchirurgie quantique PQC négociée et scellée (SHA-256 / Dilithium-5)','ok')">🔐
-                  Re-négocier Clés Quantiques PQC (60s rotation)</button>
-              </div>
-              <div style="background:var(--bg2);padding:10px;border-radius:6px;border:1px solid var(--border2)">
-                <div style="font-weight:700;color:var(--accent);margin-bottom:6px">🧬 Simuler Bio-Impression 4D
-                  Peropératoire</div>
-                <div style="display:flex;flex-direction:column;gap:6px">
-                  <button class="btn btn-secondary"
-                    style="text-align:left;font-size:10px;border-color:rgba(16,185,129,.4)"
-                    onclick="simulate4DBioprinting('LIVER_SEGMENT_6_DEFECT', 42.5, '1680 couches', '🟢 G-code calculé : Impression in-situ du parenchyme (Alginate-MSC-VEGF @ 37°C) en 191s.')">🫀
-                    Imprimer Patch Foie S6 (42.5 mL / 191s)</button>
-                  <button class="btn btn-secondary"
-                    style="text-align:left;font-size:10px;border-color:rgba(56,189,248,.4)"
-                    onclick="simulate4DBioprinting('CRANIAL_DURA_MATER', 14.0, '560 couches', '🔵 G-code calculé : Reconstruction dure-mère crânienne stérile étanche au collafilm bioactif en 63s.')">🧠
-                    Imprimer Dure-Mère Crânienne (14 mL / 63s)</button>
-                  <button class="btn btn-secondary"
-                    style="text-align:left;font-size:10px;border-color:rgba(234,179,8,.4)"
-                    onclick="simulate4DBioprinting('MANDIBULAR_BONE_GRAFT', 31.2, '1240 couches', '🟡 G-code calculé : Bio-impression scaffold céramique-PEEK ostéo-inducteur vascularisé en 140s.')">🦴
-                    Imprimer Greffon Mandibulaire (31.2 mL / 140s)</button>
-                </div>
-                <div
-                  style="margin-top:8px;padding:6px;background:var(--bg0);border-radius:4px;border-left:3px solid #10b981;font-size:10px"
-                  id="pqc-bioprint-output">
-                  Bras bio-imprimeur 6 axes CELLINK BioX en attente des coordonnées de résection...
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button class="btn btn-primary" style="background:#10b981;border-color:#10b981"
-              onclick="notify('🛰️ Téléchirurgie PQC LEO 6G et Bio-imprimeur 4D couplés en direct au Jumeau !','ok');closeModal('pqc-bioprint')">🚀
-              Activer Liaison PQC & Bio-Impression 4D</button>
-            <button class="btn btn-secondary" onclick="closeModal('pqc-bioprint')">Fermer</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- ── Modale Interface Cerveau-Machine (BCI) & Retour Haptique Cortical (Jalons M23 & M24) ── -->
-      <div class="modal-overlay" id="modal-bci-haptic">
-        <div class="modal" style="min-width:700px">
-          <div class="modal-hdr"><span class="modal-title" style="color:#8b5cf6">🧠 Interface Cerveau-Machine (BCI
-              1024-Ch) & Retour Haptique Cortical Direct (S1)</span><button class="modal-close"
-              onclick="closeModal('bci-haptic')">✕</button></div>
-          <div class="modal-body" style="font-size:11px;line-height:1.6">
-            <div
-              style="background:rgba(139,92,246,.1);border:1px solid rgba(139,92,246,.3);padding:10px;border-radius:6px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">
-              <div><strong>🧠 Contrôle par la Pensée & Tact Cortical :</strong> Décodage SNN sub-milliseconde (&lt; 2.4
-                ms) du cortex moteur (M1) et micro-stimulation S1 pour ressentir la résistance tissulaire dans le cortex
-                !</div>
-              <span class="badge green" style="padding:4px 8px;background:#8b5cf6;color:#fff">1024 Canaux &bull; SNN
-                Loihi 2 ⚡</span>
-            </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-              <div style="background:var(--bg2);padding:10px;border-radius:6px;border:1px solid var(--border2)">
-                <div style="font-weight:700;color:#8b5cf6;margin-bottom:6px">⚡ Télémétrie Corticale & Décodage SNN</div>
-                <div>&bull; Implant cortical : <strong style="color:var(--text1)">Neuralink N1-Surg / Precision
-                    1024-Ch</strong></div>
-                <div>&bull; Décodeur neuromorphique : <strong>Intel Loihi 2 SNN Chip</strong></div>
-                <div>&bull; Latence de décodage : <strong style="color:var(--green)">2.1 ms (Sub-milliseconde
-                    ⚡)</strong></div>
-                <div>&bull; Précision intention M1 : <strong>99.2% @ 30 kHz sampling</strong></div>
-                <button class="btn btn-secondary"
-                  style="font-size:10px;margin-top:8px;width:100%;border-color:rgba(139,92,246,.5)"
-                  onclick="notify('✨ Calibrage de la matrice corticale M1/S1 réussi — Précision synaptique 99.2% (SHA-256)','ok')">⚖️
-                  Calibrer Matrice Corticale M1 / S1 (30 kHz)</button>
-              </div>
-              <div style="background:var(--bg2);padding:10px;border-radius:6px;border:1px solid var(--border2)">
-                <div style="font-weight:700;color:var(--accent);margin-bottom:6px">🧠 Simuler Télé-Opération par la
-                  Pensée</div>
-                <div style="display:flex;flex-direction:column;gap:6px">
-                  <button class="btn btn-secondary"
-                    style="text-align:left;font-size:10px;border-color:rgba(139,92,246,.4)"
-                    onclick="simulateBciAction('CLIPPING_ANEURYSM_NECK', 2.4, '52.8 µA', '🟢 Intention M1 décodée : Clip anévrismal posé — Sensation tactile S1 fluide et réaliste dans le cortex.')">🧠
-                    Clip Anévrisme Willis par la Pensée (2.4 N / 53 µA)</button>
-                  <button class="btn btn-secondary"
-                    style="text-align:left;font-size:10px;border-color:rgba(56,189,248,.4)"
-                    onclick="simulateBciAction('TRANSECTION_HEPATIC_PARENCHYMA', 4.2, '92.4 µA', '🟡 Intention M1 décodée : Transection hépatique — Sensation S1 intense (92 µA) indiquant un parenchyme dense.')">🫀
-                    Transection Foie par la Pensée (4.2 N / 92 µA)</button>
-                  <button class="btn btn-secondary"
-                    style="text-align:left;font-size:10px;border-color:rgba(239,68,68,.4)"
-                    onclick="simulateBciAction('EMERGENCY_INTERLOCK', 5.0, '0 µA', '🛑 ALERTE FATIGUE COGNITIVE (>85%) : Découplage neuronal instantané ! Actionneurs verrouillés et impulsions S1 coupées.')">🛑
-                    Simuler Interlock Anti-Fatigue (&lt; 2.1 ms)</button>
-                </div>
-                <div
-                  style="margin-top:8px;padding:6px;background:var(--bg0);border-radius:4px;border-left:3px solid #8b5cf6;font-size:10px"
-                  id="bci-haptic-output">
-                  Décodeur SNN armé en attente des potentiels d'action du cortex moteur...
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button class="btn btn-primary" style="background:#8b5cf6;border-color:#8b5cf6"
-              onclick="notify('🧠 Interface Cerveau-Machine 1024-Ch et stimulation S1 couplées au Jumeau !','ok');closeModal('bci-haptic')">🚀
-              Activer Liaison BCI & Tact Cortical S1</button>
-            <button class="btn btn-secondary" onclick="closeModal('bci-haptic')">Fermer</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- ── Modale Essaim Nanorobotique & Oncologie Moléculaire (Jalons M25 & M26) ── -->
-      <div class="modal-overlay" id="modal-nano-swarm">
-        <div class="modal" style="min-width:700px">
-          <div class="modal-hdr"><span class="modal-title" style="color:#0ea5e9">🔬 Essaim Nanorobotique (5M Unités) &
-              Oncologie Moléculaire In-Vivo (CRISPR-Cas9)</span><button class="modal-close"
-              onclick="closeModal('nano-swarm')">✕</button></div>
-          <div class="modal-body" style="font-size:11px;line-height:1.6">
-            <div
-              style="background:rgba(14,165,233,.1);border:1px solid rgba(14,165,233,.3);padding:10px;border-radius:6px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">
-              <div><strong>🔬 Navigation Micro-Vasculaire & Hyperthermie AMF :</strong> Guidage magnétique 3D de 5
-                millions de nanorobots ADN-Origami / Fe3O4 vers les micro-métastases et libération CRISPR-Cas9 à 43.5°C
-                !</div>
-              <span class="badge green" style="padding:4px 8px;background:#0ea5e9;color:#fff">5 000 000 Unités &bull;
-                SPION Fe3O4 ⚡</span>
-            </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-              <div style="background:var(--bg2);padding:10px;border-radius:6px;border:1px solid var(--border2)">
-                <div style="font-weight:700;color:#0ea5e9;margin-bottom:6px">⚡ Télémétrie Essaim & Gradient Magnétique
-                </div>
-                <div>&bull; Unités actives : <strong style="color:var(--text1)">5 000 000 Nanobots (&lt; 100
-                    nm)</strong></div>
-                <div>&bull; Matériau cœur : <strong>SPION Fe3O4 Superparamagnétique</strong></div>
-                <div>&bull; Bobines table : <strong style="color:var(--green)">SurgMag 6-Axis Gradient Array (0.85
-                    T/m)</strong></div>
-                <div>&bull; Ciblage antigénique : <strong>Anti-EGFR / Anti-VEGF (98.4%)</strong></div>
-                <button class="btn btn-secondary"
-                  style="font-size:10px;margin-top:8px;width:100%;border-color:rgba(14,165,233,.5)"
-                  onclick="notify('✨ Calibration du champ magnétique 0.85 T/m et synchronisation essaim réussie (SHA-256)','ok')">🧲
-                  Calibrer Champ de Gradient Magnétique (0.85 T/m)</button>
-              </div>
-              <div style="background:var(--bg2);padding:10px;border-radius:6px;border:1px solid var(--border2)">
-                <div style="font-weight:700;color:var(--accent);margin-bottom:6px">🔬 Simuler Intervention Oncolytique
-                  In-Vivo</div>
-                <div style="display:flex;flex-direction:column;gap:6px">
-                  <button class="btn btn-secondary"
-                    style="text-align:left;font-size:10px;border-color:rgba(14,165,233,.4)"
-                    onclick="simulateNanoAction('GUIDE_HEPATIC_S8_METS', 1.2, '4.1 mm/s', '🟢 Guidage magnétique 1.2 T/m : 4 985 000 nanorobots convergés sur micro-métastase S8 — Arrimage EGFR confirmé.')">🔬
-                    Guider Essaim vers Micro-Métastase Foie S8 (1.2 T/m)</button>
-                  <button class="btn btn-secondary"
-                    style="text-align:left;font-size:10px;border-color:rgba(16,185,129,.4)"
-                    onclick="simulateNanoAction('TRIGGER_AMF_CRISPR_RELEASE', 43.5, '99.1% Apoptose', '🟢 Activation AMF 150 kHz (43.5°C) : Libération CRISPR-Cas9 KRAS-G12D en cours — Apoptose tumorale 99.1%, parenchyme sain 100% intact.')">🧬
-                    Déclencher Libération CRISPR-Cas9 (AMF 43.5°C)</button>
-                  <button class="btn btn-secondary"
-                    style="text-align:left;font-size:10px;border-color:rgba(239,68,68,.4)"
-                    onclick="simulateNanoAction('EMERGENCY_FIELD_DEMAGNETIZATION', 0.0, 'Dispersé', '🛑 ALERTE DENSITÉ VASCULAIRE : Démagnétisation instantanée des bobines table ! Essaim dispersé en flux physiologique normal.')">🛑
-                    Simuler Arrêt & Démagnétisation Urgence</button>
-                </div>
-                <div
-                  style="margin-top:8px;padding:6px;background:var(--bg0);border-radius:4px;border-left:3px solid #0ea5e9;font-size:10px"
-                  id="nano-swarm-output">
-                  Essaim nanorobotique en circulation micro-vasculaire en attente des vecteurs de guidage...
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button class="btn btn-primary" style="background:#0ea5e9;border-color:#0ea5e9"
-              onclick="notify('🔬 Essaim 5M nanorobots et bobines magnétiques couplés en direct au Jumeau !','ok');closeModal('nano-swarm')">🚀
-              Activer Guidage Essaim & Oncologie CRISPR</button>
-            <button class="btn btn-secondary" onclick="closeModal('nano-swarm')">Fermer</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- ── Modale Autonomie Robotique L5 & Fusion Laser (Jalons M27 & M28) ── -->
-      <div class="modal-overlay" id="modal-auto-laser">
-        <div class="modal" style="min-width:700px">
-          <div class="modal-hdr"><span class="modal-title" style="color:#eab308">🤖⚡ Chirurgie Robotique Autonome Niveau
-              5 & Soudure Laser (EPLW 1470 nm)</span><button class="modal-close"
-              onclick="closeModal('auto-laser')">✕</button></div>
-          <div class="modal-body" style="font-size:11px;line-height:1.6">
-            <div
-              style="background:rgba(234,179,8,.1);border:1px solid rgba(234,179,8,.3);padding:10px;border-radius:6px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">
-              <div><strong>🤖⚡ Autonomie STAR-5 & Soudure Laser :</strong> Modèle Med-VLA RT-2 pilotant la
-                micro-chirurgie à 10 000 FPS OCT avec fusion laser albumine-ICG (Burst &gt; 280 mmHg) !</div>
-              <span class="badge yellow" style="padding:4px 8px;background:#eab308;color:#000">STAR-5 Autonomie &bull;
-                1470 nm Laser ⚡</span>
-            </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-              <div style="background:var(--bg2);padding:10px;border-radius:6px;border:1px solid var(--border2)">
-                <div style="font-weight:700;color:#eab308;margin-bottom:6px">⚡ Télémétrie IA Autonome & OCT 3D</div>
-                <div>&bull; Moteur VLA : <strong style="color:var(--text1)">Med-PaLM 3 Robotics / RT-2</strong></div>
-                <div>&bull; Grade Autonomie : <strong>STAR-5 (100% Autonome)</strong></div>
-                <div>&bull; Capteur de suivi : <strong style="color:var(--green)">SurgOCT Interferometer (10 000
-                    FPS)</strong></div>
-                <div>&bull; Vitesse d'exécution : <strong>5.2x plus rapide (0 tremblement)</strong></div>
-                <button class="btn btn-secondary"
-                  style="font-size:10px;margin-top:8px;width:100%;border-color:rgba(234,179,8,.5)"
-                  onclick="notify('✨ Calibration du modèle VLA et de la tête laser 1470 nm réussie — Latence 0.78 ms (SHA-256)','ok')">⚖️
-                  Calibrer Moteur VLA & Tête Laser (1470 nm)</button>
-              </div>
-              <div style="background:var(--bg2);padding:10px;border-radius:6px;border:1px solid var(--border2)">
-                <div style="font-weight:700;color:var(--accent);margin-bottom:6px">🤖 Simuler Exécution L5 & Fusion
-                  Laser</div>
-                <div style="display:flex;flex-direction:column;gap:6px">
-                  <button class="btn btn-secondary"
-                    style="text-align:left;font-size:10px;border-color:rgba(234,179,8,.4)"
-                    onclick="simulateAutoAction('AUTONOMOUS_MICRO_ANASTOMOSIS', 12.5, '285 mmHg', '🟢 Exécution STAR-5 : Micro-anastomose artère hépatique — Soudure laser 12.5 J/cm² étanche (Burst 285 mmHg).')">🤖
-                    Anastomose Artérielle Autonome + Laser (285 mmHg)</button>
-                  <button class="btn btn-secondary"
-                    style="text-align:left;font-size:10px;border-color:rgba(16,185,129,.4)"
-                    onclick="simulateAutoAction('LASER_WELDING_BILIARY_DUCT', 14.0, '319 mmHg', '🟢 Exécution STAR-5 : Soudure laser du canal biliaire — Albumine-ICG polymérisée en 5.6s sans aucune fuite ni agrafe.')">🔥
-                    Soudure Laser Canal Biliaire (14.0 J/cm² / 319 mmHg)</button>
-                  <button class="btn btn-secondary"
-                    style="text-align:left;font-size:10px;border-color:rgba(239,68,68,.4)"
-                    onclick="simulateAutoAction('EMERGENCY_HUMAN_TAKEOVER', 0.0, 'BCI Reprise', '🛑 ALERTE REPRISE DE CONTRÔLE (< 1 ms) : Transfert immédiat des actionneurs au chirurgien via BCI/Voice ! Laser en sécurité.')">🛑
-                    Reprise de Contrôle Humaine Instantanée (&lt; 1 ms)</button>
-                </div>
-                <div
-                  style="margin-top:8px;padding:6px;background:var(--bg0);border-radius:4px;border-left:3px solid #eab308;font-size:10px"
-                  id="auto-laser-output">
-                  Moteur VLA STAR-5 armé en attente de la sélection du geste autonome...
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button class="btn btn-primary" style="background:#eab308;color:#000;border-color:#eab308;font-weight:700"
-              onclick="notify('🤖⚡ Autonomie STAR-5 et soudure laser couplées en direct au Jumeau !','ok');closeModal('auto-laser')">🚀
-              Activer Autonomie L5 & Soudure Laser</button>
-            <button class="btn btn-secondary" onclick="closeModal('auto-laser')">Fermer</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- ── Modale Reprogrammation Epigénétique & Sonogénétique Profonde (Jalons M29 & M30) ── -->
-      <div class="modal-overlay" id="modal-epi-sono">
-        <div class="modal" style="min-width:700px">
-          <div class="modal-hdr"><span class="modal-title" style="color:#22c55e">🧬✨ Reprogrammation Epigénétique
-              In-Vivo & Sonogénétique Profonde (OSKM / FUS 1.2 MHz)</span><button class="modal-close"
-              onclick="closeModal('epi-sono')">✕</button></div>
-          <div class="modal-body" style="font-size:11px;line-height:1.6">
-            <div
-              style="background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);padding:10px;border-radius:6px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">
-              <div><strong>🧬✨ Réjuvénation & Sonogénétique :</strong> Libération d'ARNm LNP facteurs de Yamanaka (OSKM)
-                activée par ultrasons focalisés (FUS 1.2 MHz) : -20 ans sur l'horloge épigénétique sans risque
-                tératomateux !</div>
-              <span class="badge green" style="padding:4px 8px;background:#22c55e;color:#fff">OSKM -20 Ans &bull; FUS
-                1.2 MHz 🌱</span>
-            </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-              <div style="background:var(--bg2);padding:10px;border-radius:6px;border:1px solid var(--border2)">
-                <div style="font-weight:700;color:#22c55e;margin-bottom:6px">⚡ Télémétrie Epigénétique & Optogénétique
-                  UCNP</div>
-                <div>&bull; Facteurs de réjuvénation : <strong style="color:var(--text1)">ARNm LNP Yamanaka (Oct4, Sox2,
-                    Klf4, c-Myc)</strong></div>
-                <div>&bull; Régression horloge : <strong style="color:var(--green)">-20.4 Ans (0.00% risque
-                    tératome)</strong></div>
-                <div>&bull; Faisceau FUS : <strong>SurgFUS Phased Array (1.2 MHz / 0.85 MPa)</strong></div>
-                <div>&bull; Nanoparticules UCNP : <strong>Conversion NIR 980 nm &rarr; Bleu 470 nm</strong></div>
-                <button class="btn btn-secondary"
-                  style="font-size:10px;margin-top:8px;width:100%;border-color:rgba(34,197,94,.5)"
-                  onclick="notify('✨ Calibration des faisceaux FUS 1.2 MHz et excitation UCNP 980 nm réussie (SHA-256)','ok')">🌱
-                  Calibrer Faisceaux FUS (1.2 MHz) & Laser NIR (980 nm)</button>
-              </div>
-              <div style="background:var(--bg2);padding:10px;border-radius:6px;border:1px solid var(--border2)">
-                <div style="font-weight:700;color:var(--accent);margin-bottom:6px">🧬 Simuler Réjuvénation & Modulation
-                  In-Vivo</div>
-                <div style="display:flex;flex-direction:column;gap:6px">
-                  <button class="btn btn-secondary"
-                    style="text-align:left;font-size:10px;border-color:rgba(34,197,94,.4)"
-                    onclick="simulateEpiAction('TRIGGER_HEPATIC_REJUVENATION', 0.85, '-20.4 Ans', '🟢 Activation FUS 0.85 MPa : Libération OSKM en zone hépatique S6/S7 — Horloge épigénétique inversée de 20.4 ans. Viabilité cellulaire 90.5%.')">🌱
-                    Réjuvénation Lobe Hépatique Post-Ischémique (-20 Ans)</button>
-                  <button class="btn btn-secondary"
-                    style="text-align:left;font-size:10px;border-color:rgba(14,165,233,.4)"
-                    onclick="simulateEpiAction('OPTOGENETIC_FIBROSIS_REVERSAL', 150.0, '94.8% Clairance', '🟢 Excitation laser NIR 980 nm -> 470 nm par UCNPs : Activation de la collagénase — Clairance de la fibrose à 94.8% sans effraction cutanée.')">🌟
-                    Modulation Optogénétique Anti-Fibrose (UCNP 980 nm)</button>
-                  <button class="btn btn-secondary"
-                    style="text-align:left;font-size:10px;border-color:rgba(239,68,68,.4)"
-                    onclick="simulateEpiAction('EMERGENCY_ONCOGENIC_INTERLOCK', 0.0, 'Inhibé', '🛑 ALERTE INTERLOCK ONCOGÉNIQUE : Arrêt instantané des impulsions FUS ! Sécurité anti-tératome garantie à 100% (SHA-256).')">🛑
-                    Simuler Verrouillage de Sécurité Anti-Tératome</button>
-                </div>
-                <div
-                  style="margin-top:8px;padding:6px;background:var(--bg0);border-radius:4px;border-left:3px solid #22c55e;font-size:10px"
-                  id="epi-sono-output">
-                  Transducteur FUS et vecteurs ARNm LNP armés en attente du ciblage tissulaire...
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button class="btn btn-primary" style="background:#22c55e;border-color:#22c55e"
-              onclick="notify('🧬✨ Reprogrammation épigénétique et sonogénétique couplées au Jumeau !','ok');closeModal('epi-sono')">🚀
-              Activer Réjuvénation Epigénétique & Sonogénétique</button>
-            <button class="btn btn-secondary" onclick="closeModal('epi-sono')">Fermer</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- ── Modale Spectrométrie Raman & Plasma CAP (Jalons M31 & M32) ── -->
-      <div class="modal-overlay" id="modal-raman-plasma">
-        <div class="modal" style="min-width:700px">
-          <div class="modal-hdr"><span class="modal-title" style="color:#06b6d4">⚡🔬 Spectrométrie Raman CARS/SERS &
-              Plasma Froid Atmosphérique (CAP / RONS)</span><button class="modal-close"
-              onclick="closeModal('raman-plasma')">✕</button></div>
-          <div class="modal-body" style="font-size:11px;line-height:1.6">
-            <div
-              style="background:rgba(6,182,212,.1);border:1px solid rgba(6,182,212,.3);padding:10px;border-radius:6px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">
-              <div><strong>⚡🔬 Biopsie Optique < 10 ms & Plasma R0 :</strong> Spectrométrie vibratoire Raman CARS/SERS à
-                    1000 Hz et jet de plasma froid atmosphérique pour l'éradication ciblée d'infiltrats par apoptose
-                    sans dommage thermique !</div>
-              <span class="badge blue" style="padding:4px 8px;background:#06b6d4;color:#fff">R0 99.8% &bull; CAP He/Ar
-                37°C ⚡</span>
-            </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-              <div style="background:var(--bg2);padding:10px;border-radius:6px;border:1px solid var(--border2)">
-                <div style="font-weight:700;color:#06b6d4;margin-bottom:6px">⚡ Télémétrie Sonde Raman & Pulvérisateur
-                  Plasma</div>
-                <div>&bull; Biopsie Optique : <strong style="color:var(--text1)">Sonde fibre optique CARS / SERS @ 1000
-                    Hz</strong></div>
-                <div>&bull; Latence & Spécificité : <strong style="color:var(--green)">7.4 ms | Spécificité R0/R1 :
-                    99.8%</strong></div>
-                <div>&bull; Jet de Plasma Froid : <strong>CAP Atmosphérique (He/Ar 98/2% @ 36.8°C)</strong></div>
-                <div>&bull; Espèces réactives : <strong>RONS (H₂O₂, NO₂⁻, ONOO⁻) — Apoptose 99.99%</strong></div>
-                <button class="btn btn-secondary"
-                  style="font-size:10px;margin-top:8px;width:100%;border-color:rgba(6,182,212,.5)"
-                  onclick="notify('✨ Calibration de la sonde Raman 1000 Hz et du générateur plasma 12.5 kV réussie (SHA-256)','ok')">🌱
-                  Calibrer Sonde Raman (1000 Hz) & Jet CAP (12.5 kV)</button>
-              </div>
-              <div style="background:var(--bg2);padding:10px;border-radius:6px;border:1px solid var(--border2)">
-                <div style="font-weight:700;color:var(--accent);margin-bottom:6px">🔬 Simuler Biopsie Raman &
-                  Éradication Plasma</div>
-                <div style="display:flex;flex-direction:column;gap:6px">
-                  <button class="btn btn-secondary"
-                    style="text-align:left;font-size:10px;border-color:rgba(6,182,212,.4)"
-                    onclick="simulateRamanAction('ANALYZE_HEPATIC_MARGIN', 1000, '99.8% Spécificité', '🟢 Biopsie optique CARS/SERS 1000 Hz en tranche S7 : Aucun pic nucléique aberrant détecté à 1575 cm⁻¹. Marge R0 certifiée.')">⚡
-                    Biopsie Optique Tranche de Section (Marge R0)</button>
-                  <button class="btn btn-secondary"
-                    style="text-align:left;font-size:10px;border-color:rgba(14,165,233,.4)"
-                    onclick="simulateRamanAction('TRIGGER_CAP_ERADICATION', 12.5, '99.99% Apoptose', '🟢 Jet plasma froid CAP (12.5 kV / 36.8°C) sur micro-infiltrat : Apoptose sélective induite par RONS sans dommage aux vaisseaux nobles.')">🔬
-                    Éradication Plasma Froid d'Infiltrat R1 (CAP 37°C)</button>
-                  <button class="btn btn-secondary"
-                    style="text-align:left;font-size:10px;border-color:rgba(239,68,68,.4)"
-                    onclick="simulateRamanAction('EMERGENCY_IONIZATION_INTERLOCK', 0.0, 'Inhibé', '🛑 ALERTE INTERLOCK IONISATION : Coupure haute tension plasma (0.0 kV) ! Protection anti-arc électrique active (SHA-256).')">🛑
-                    Simuler Verrouillage de Sécurité Anti-Arc (0 kV)</button>
-                </div>
-                <div
-                  style="margin-top:8px;padding:6px;background:var(--bg0);border-radius:4px;border-left:3px solid #06b6d4;font-size:10px"
-                  id="raman-plasma-output">
-                  Sonde Raman CARS et pulvérisateur de plasma froid prêts pour l'analyse des marges...
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button class="btn btn-primary" style="background:#06b6d4;border-color:#06b6d4"
-              onclick="notify('⚡🔬 Spectrométrie Raman et Plasma Froid couplés au Jumeau !','ok');closeModal('raman-plasma')">🚀
-              Activer Diagnostic Raman & Plasma Froid</button>
-            <button class="btn btn-secondary" onclick="closeModal('raman-plasma')">Fermer</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- ── Modale Cryo-Électroporation IRE & BNCT Neutrons (Jalons M33 & M34) ── -->
-      <div class="modal-overlay" id="modal-cryo-bnct">
-        <div class="modal" style="min-width:700px">
-          <div class="modal-hdr"><span class="modal-title" style="color:#38bdf8">❄️☢️ Cryo-Électroporation Irréversible
-              (nsPEF) & BNCT Peropératoire Neutrons</span><button class="modal-close"
-              onclick="closeModal('cryo-bnct')">✕</button></div>
-          <div class="modal-body" style="font-size:11px;line-height:1.6">
-            <div
-              style="background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.3);padding:10px;border-radius:6px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">
-              <div><strong>❄️☢️ Ablation Hilaire non-thermique & Neutrons BNCT :</strong> Électroporation nanoseconde au
-                contact des gros vaisseaux sans thrombose et désintégration alpha sub-cellulaire (5 µm) par capture
-                neutronique sur Bore-10 !</div>
-              <span class="badge blue" style="padding:4px 8px;background:#38bdf8;color:#fff">nsPEF 30 kV/cm &bull; BNCT
-                ¹⁰B 2.34 MeV ❄️</span>
-            </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-              <div style="background:var(--bg2);padding:10px;border-radius:6px;border:1px solid var(--border2)">
-                <div style="font-weight:700;color:#38bdf8;margin-bottom:6px">❄️ Télémétrie Générateur nsPEF & Source
-                  BNCT</div>
-                <div>&bull; Cryo-IRE : <strong style="color:var(--text1)">nsPEF 300 ns @ 30 kV/cm + Joule-Thomson
-                    -20°C</strong></div>
-                <div>&bull; Intégrité Vasculaire : <strong style="color:var(--green)">100% Matrice collagénique
-                    préservée</strong></div>
-                <div>&bull; Source Neutrons BNCT : <strong>Épithermiques (0.5 eV - 10 keV) @ 1.2x10⁹ n/cm²/s</strong>
-                </div>
-                <div>&bull; Réaction Nucléaire : <strong>¹⁰B + n → ⁴He (α) + ⁷Li (2.34 MeV sur 7 µm)</strong></div>
-                <button class="btn btn-secondary"
-                  style="font-size:10px;margin-top:8px;width:100%;border-color:rgba(56,189,248,.5)"
-                  onclick="notify('✨ Calibration du générateur nsPEF (30 kV/cm) et du faisceau neutrons BNCT réussie (SHA-256)','ok')">🌱
-                  Calibrer Générateur nsPEF & Faisceau BNCT</button>
-              </div>
-              <div style="background:var(--bg2);padding:10px;border-radius:6px;border:1px solid var(--border2)">
-                <div style="font-weight:700;color:var(--accent);margin-bottom:6px">🔬 Simuler Cryo-IRE & Irradiation
-                  BNCT</div>
-                <div style="display:flex;flex-direction:column;gap:6px">
-                  <button class="btn btn-secondary"
-                    style="text-align:left;font-size:10px;border-color:rgba(56,189,248,.4)"
-                    onclick="simulateCryoAction('TRIGGER_NSPEF_HILAR_ABLATION', 30.0, '100% Vasculaire intact', '🟢 Ablation Cryo-IRE nsPEF (30 kV/cm / -20°C) au contact de la veine porte : Nanoporation létale 99.9% tumorale sans aucune dénaturation du collagène vasculaire.')">❄️
-                    Ablation nsPEF Hile Hépatique (Sans Thrombose)</button>
-                  <button class="btn btn-secondary"
-                    style="text-align:left;font-size:10px;border-color:rgba(14,165,233,.4)"
-                    onclick="simulateCryoAction('TRIGGER_BNCT_IRRADIATION', 65.0, '2.34 MeV / cellule', '🟢 Irradiation BNCT épithermique sur ¹⁰B-BPA accumulé (65 ppm) : Désintégration alpha sub-cellulaire (7 µm). 100% des cellules tumorales infiltrantes éradiquées.')">☢️
-                    Irradiation Neutrons BNCT (¹⁰B-BPA Alpha)</button>
-                  <button class="btn btn-secondary"
-                    style="text-align:left;font-size:10px;border-color:rgba(239,68,68,.4)"
-                    onclick="simulateCryoAction('EMERGENCY_DOSIMETRY_INTERLOCK', 0.0, 'Faisceau Coupé', '🛑 ALERTE INTERLOCK DOSIMÉTRIE NEUTRONIQUE : Absorption seuil atteinte ! Coupure instantanée de la source (0.0 n/cm²/s). Protection pare-chocs SHA-256.')">🛑
-                    Simuler Verrouillage Dosimétrique Neutrons (0 n/cm²)</button>
-                </div>
-                <div
-                  style="margin-top:8px;padding:6px;background:var(--bg0);border-radius:4px;border-left:3px solid #38bdf8;font-size:10px"
-                  id="cryo-bnct-output">
-                  Générateur de cryo-électroporation nsPEF et source neutronique BNCT prêts...
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button class="btn btn-primary" style="background:#38bdf8;border-color:#38bdf8"
-              onclick="notify('❄️☢️ Cryo-IRE et BNCT couplés au Jumeau Numérique !','ok');closeModal('cryo-bnct')">🚀
-              Activer Cryo-IRE & BNCT Peropératoire</button>
-            <button class="btn btn-secondary" onclick="closeModal('cryo-bnct')">Fermer</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- ── Modale Organoïdes 4D & Micro-Vaisseaux Biomimétiques (Jalons M35 & M36) ── -->
-      <div class="modal-overlay" id="modal-organoid-4d">
-        <div class="modal" style="min-width:700px">
-          <div class="modal-hdr"><span class="modal-title" style="color:#10b981">🧬🌱 Assemblage d'Organoïdes 4D &
-              Micro-Vasculogenèse 2PP Biomimétique</span><button class="modal-close"
-              onclick="closeModal('organoid-4d')">✕</button></div>
-          <div class="modal-body" style="font-size:11px;line-height:1.6">
-            <div
-              style="background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3);padding:10px;border-radius:6px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">
-              <div><strong>🧬🌱 Reconstruction Organoïde in-situ & Laser 2PP :</strong> Dépôt par lévitation acoustique
-                de 450 000 sphéroïdes autologues et anastomose micro-capillaire par laser femtoseconde en < 90 secondes
-                  !</div>
-                  <span class="badge blue" style="padding:4px 8px;background:#10b981;color:#fff">Lévitation 40 kHz
-                    &bull; Laser 2PP 780 nm 🌱</span>
-              </div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-                <div style="background:var(--bg2);padding:10px;border-radius:6px;border:1px solid var(--border2)">
-                  <div style="font-weight:700;color:#10b981;margin-bottom:6px">🌱 Télémétrie Lévitation Acoustique &
-                    Laser 2PP</div>
-                  <div>&bull; Injecteur : <strong style="color:var(--text1)">Lévitation Acoustique (40 kHz) + Piège
-                      Optique</strong></div>
-                  <div>&bull; Sphéroïdes : <strong style="color:var(--green)">450 000 organoïdes hépatiques (300 µm) @
-                      10 µm</strong></div>
-                  <div>&bull; Laser 2PP : <strong>Femtoseconde Ti:Sapphire (780 nm / 100 fs)</strong></div>
-                  <div>&bull; Anastomose : <strong>Réseau capillaire PEG-DA réticulé en 84.5 s</strong></div>
-                  <button class="btn btn-secondary"
-                    style="font-size:10px;margin-top:8px;width:100%;border-color:rgba(16,185,129,.5)"
-                    onclick="notify('✨ Calibration de la lévitation acoustique (40 kHz) et du laser 2PP femtoseconde réussie (SHA-256)','ok')">🌱
-                    Calibrer Lévitation Acoustique & Laser 2PP</button>
-                </div>
-                <div style="background:var(--bg2);padding:10px;border-radius:6px;border:1px solid var(--border2)">
-                  <div style="font-weight:700;color:var(--accent);margin-bottom:6px">🔬 Simuler Assemblage &
-                    Micro-Vasculogenèse</div>
-                  <div style="display:flex;flex-direction:column;gap:6px">
-                    <button class="btn btn-secondary"
-                      style="text-align:left;font-size:10px;border-color:rgba(16,185,129,.4)"
-                      onclick="simulateOrganoidAction('TRIGGER_LEVITATION_DEPOSITION', 450, '100% Comblement', '🟢 Dépôt acoustique de 450 000 sphéroïdes hépatiques (300 µm) dans la cavité de résection S5/S8 : Assemblage architectural parfait (précision 10 µm).')">🌱
-                      Dépôt Acoustique d'Organoïdes (Cavité S5/S8)</button>
-                    <button class="btn btn-secondary"
-                      style="text-align:left;font-size:10px;border-color:rgba(14,165,233,.4)"
-                      onclick="simulateOrganoidAction('TRIGGER_2PP_MICROVASCULARIZATION', 180.0, 'Anastomose 84.5s', '🟢 Photopolymérisation laser 2PP (780 nm / 180 mW) : Création du réseau micro-capillaire et anastomose aux moignons de la veine porte en 84.5s. Perfusion 100% rétablie !')">⚡
-                      Micro-Vasculogenèse Laser 2PP (Anastomose)</button>
-                    <button class="btn btn-secondary"
-                      style="text-align:left;font-size:10px;border-color:rgba(239,68,68,.4)"
-                      onclick="simulateOrganoidAction('EMERGENCY_HYPOXIA_INTERLOCK', 0.0, 'Arrêt Injecteur', '🛑 ALERTE INTERLOCK HYPOXIE : Baisse de perfusion capillaire locale ! Arrêt instantané du dépôt d\'organoïdes (0 sphéroïdes/s). Protection nécrose SHA-256.')">🛑
-                      Simuler Verrouillage d'Hypoxie (0 sphéroïde/s)</button>
-                  </div>
-                  <div
-                    style="margin-top:8px;padding:6px;background:var(--bg0);border-radius:4px;border-left:3px solid #10b981;font-size:10px"
-                    id="organoid-4d-output">
-                    Injecteur par lévitation acoustique et laser 2PP femtoseconde prêts...
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="modal-footer">
-              <button class="btn btn-primary" style="background:#10b981;border-color:#10b981"
-                onclick="notify('🧬🌱 Organoïdes 4D et laser 2PP couplés au Jumeau Numérique !','ok');closeModal('organoid-4d')">🚀
-                Activer Assemblage Organoïdes & Micro-Vaisseaux</button>
-              <button class="btn btn-secondary" onclick="closeModal('organoid-4d')">Fermer</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="modal-overlay" id="modal-iknife-ac225">
-          <div class="modal-box" style="max-width:760px">
-            <div class="modal-hdr">
-              <div class="modal-title">🔬💨 DIAGNOSTIC MOLÉCULAIRE AÉROSOL (iKnife REIMS) & THÉRANOSTIQUE ALPHA
-                ACTINIUM-225 (Phase 20 / M39-M40)</div>
-              <button class="modal-close" onclick="closeModal('iknife-ac225')">✕</button>
-            </div>
-            <div class="modal-body" style="font-size:11px;color:var(--text2);line-height:1.6">
-              <div
-                style="padding:10px;background:var(--bg2);border:1px solid #f43f5e;border-radius:6px;margin-bottom:12px;color:#f43f5e">
-                <b>🔬 Aspiration Spectrométrique in-situ (0.8s) & Radioguidage Alpha 28 MeV :</b><br>
-                L'aspiration des aérosols de découpe au scalpel/laser alimente en continu un spectromètre de masse à
-                temps de vol (<b>REIMS / iKnife</b>), identifiant le ratio membranaire Phosphatidylcholine (PC) pour
-                garantir une marge R0. En parallèle, la sonde de détection peropératoire cartographie et irradie les
-                micro-clusters occultes (&lt; 250 µm) par émission alpha ciblée d'<b>Actinium-225</b>.
-              </div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
-                <div style="background:var(--bg1);padding:10px;border-radius:6px;border:1px solid var(--border)">
-                  <div style="font-weight:700;color:var(--text1);margin-bottom:6px">⚡ Télémétrie Aérosol iKnife (REIMS
-                    ToF)</div>
-                  <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span>Débit d'aspiration
-                      :</span><strong style="color:#06b6d4">1.5 L/min (Buse stérile)</strong></div>
-                  <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span>Vitesse d'ionisation
-                      :</span><strong style="color:#10b981">740 ms (Temps de Vol)</strong></div>
-                  <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span>Pic membranaire ciblé
-                      :</span><strong style="color:#f43f5e">PC(34:1) m/z 760.6</strong></div>
-                  <div style="display:flex;justify-content:space-between"><span>Précision histologique :</span><strong
-                      style="color:#10b981">99.95% (Spécificité R0)</strong></div>
-                </div>
-                <div style="background:var(--bg1);padding:10px;border-radius:6px;border:1px solid var(--border)">
-                  <div style="font-weight:700;color:var(--text1);margin-bottom:6px">☢️ Sonde Théranostique Alpha (Ac-225
-                    / Ga-68)</div>
-                  <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span>Radionucléide alpha
-                      :</span><strong style="color:#f43f5e">Actinium-225 (Ac-225)</strong></div>
-                  <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span>Énergie de cascade
-                      :</span><strong style="color:#eab308">28 MeV (4 particules α)</strong></div>
-                  <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span>Pénétration tissulaire
-                      :</span><strong style="color:#38bdf8">80 µm (0 dommage collatéral)</strong></div>
-                  <div style="display:flex;justify-content:space-between"><span>Comptage gamma direct :</span><strong
-                      style="color:#10b981">4 850 cps (Seuil 150 µm)</strong></div>
-                </div>
-              </div>
-              <div style="font-weight:700;color:var(--text1);margin-bottom:6px">⚙️ Simulation d'Analyse iKnife en ligne
-                et de Tir Théranostique Actinium-225 :</div>
-              <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap">
-                <button class="btn" style="background:#06b6d4;color:#fff;border:none;flex:1"
-                  onclick="simulateIknifeAction('Analyse Fumée Scalpel (Marge saine)', 885.5, 'R0 CONFIRMÉ', 'Ratio PC/PI faible (0.21), absence d\\'invasion tumorale sur la ligne de transection.')">💨
-                  Analyse Aérosol iKnife (Marge R0)</button>
-                <button class="btn" style="background:#f43f5e;color:#fff;border:none;flex:1"
-                  onclick="simulateIknifeAction('Alerte Infiltration Membranaire', 760.6, 'MARGE R1 DÉTECTÉE 🛑', 'Pic prolifératif PC(34:1) m/z 760.6 massif ! Extension chirurgicale requise (+3 mm).')">🛑
-                  Alerte Infiltration iKnife (R1)</button>
-                <button class="btn" style="background:#eab308;color:#000;border:none;flex:1;font-weight:700"
-                  onclick="simulateIknifeAction('Tir Théranostique Actinium-225', 8.5, 'ERADICATION ALPHA 100%', 'Irradiation courte portée (80 µm, 28 MeV) sur le micro-cluster S4/Hilaire. Zéro dommage aux vaisseaux.')">☢️
-                  Tir Alpha Ac-225 (8.5 MBq)</button>
-                <button class="btn" style="background:#ef4444;color:#fff;border:none"
-                  onclick="simulateIknifeAction('Verrouillage Sécurité Radiologique', 0.0, 'INTERLOCK ACTIF 🛡️', 'Coupure immédiate de la ligne d\\'injection Actinium-225 (0 MBq). Sceau SHA-256.')">🛑
-                  Interlock Radio (0 MBq)</button>
-              </div>
-              <div id="iknife-ac225-output"
-                style="padding:10px;background:#0d1117;border-left:3px solid #f43f5e;border-radius:4px;font-family:var(--mono);font-size:10px;color:#cbd5e1">
-                🔬💨 <b>EN ATTENTE D'ASPIRATION AÉROSOL ET DE DÉTECTION GAMMA :</b> Sélectionnez une commande pour
-                lancer l'ionisation REIMS ou l'irradiation théranostique Actinium-225.
-              </div>
-            </div>
-            <div class="modal-ft">
-              <button class="btn btn-primary" style="background:#f43f5e;border-color:#f43f5e"
-                onclick="notify('🔬💨 Diagnostic iKnife et théranostique Actinium-225 synchronisés !','ok');closeModal('iknife-ac225')">🚀
-                Activer Diagnostic Aérosol & Alpha-Théranostique</button>
-              <button class="btn btn-secondary" onclick="closeModal('iknife-ac225')">Fermer</button>
-            </div>
-          </div>
-        </div>
-
         <!-- Notification -->
         <div class="notif" id="notif"></div>
 
@@ -2599,7 +1784,7 @@
         <div id="pwa-install-banner" role="complementary" aria-label="Installer l'application">
           <span class="pwa-banner-icon">🏥</span>
           <div class="pwa-banner-text">
-            <strong>Installer GeneralSurg Plan</strong>
+            <strong>Installer ORLSurgPlan3D</strong>
             <span>Accès rapide, fonctionne hors ligne</span>
           </div>
           <button class="pwa-banner-btn-install" id="pwa-btn-install" aria-label="Installer l'application">

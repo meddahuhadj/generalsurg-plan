@@ -1,6 +1,6 @@
--- GeneralSurg Plan MIMO — Schéma PostgreSQL
+-- ORLSurgPlan3D — Schéma PostgreSQL
 -- ======================================
--- Exécuter avec: psql -U postgres -d generalsurg -f schema.sql
+-- Exécuter avec: psql -U postgres -d orlsurgplan3d -f schema.sql
 -- (ou laisser main.py le faire automatiquement au démarrage / via Alembic)
 
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
@@ -36,8 +36,8 @@ CREATE TABLE patients (
     bsa_m2          REAL GENERATED ALWAYS AS (SQRT(poids_kg * taille_cm / 3600)) STORED,
     diagnostic      TEXT NOT NULL,
     chirurgien      VARCHAR(128) NOT NULL,
-    specialty       VARCHAR(32) NOT NULL DEFAULT 'hbp'
-                    CHECK (specialty IN ('hbp','colorectal','gastrique','thyroide','thoracique','cardiaque','urologie','anesthesie_reanimation')),
+    specialty       VARCHAR(32) NOT NULL DEFAULT 'laryngologie'
+                    CHECK (specialty IN ('laryngologie','otologie','rhinologie','cervicofacial','pediatrique','anesthesie_reanimation')),
     urgence         VARCHAR(16) DEFAULT 'vert' CHECK (urgence IN ('vert','orange','rouge')),
     note            TEXT,
     status          VARCHAR(32) DEFAULT 'active',
@@ -206,6 +206,33 @@ CREATE TABLE plans_coupe (
     created_at            TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- Table: resection_plans (Plan de résection — boucle Planification → FLR → Plan chirurgical)
+-- Stocke le plan de coupe (point + normale), la marge oncologique demandée et les métriques
+-- calculées par backend/routers/surgical_planning.py (FLR, volumes, énergie post-résection du
+-- solveur hyperélastique backend/biomech_solver.py). MiROIR Postgres de models.ResectionPlan.
+CREATE TABLE resection_plans (
+    id                VARCHAR(36) PRIMARY KEY,
+    patient_id        VARCHAR(32) REFERENCES patients(id) ON DELETE CASCADE,
+    title             VARCHAR(256) NOT NULL DEFAULT 'Plan de résection',
+    status            VARCHAR(32) NOT NULL DEFAULT 'DRAFT' CHECK (status IN ('DRAFT','SELECTED')),
+    tissue_type       VARCHAR(32) NOT NULL DEFAULT 'liver_parenchyma',
+    model             VARCHAR(32) NOT NULL DEFAULT 'mooney_rivlin' CHECK (model IN ('linear','mooney_rivlin','ogden','neo_hookean')),
+    mesh_ref          TEXT,                          -- maillage organe réel utilisé pour la simulation
+    plane_point       JSONB NOT NULL,                -- [x, y, z] mm (référentiel du maillage)
+    plane_normal      JSONB NOT NULL,                -- [nx, ny, nz] (côté n·(x-p) > 0 = remnant)
+    margin_mm         REAL NOT NULL DEFAULT 5.0,
+    metrics           JSONB NOT NULL DEFAULT '{}',   -- FLR, volumes, énergie post-résection, convergence
+    deformed_mesh_url TEXT,                          -- URL /meshes/... du maillage déformé exporté
+    warning           TEXT,
+    created_by        INTEGER REFERENCES users(id),
+    created_at        TIMESTAMPTZ DEFAULT NOW(),
+    updated_at        TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_resection_plans_patient ON resection_plans(patient_id);
+CREATE TRIGGER resection_plans_updated_at BEFORE UPDATE ON resection_plans
+    FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
 -- Table: audit_log — traçabilité complète (qui, quand, quoi, sur quel patient)
 CREATE TABLE audit_log (
     id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -266,7 +293,7 @@ CREATE TRIGGER patients_updated_at BEFORE UPDATE ON patients
     FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
 -- ==============================================================================
--- TABLES GENERALSURG PLAN 3D NEXTGEN (v2.0 - 2026-2046)
+-- TABLES ORLSURGPLAN3D NEXTGEN (v2.0 - 2026-2046)
 -- Conformité : HIPAA / RGPD / MDR 2017/745 / IEC 62304 Classe C
 -- ==============================================================================
 
@@ -297,8 +324,8 @@ CREATE TABLE surgical_plans (
     patient_id              VARCHAR(32) NOT NULL REFERENCES patients(id) ON DELETE CASCADE,
     lead_surgeon_username   VARCHAR(64) NOT NULL,
     title                   VARCHAR(256) NOT NULL,
-    specialty               VARCHAR(64) NOT NULL DEFAULT 'HBP',
-    planned_procedure_code  VARCHAR(64) NOT NULL DEFAULT 'CCAM-HMFA004',
+    specialty               VARCHAR(64) NOT NULL DEFAULT 'Laryngologie',
+    planned_procedure_code  VARCHAR(64) NOT NULL DEFAULT 'CCAM-GEGA350',
     strategy_status         VARCHAR(32) NOT NULL DEFAULT 'AI_PROPOSED' CHECK (strategy_status IN ('DRAFT', 'AI_PROPOSED', 'APPROVED', 'IN_PROGRESS', 'COMPLETED', 'ABORTED')),
     resection_volume_ml     REAL,
     remnant_volume_ml       REAL,

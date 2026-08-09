@@ -1,5 +1,5 @@
     /* ================================================================
-   GENERALSURG PLAN — Design System Modulaire Omni-Spécialisé
+   ORLSURGPLAN3D — Design System Modulaire Omni-Spécialisé
    Palette: acier chirurgical + orange trauma + vert validation
    ================================================================ */
     :root {
@@ -31,39 +31,29 @@
     }
 
     /* ── Specialty Theme Overrides ── */
-    body[data-mod="hbp"] {
-      --accent: #4fc3f7;
-      --accent-rgb: 79, 195, 247;
+    body[data-mod="laryngologie"] {
+      --accent: #dc2626;
+      --accent-rgb: 220, 38, 38;
     }
 
-    body[data-mod="colorectal"] {
+    body[data-mod="otologie"] {
+      --accent: #0ea5e9;
+      --accent-rgb: 14, 165, 233;
+    }
+
+    body[data-mod="rhinologie"] {
       --accent: #22c55e;
       --accent-rgb: 34, 197, 94;
     }
 
-    body[data-mod="gastrique"] {
-      --accent: #ff6b35;
-      --accent-rgb: 255, 107, 53;
-    }
-
-    body[data-mod="thyroide"] {
+    body[data-mod="cervicofacial"] {
       --accent: #a855f7;
       --accent-rgb: 168, 85, 247;
     }
 
-    body[data-mod="thoracique"] {
-      --accent: #06b6d4;
-      --accent-rgb: 6, 182, 212;
-    }
-
-    body[data-mod="cardiaque"] {
-      --accent: #ef4444;
-      --accent-rgb: 239, 68, 68;
-    }
-
-    body[data-mod="urologie"] {
-      --accent: #14b8a6;
-      --accent-rgb: 20, 184, 166;
+    body[data-mod="pediatrique"] {
+      --accent: #ec4899;
+      --accent-rgb: 236, 72, 153;
     }
 
     body[data-mod="anesthesie_reanimation"] {
@@ -274,47 +264,14 @@
       scrollbar-width: thin
     }
 
-    /* ── Mode Clinique (défaut) vs Mode Recherche ──────────────────────────
-   Par défaut, seuls les outils validés/utilisables au bloc sont visibles.
-   Les modules exploratoires (Jalons M21-M40 : nanorobots, BCI, cryo-BNCT,
-   iKnife/Ac-225, etc.) restent dans le code mais sont masqués tant que le
-   chirurgien n'active pas explicitement le Mode Recherche. */
-    .top-nav .nav-explore {
-      display: none
-    }
-
-    body.research-mode .top-nav .nav-explore {
-      display: flex
-    }
-
-    body.research-mode .top-nav {
-      background: repeating-linear-gradient(135deg, rgba(234, 179, 8, .05), rgba(234, 179, 8, .05) 10px, transparent 10px, transparent 20px)
-    }
-
-    #btn-research-toggle {
+    #btn-advanced-toggle {
       position: relative
     }
 
-    #btn-research-toggle.active {
+    #btn-advanced-toggle.active {
       background: rgba(234, 179, 8, .15);
       border-color: #eab308;
       color: #eab308
-    }
-
-    .research-banner {
-      display: none;
-      align-items: center;
-      gap: 8px;
-      background: rgba(234, 179, 8, .1);
-      border-bottom: 1px solid rgba(234, 179, 8, .3);
-      color: #eab308;
-      font-size: 10px;
-      font-weight: 600;
-      padding: 4px 14px
-    }
-
-    body.research-mode .research-banner {
-      display: flex
     }
 
     .top-nav button {
@@ -1160,14 +1117,14 @@
 
     /* ── Paramètres techniques masqués en production ───────────────────────
    Le bouton ⚙ (clé Gemini, URL backend) n'a rien à faire devant un
-   chirurgien au bloc. Il reste caché en Mode Clinique et n'apparaît
-   qu'en Mode Recherche/maintenance — l'auto-configuration réelle passe
+   chirurgien au bloc. Il reste caché par défaut et n'apparaît qu'avec les
+   Paramètres avancés (maintenance) — l'auto-configuration réelle passe
    par window.APP_CONFIG (voir commentaire au-dessus de `const state`). */
     .admin-only {
       display: none !important
     }
 
-    body.research-mode .admin-only {
+    body.advanced-mode .admin-only {
       display: inline-block !important
     }
 
@@ -1207,6 +1164,159 @@
 
     .metric-row .v.alert {
       color: var(--red)
+    }
+
+    /* ── Plan chirurgical (onglet Plan chir.) ── */
+    .planchir-badge-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-bottom: 8px
+    }
+
+    .planchir-badge {
+      display: inline-block;
+      font-size: 9px;
+      padding: 2px 8px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      color: var(--text3);
+      background: var(--bg2)
+    }
+
+    .planchir-badge.real {
+      color: var(--green);
+      border-color: rgba(34, 197, 94, .4)
+    }
+
+    .planchir-badge.synth {
+      color: var(--yellow);
+      border-color: rgba(234, 179, 8, .4)
+    }
+
+    .planchir-badge.mixed {
+      color: #a78bfa;
+      border-color: rgba(167, 139, 250, .4)
+    }
+
+    .planchir-org {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 10px;
+      padding: 3px 0;
+      cursor: pointer;
+      color: var(--text1)
+    }
+
+    .planchir-org .sub {
+      color: var(--text3);
+      font-size: 9px
+    }
+
+    .planchir-vec {
+      display: flex;
+      gap: 6px;
+      width: 100%
+    }
+
+    .planchir-num {
+      min-width: 0;
+      flex: 1
+    }
+
+    .planchir-empty {
+      font-size: 10px;
+      color: var(--text3);
+      padding: 8px 0;
+      line-height: 1.5
+    }
+
+    .planchir-plan {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px 10px;
+      margin-bottom: 6px;
+      font-size: 10px
+    }
+
+    .planchir-plan.sel {
+      border-color: var(--green);
+      box-shadow: 0 0 0 1px rgba(34, 197, 94, .25)
+    }
+
+    .planchir-plan-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 3px
+    }
+
+    .planchir-plan-title {
+      color: var(--text1);
+      font-weight: 600;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap
+    }
+
+    .planchir-plan-status {
+      font-size: 9px;
+      color: var(--text3);
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      flex: none
+    }
+
+    .planchir-plan-status.ok {
+      color: var(--green)
+    }
+
+    .planchir-plan-meta {
+      color: var(--text3);
+      margin-bottom: 6px;
+      font-family: var(--mono);
+      font-size: 9px
+    }
+
+    .planchir-plan-actions {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap
+    }
+
+    .btn-planchir {
+      font-size: 9px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      background: var(--bg1);
+      color: var(--text2);
+      cursor: pointer;
+      transition: .15s
+    }
+
+    .btn-planchir:hover:not(:disabled) {
+      border-color: var(--accent);
+      color: var(--accent)
+    }
+
+    .btn-planchir:disabled {
+      opacity: .45;
+      cursor: default
+    }
+
+    .btn-planchir.danger:hover {
+      border-color: var(--red);
+      color: var(--red)
+    }
+
+    .btn-planchir.accent {
+      border-color: var(--accent);
+      color: var(--accent);
+      margin-top: 4px
     }
 
     .implant-card {

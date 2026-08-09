@@ -31,7 +31,7 @@ def _register_and_login(client, *, password: str = "TestPass123") -> tuple[str, 
     return username, {"Authorization": f"Bearer {r.json()['access_token']}"}
 
 
-def _patient_payload(patient_id: str, specialty: str = "hbp") -> dict:
+def _patient_payload(patient_id: str, specialty: str = "laryngologie") -> dict:
     return {
         "id": patient_id, "nom": "Test Patient", "age": 55, "sexe": "F",
         "poids_kg": 68.0, "taille_cm": 165.0, "diagnostic": "Test diagnostic",
@@ -39,7 +39,7 @@ def _patient_payload(patient_id: str, specialty: str = "hbp") -> dict:
     }
 
 
-def _create_patient(client, headers, specialty: str = "hbp") -> str:
+def _create_patient(client, headers, specialty: str = "laryngologie") -> str:
     patient_id = _unique("pat")
     r = client.post("/patients", json=_patient_payload(patient_id, specialty), headers=headers)
     assert r.status_code == 201, r.text
@@ -47,7 +47,7 @@ def _create_patient(client, headers, specialty: str = "hbp") -> str:
 
 
 def _segment_payload(seg_id: str, seg_type: str = "organe", volume_ml: float = 1200.0) -> dict:
-    return {"id": seg_id, "type": seg_type, "volume_ml": volume_ml, "label": "Foie", "color_hex": "#ff0000"}
+    return {"id": seg_id, "type": seg_type, "volume_ml": volume_ml, "label": "Larynx", "color_hex": "#ff0000"}
 
 
 # ---------------------------------------------------------------------------
@@ -96,20 +96,18 @@ def test_segments_require_authentication(client):
 # ---------------------------------------------------------------------------
 def test_volumetrie_without_segments_uses_specialty_defaults(client):
     _, headers = _register_and_login(client)
-    patient_id = _create_patient(client, headers, specialty="hbp")
+    patient_id = _create_patient(client, headers, specialty="rhinologie")
 
     r = client.get(f"/patients/{patient_id}/volumetrie", headers=headers)
     assert r.status_code == 200, r.text
     data = r.json()
     assert data["patient_id"] == patient_id
-    assert data["organ_volume_ml"] > 0
-    assert "flr_pct" in data  # spécifique HBP
-    assert "flr_safe" in data
+    assert data["organ_volume_ml"] == 40.0  # défaut anatomique rhinologie (DEFAULT_ORGAN_VOLUME_ML)
 
 
 def test_volumetrie_reflects_real_segments_when_present(client):
     _, headers = _register_and_login(client)
-    patient_id = _create_patient(client, headers, specialty="hbp")
+    patient_id = _create_patient(client, headers, specialty="laryngologie")
     client.post(f"/patients/{patient_id}/segments",
                 json=_segment_payload(_unique("organe"), "organe", 1000.0), headers=headers)
     client.post(f"/patients/{patient_id}/segments",

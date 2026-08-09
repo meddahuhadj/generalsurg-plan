@@ -1,7 +1,7 @@
 # =============================================================================
 # .github/workflows/deploy.yml — CI/CD GitHub Actions → Render.com
 # =============================================================================
-# Pipeline en 2 étapes pour GeneralSurg Plan :
+# Pipeline en 2 étapes pour ORLSurgPlan3D :
 #   1. tests  — lance la suite pytest (réutilise tests.yml pour la logique)
 #   2. deploy — si les tests passent ET on est sur la branche main,
 #               déclenche le redéploiement Render via Deploy Hook.
@@ -65,7 +65,7 @@ jobs:
 
     environment:
       name: production
-      url: https://generalsurg-plan-mimo-demo.onrender.com
+      url: https://orlsurgplan3d-demo.onrender.com
 
     steps:
       - name: Checkout
@@ -78,8 +78,8 @@ jobs:
         # leur cache local jusqu'à expiration (potentiellement des jours).
         run: |
           BUILD_TS=$(date +%Y%m%d%H%M%S)
-          sed -i "s/generalsurg-shell-v2-[0-9]*/generalsurg-shell-v2-${BUILD_TS}/" sw.js
-          echo "✅ CACHE_VERSION mis à jour : generalsurg-shell-v2-${BUILD_TS}"
+          sed -i "s/orlsurgplan3d-shell-v2-[0-9]*/orlsurgplan3d-shell-v2-${BUILD_TS}/" sw.js
+          echo "✅ CACHE_VERSION mis à jour : orlsurgplan3d-shell-v2-${BUILD_TS}"
 
       - name: Déclencher le redéploiement Render
         # Appelle le Deploy Hook Render (URL secrète → aucun token exposé)
@@ -103,7 +103,7 @@ jobs:
           echo "✅ Redéploiement Render déclenché avec succès."
           echo ""
           echo "📋 Suivi : https://dashboard.render.com"
-          echo "🌐 URL   : https://generalsurg-plan-mimo-demo.onrender.com"
+          echo "🌐 URL   : https://orlsurgplan3d-demo.onrender.com"
           echo ""
           echo "⏱ Le déploiement prend généralement 2-5 minutes."
           echo "   Sur le plan gratuit, le service peut mettre ~30s à"

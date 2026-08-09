@@ -42,8 +42,8 @@ function extractObjectLiteral(src, name) {
 }
 
 // Mocks requis par _generateLocalPatientData() (MODULES[state.mod].patient) — avant eval.
-global.state = { mod: 'hbp', settings: {} };
-global.MODULES = { hbp: { patient: { nom: 'Patient Test' } } };
+global.state = { mod: 'laryngologie', settings: {} };
+global.MODULES = { laryngologie: { patient: { nom: 'Patient Test' } } };
 
 // `const` déclaré dans un eval() direct reste scopé à cet eval (ES6) — on le convertit en
 // affectation sur `global` pour le rendre accessible ensuite, sans changer une seule ligne de
@@ -87,8 +87,8 @@ assert(global._lastNotify.type === 'warn', 'estimation locale : la notification 
 // Cas B : données réelles (backend réellement disponible, hypothétique mais doit rester géré)
 const realData = {
   is_real_patient_anatomy: true,
-  volumetric_analysis_ml: { total_liver_volume_tlv: 1420, tumor_volume_chc: 320, future_liver_remnant_flr_s1_s2_s3_s4_s6_s7: 640, flr_ratio_pct: 45.1 },
-  '3d_mesh_manifest_gltf': [{ organ: 'Liver' }]
+  volumetric_analysis_ml: { total_organ_volume_ml: 20, lesion_volume_ml: 3, resected_volume_ml: 8, remnant_volume_ml: 12, remnant_ratio_pct: 60.0 },
+  '3d_mesh_manifest_gltf': [{ organ: 'Larynx' }]
 };
 digitalTwinPipeline._applyResult(realData, 'PAT-TEST-REAL', false);
 const descReal = document.getElementById('anatomy-mode-desc').innerHTML;

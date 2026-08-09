@@ -1,0 +1,16 @@
+# Dépendances de la fonction serverless Vercel (api/index.py) — sous-ensemble
+# volontairement réduit de backend/requirements.txt : ni nibabel/scikit-image/
+# trimesh/rtree (mesh 3D), ni pydicom/pynetdicom/dicomweb-client (DICOM/PACS),
+# absents du runtime serverless (dicom/volumetrie/segmentation non montés ici).
+fastapi>=0.111.0
+pydantic>=2.0
+python-dotenv>=1.0.0
+python-jose[cryptography]>=3.3
+passlib[bcrypt]>=1.7
+bcrypt<4.1
+python-multipart>=0.0.9
+sqlalchemy>=2.0.0
+psycopg2-binary>=2.9.9
+pyotp>=2.9.0
+qrcode[pil]>=7.4.2
+httpx>=0.27.0

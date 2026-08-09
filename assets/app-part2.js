@@ -7,9 +7,9 @@
           Object.assign(state.mpr, {
             segments: {
               tumor: { voxels: new Set(), color: '#ef4444', label: 'Tumeur' },
-              portal_vein: { voxels: new Set(), color: '#3b82f6', label: 'Veine porte' },
-              hepatic_vein: { voxels: new Set(), color: '#8b5cf6', label: 'VS-Hépatiques' },
-              bile_duct: { voxels: new Set(), color: '#eab308', label: 'Voies biliaires' },
+              vessel: { voxels: new Set(), color: '#3b82f6', label: 'Vaisseau à risque' },
+              nerve: { voxels: new Set(), color: '#8b5cf6', label: 'Nerf à risque' },
+              duct: { voxels: new Set(), color: '#eab308', label: 'Canal/conduit' },
               gtv: { voxels: new Set(), color: '#f97316', label: 'GTV' },
               ctv: { voxels: new Set(), color: '#fb923c', label: 'CTV' },
             },
@@ -371,9 +371,9 @@
           let segmentMesh3D = null;
           const SEG_COLORS_3D = {
             tumor: 0xef4444,
-            portal_vein: 0x3b82f6,
-            hepatic_vein: 0x8b5cf6,
-            bile_duct: 0xeab308,
+            vessel: 0x3b82f6,
+            nerve: 0x8b5cf6,
+            duct: 0xeab308,
             gtv: 0xf97316,
             ctv: 0xfb923c,
           };
@@ -574,9 +574,11 @@
           // ════════════════════════════════════════════════
           function renderStagingPanel() {
             const mod = MODULES[state.mod];
-            const isHBP = state.mod === 'hbp';
-            const isColorectal = state.mod === 'colorectal';
-            const isThoracique = state.mod === 'thoracique';
+            const isLaryngo = state.mod === 'laryngologie';
+            const isOtologie = state.mod === 'otologie';
+            const isRhino = state.mod === 'rhinologie';
+            const isCervicofacial = state.mod === 'cervicofacial';
+            const isPediatrique = state.mod === 'pediatrique';
 
             // Calcul volumétrie depuis le volume courant — priorité au volume RÉEL de segmentation
             // (TotalSegmentator, via realMeshGroup) s'il est chargé, sinon estimation par voxel-counting.
@@ -595,10 +597,17 @@
             // Scores actuels
             const stagingData = state.mpr._stagingData || {
               T: 'T2', N: 'N0', M: 'M0',
-              bclc: isHBP ? 'A' : null,
-              childPugh: isHBP ? 'A5' : null,
-              crm: isColorectal ? 'Négatif (>1mm)' : null,
-              vems: isThoracique ? '82%' : null,
+              cordMobility: isLaryngo ? 'Mobile' : null,
+              cartilageInv: isLaryngo ? 'Non' : null,
+              hbGrade: isOtologie ? 'I' : null,
+              cholesteatomaStage: isOtologie ? 'I' : null,
+              lundMackay: isRhino ? 12 : null,
+              skullBaseInv: isRhino ? 'Non' : null,
+              orbitInv: isRhino ? 'Non' : null,
+              extracapsular: isCervicofacial ? 'Non' : null,
+              facialNerveInv: isCervicofacial ? 'Non' : null,
+              osa18: isPediatrique ? 60 : null,
+              desatMin: isPediatrique ? 92 : null,
             };
             state.mpr._stagingData = stagingData;
 
@@ -625,37 +634,83 @@
       </div>
     </div>
 
-    ${isHBP ? `<div class="staging-section">
-      <div class="staging-section-title">${I18N.t('staging.hbpParams')}</div>
+    ${isLaryngo ? `<div class="staging-section">
+      <div class="staging-section-title">${I18N.t('staging.laryngoParams')}</div>
       <div class="staging-field">
-        <label>${I18N.t('staging.bclcField')}</label>
-        <select id="stg-bclc" onchange="updateStagingDecision()">
-          ${['0', 'A', 'B', 'C', 'D'].map(v => `<option ${stagingData.bclc === v ? 'selected' : ''}>${v}</option>`).join('')}
+        <label>${I18N.t('staging.cordMobilityField')}</label>
+        <select id="stg-cordmob" onchange="updateStagingDecision()">
+          ${['Mobile', 'Limitée', 'Fixée'].map(v => `<option ${stagingData.cordMobility === v ? 'selected' : ''}>${v}</option>`).join('')}
         </select>
       </div>
       <div class="staging-field">
-        <label>${I18N.t('staging.childPughField')}</label>
-        <select id="stg-child" onchange="updateStagingDecision()">
-          ${['A5', 'A6', 'B7', 'B8', 'B9', 'C10+'].map(v => `<option ${stagingData.childPugh === v ? 'selected' : ''}>${v}</option>`).join('')}
-        </select>
-      </div>
-    </div>` : ''}
-
-    ${isColorectal ? `<div class="staging-section">
-      <div class="staging-section-title">${I18N.t('staging.colorectalParams')}</div>
-      <div class="staging-field">
-        <label>${I18N.t('staging.crmField')}</label>
-        <select id="stg-crm" onchange="updateStagingDecision()">
-          ${['Négatif (>1mm)', 'Menacée (≤1mm)', 'Positive'].map(v => `<option ${stagingData.crm === v ? 'selected' : ''}>${v}</option>`).join('')}
+        <label>${I18N.t('staging.cartilageInvField')}</label>
+        <select id="stg-cartilage" onchange="updateStagingDecision()">
+          ${['Non', 'Oui'].map(v => `<option ${stagingData.cartilageInv === v ? 'selected' : ''}>${v}</option>`).join('')}
         </select>
       </div>
     </div>` : ''}
 
-    ${isThoracique ? `<div class="staging-section">
-      <div class="staging-section-title">${I18N.t('staging.thoracicParams')}</div>
+    ${isOtologie ? `<div class="staging-section">
+      <div class="staging-section-title">${I18N.t('staging.otoParams')}</div>
       <div class="staging-field">
-        <label>${I18N.t('staging.vemsField')}</label>
-        <input id="stg-vems" type="text" value="${stagingData.vems || '82%'}" onchange="updateStagingDecision()">
+        <label>${I18N.t('staging.hbGradeField')}</label>
+        <select id="stg-hbgrade" onchange="updateStagingDecision()">
+          ${['I', 'II', 'III', 'IV', 'V', 'VI'].map(v => `<option ${stagingData.hbGrade === v ? 'selected' : ''}>${v}</option>`).join('')}
+        </select>
+      </div>
+      <div class="staging-field">
+        <label>${I18N.t('staging.cholesteatomaStageField')}</label>
+        <select id="stg-cholestage" onchange="updateStagingDecision()">
+          ${['I', 'II', 'III'].map(v => `<option ${stagingData.cholesteatomaStage === v ? 'selected' : ''}>${v}</option>`).join('')}
+        </select>
+      </div>
+    </div>` : ''}
+
+    ${isRhino ? `<div class="staging-section">
+      <div class="staging-section-title">${I18N.t('staging.rhinoParams')}</div>
+      <div class="staging-field">
+        <label>${I18N.t('staging.lundMackayField')}</label>
+        <input id="stg-lundmackay" type="number" min="0" max="24" value="${stagingData.lundMackay ?? 12}" onchange="updateStagingDecision()">
+      </div>
+      <div class="staging-field">
+        <label>${I18N.t('staging.skullBaseInvField')}</label>
+        <select id="stg-skullbase" onchange="updateStagingDecision()">
+          ${['Non', 'Oui'].map(v => `<option ${stagingData.skullBaseInv === v ? 'selected' : ''}>${v}</option>`).join('')}
+        </select>
+      </div>
+      <div class="staging-field">
+        <label>${I18N.t('staging.orbitInvField')}</label>
+        <select id="stg-orbit" onchange="updateStagingDecision()">
+          ${['Non', 'Oui'].map(v => `<option ${stagingData.orbitInv === v ? 'selected' : ''}>${v}</option>`).join('')}
+        </select>
+      </div>
+    </div>` : ''}
+
+    ${isCervicofacial ? `<div class="staging-section">
+      <div class="staging-section-title">${I18N.t('staging.cervicoParams')}</div>
+      <div class="staging-field">
+        <label>${I18N.t('staging.extracapsularField')}</label>
+        <select id="stg-extracaps" onchange="updateStagingDecision()">
+          ${['Non', 'Oui'].map(v => `<option ${stagingData.extracapsular === v ? 'selected' : ''}>${v}</option>`).join('')}
+        </select>
+      </div>
+      <div class="staging-field">
+        <label>${I18N.t('staging.facialNerveInvField')}</label>
+        <select id="stg-facialnerve" onchange="updateStagingDecision()">
+          ${['Non', 'Oui'].map(v => `<option ${stagingData.facialNerveInv === v ? 'selected' : ''}>${v}</option>`).join('')}
+        </select>
+      </div>
+    </div>` : ''}
+
+    ${isPediatrique ? `<div class="staging-section">
+      <div class="staging-section-title">${I18N.t('staging.pediatriqueParams')}</div>
+      <div class="staging-field">
+        <label>${I18N.t('staging.osa18Field')}</label>
+        <input id="stg-osa18" type="number" min="0" max="126" value="${stagingData.osa18 ?? 60}" onchange="updateStagingDecision()">
+      </div>
+      <div class="staging-field">
+        <label>${I18N.t('staging.desatMinField')}</label>
+        <input id="stg-desatmin" type="number" min="50" max="100" value="${stagingData.desatMin ?? 92}" onchange="updateStagingDecision()">
       </div>
     </div>` : ''}
 
@@ -696,18 +751,32 @@
             const T = document.getElementById('stg-T')?.value || 'T2';
             const N = document.getElementById('stg-N')?.value || 'N0';
             const M = document.getElementById('stg-M')?.value || 'M0';
-            const bclc = document.getElementById('stg-bclc')?.value;
-            const child = document.getElementById('stg-child')?.value;
-            const crm = document.getElementById('stg-crm')?.value;
-            const vemsStr = document.getElementById('stg-vems')?.value;
+            const cordMobility = document.getElementById('stg-cordmob')?.value;
+            const cartilageInv = document.getElementById('stg-cartilage')?.value;
+            const hbGrade = document.getElementById('stg-hbgrade')?.value;
+            const cholesteatomaStage = document.getElementById('stg-cholestage')?.value;
+            const lundMackayStr = document.getElementById('stg-lundmackay')?.value;
+            const skullBaseInv = document.getElementById('stg-skullbase')?.value;
+            const orbitInv = document.getElementById('stg-orbit')?.value;
+            const extracapsular = document.getElementById('stg-extracaps')?.value;
+            const facialNerveInv = document.getElementById('stg-facialnerve')?.value;
+            const osa18Str = document.getElementById('stg-osa18')?.value;
+            const desatMinStr = document.getElementById('stg-desatmin')?.value;
 
             // Sauvegarde
             if (state.mpr._stagingData) {
               state.mpr._stagingData.T = T; state.mpr._stagingData.N = N; state.mpr._stagingData.M = M;
-              if (bclc) state.mpr._stagingData.bclc = bclc;
-              if (child) state.mpr._stagingData.childPugh = child;
-              if (crm) state.mpr._stagingData.crm = crm;
-              if (vemsStr) state.mpr._stagingData.vems = vemsStr;
+              if (cordMobility) state.mpr._stagingData.cordMobility = cordMobility;
+              if (cartilageInv) state.mpr._stagingData.cartilageInv = cartilageInv;
+              if (hbGrade) state.mpr._stagingData.hbGrade = hbGrade;
+              if (cholesteatomaStage) state.mpr._stagingData.cholesteatomaStage = cholesteatomaStage;
+              if (lundMackayStr) state.mpr._stagingData.lundMackay = parseFloat(lundMackayStr);
+              if (skullBaseInv) state.mpr._stagingData.skullBaseInv = skullBaseInv;
+              if (orbitInv) state.mpr._stagingData.orbitInv = orbitInv;
+              if (extracapsular) state.mpr._stagingData.extracapsular = extracapsular;
+              if (facialNerveInv) state.mpr._stagingData.facialNerveInv = facialNerveInv;
+              if (osa18Str) state.mpr._stagingData.osa18 = parseFloat(osa18Str);
+              if (desatMinStr) state.mpr._stagingData.desatMin = parseFloat(desatMinStr);
             }
 
             const criteria = [];
@@ -721,60 +790,81 @@
               criteria.push({ ok: true, text: 'Pas de métastase à distance (M0/Mx)' });
             }
 
-            // N2 en colorectal → chimiothérapie néo-adjuvante
+            // N2 → discuter traitement néo-adjuvant
             if (N === 'N2') {
-              criteria.push({ ok: 'warn', text: 'Atteinte ganglionnaire N2 — chimiothérapie néo-adjuvante recommandée' });
+              criteria.push({ ok: 'warn', text: 'Atteinte ganglionnaire N2 — discuter traitement néo-adjuvant' });
             } else {
               criteria.push({ ok: true, text: `Statut ganglionnaire ${N}` });
             }
 
             // T4b → résection difficile
             if (T === 'T4b') {
-              criteria.push({ ok: 'warn', text: 'T4b — envahissement organes adjacents : évaluer exérèse combinée' });
+              criteria.push({ ok: 'warn', text: 'T4b — envahissement des structures adjacentes : évaluer exérèse combinée' });
             }
 
-            // CRM en colorectal
-            if (crm) {
-              if (crm.includes('Positive')) {
-                criteria.push({ ok: false, text: 'CRM positive — risque élevé de récidive locale' });
-                resectable = false;
-              } else if (crm.includes('Menacée')) {
-                criteria.push({ ok: 'warn', text: 'CRM menacée — discuter avec le radiooncologiste' });
+            // Laryngologie : mobilité cordale + invasion cartilagineuse
+            if (cordMobility) {
+              if (cordMobility === 'Fixée' || cartilageInv === 'Oui') {
+                criteria.push({ ok: 'warn', text: 'Corde fixée / cartilage envahi — laryngectomie totale recommandée' });
+              } else if (cordMobility === 'Mobile' && (T === 'T1a' || T === 'T1b' || T === 'T2')) {
+                criteria.push({ ok: true, text: 'Corde mobile, stade précoce — chirurgie partielle / laser CO2 possible' });
               } else {
-                criteria.push({ ok: true, text: 'CRM négative (>1mm)' });
+                criteria.push({ ok: 'warn', text: `Mobilité cordale : ${cordMobility}` });
               }
             }
 
-            // BCLC / Child-Pugh en HBP
-            if (bclc) {
-              if (bclc === 'C' || bclc === 'D') {
-                criteria.push({ ok: false, text: `BCLC ${bclc} — traitement systémique ou soins palliatifs` });
+            // Otologie : grade House-Brackmann + stade cholestéatome
+            if (hbGrade) {
+              if (['IV', 'V', 'VI'].includes(hbGrade)) {
+                criteria.push({ ok: false, text: `Grade House-Brackmann ${hbGrade} — exploration/décompression du nerf facial à discuter` });
                 resectable = false;
-              } else if (bclc === 'B') {
-                criteria.push({ ok: 'warn', text: 'BCLC B — évaluer TACE/downstaging avant résection' });
               } else {
-                criteria.push({ ok: true, text: `BCLC ${bclc} — résécable` });
+                criteria.push({ ok: true, text: `Grade House-Brackmann ${hbGrade} — fonction faciale préservée` });
               }
             }
-            if (child) {
-              if (child.startsWith('C')) {
-                criteria.push({ ok: false, text: `Child-Pugh C — contre-indication chirurgicale relative` });
-                resectable = false;
-              } else if (child.startsWith('B')) {
-                criteria.push({ ok: 'warn', text: `Child-Pugh ${child} — réserve hépatique limitée, FLR critique` });
+            if (cholesteatomaStage) {
+              if (cholesteatomaStage === 'III') {
+                criteria.push({ ok: 'warn', text: 'Cholestéatome stade III (EAONO-JOS) — IRM diffusion pré-op, risque de complication intracrânienne' });
               } else {
-                criteria.push({ ok: true, text: `Child-Pugh ${child} — bonne réserve hépatique` });
+                criteria.push({ ok: true, text: `Cholestéatome stade ${cholesteatomaStage} (EAONO-JOS)` });
               }
             }
 
-            // VEMS thoracique
-            if (vemsStr) {
-              const vems = parseFloat(vemsStr);
-              if (!isNaN(vems) && vems < 40) {
-                criteria.push({ ok: false, text: `VEMS ${vemsStr} < 40% — contre-indication fonctionnelle` });
-                resectable = false;
-              } else if (!isNaN(vems) && vems < 60) {
-                criteria.push({ ok: 'warn', text: `VEMS ${vemsStr} — fonction limite, pré-habilitation suggérée` });
+            // Rhinologie : score de Lund-Mackay + invasion base du crâne / orbite
+            if (lundMackayStr) {
+              const lm = parseFloat(lundMackayStr);
+              if (skullBaseInv === 'Oui' || orbitInv === 'Oui') {
+                criteria.push({ ok: 'warn', text: 'Invasion base du crâne / orbite — abord combiné endoscopique-externe, RCP neurochirurgie' });
+              } else if (!isNaN(lm) && lm >= 12) {
+                criteria.push({ ok: true, text: `Score de Lund-Mackay ${lm}/24 — CEES indiquée` });
+              } else {
+                criteria.push({ ok: true, text: `Score de Lund-Mackay ${lm}/24` });
+              }
+            }
+
+            // Cervico-facial : rupture capsulaire + invasion du nerf facial
+            if (extracapsular) {
+              if (extracapsular === 'Oui') {
+                criteria.push({ ok: 'warn', text: 'Rupture capsulaire ganglionnaire — indication de radiothérapie adjuvante' });
+              } else {
+                criteria.push({ ok: true, text: 'Pas de rupture capsulaire' });
+              }
+            }
+            if (facialNerveInv === 'Oui') {
+              criteria.push({ ok: false, text: 'Invasion du nerf facial — sacrifice nerveux et greffe à prévoir' });
+              resectable = false;
+            }
+
+            // ORL pédiatrique : score OSA-18 + désaturation nocturne minimale
+            if (osa18Str) {
+              const osa = parseFloat(osa18Str);
+              const desat = parseFloat(desatMinStr);
+              if (!isNaN(osa) && osa >= 60 && !isNaN(desat) && desat < 90) {
+                criteria.push({ ok: true, text: `OSA-18 ${osa} avec SpO2 min. ${desat}% — indication chirurgicale formelle` });
+              } else if (!isNaN(osa) && osa >= 60) {
+                criteria.push({ ok: 'warn', text: `OSA-18 ${osa} — retentissement significatif, corréler à la polysomnographie` });
+              } else if (!isNaN(osa)) {
+                criteria.push({ ok: true, text: `OSA-18 ${osa}` });
               }
             }
 
@@ -1106,13 +1196,16 @@
                 SpacingMM: state.mpr.spacing,
                 TotalOrganVolumeML: state.mpr.lastFLR ? state.mpr.lastFLR.totalML : 1250.0,
                 ResectedVolumeML: state.mpr.lastFLR ? state.mpr.lastFLR.resectedML : 375.0,
-                FutureLiverRemnantFLR_Percent: state.mpr.lastFLR ? state.mpr.lastFLR.flrPct : 70.0,
+                RemnantVolume_Percent: state.mpr.lastFLR ? state.mpr.lastFLR.flrPct : 70.0,
                 TumorSegmentsCount: state.mpr.segments.tumor.voxels.size,
                 LinearMeasurementsMM: state.mpr.measurements.map(m => ({ type: m.type, value: m.value, unit: m.unit }))
               },
               StagingSummary: {
                 TNM: `${sd.T || '?'}${sd.N || '?'}${sd.M || '?'}`,
-                BCLC: sd.bclc || null,
+                // Champs spécifiques au module actif (mobilité cordale, House-Brackmann, Lund-Mackay,
+                // rupture capsulaire, OSA-18...) — dérivés dynamiquement plutôt que listés en dur,
+                // pour rester valides quel que soit le module ORL actif.
+                AdditionalCriteria: Object.fromEntries(Object.entries(sd).filter(([k]) => !['T', 'N', 'M', 'resectable', 'decisionText'].includes(k))),
                 ResectabilityDecision: sd.decisionText || 'Non calculée — cliquer « Calculer la résécabilité »'
               },
               AuditHashChain: currentPatientAuditLog().map(a => a.hash)
@@ -1140,12 +1233,12 @@
                     id: "rep-" + Date.now(),
                     status: "final",
                     code: {
-                      coding: [{ system: "http://loinc.org", code: "8302-2", display: "Liver height and volume" }]
+                      coding: [{ system: "http://loinc.org", code: "8302-2", display: "Body/organ volume measurement" }]
                     },
                     subject: { reference: "Patient/" + pid },
                     effectiveDateTime: ts,
                     performer: [{ display: (state.settings && state.settings.chirurgien) || "Dr. MIMO" }],
-                    conclusion: `Staging: ${sd.T || '?'}${sd.N || '?'}${sd.M || '?'} (BCLC ${sd.bclc || 'N/A'}). Résécabilité: ${sd.decisionText || 'Non calculée'}.`,
+                    conclusion: `Staging: ${sd.T || '?'}${sd.N || '?'}${sd.M || '?'}. Résécabilité: ${sd.decisionText || 'Non calculée'}.`,
                     result: [
                       { reference: "Observation/obs-flr" },
                       { reference: "Observation/obs-margin" }
@@ -1158,7 +1251,7 @@
                     id: "obs-flr",
                     status: "final",
                     code: {
-                      coding: [{ system: "http://loinc.org", code: "88056-7", display: "Future liver remnant volume percentage" }]
+                      coding: [{ system: "http://loinc.org", code: "88056-7", display: "Residual/remnant organ volume percentage" }]
                     },
                     valueQuantity: {
                       value: state.mpr.lastFLR ? parseFloat(state.mpr.lastFLR.flrPct.toFixed(1)) : 70.0,
@@ -1189,26 +1282,40 @@
 
           // ── 4. Guidelines Oncologiques HAS / NCCN (Important 7) ──
           const GUIDELINES_RULES = {
-            hbp: {
-              title: "🏥 Guidelines HAS / NCCN — Chirurgie Hépato-Biliaire",
+            laryngologie: {
+              title: "🏥 Guidelines HAS / SFORL — Chirurgie Laryngée & VADS",
               rules: [
-                { id: "flr_normal", name: "FLR parenchyme sain ≥ 30%", check: () => (!state.mpr.lastFLR || state.mpr.lastFLR.flrPct >= 30) },
-                { id: "flr_cirrhosis", name: "FLR sur foie cirrhotique / post-chimio ≥ 40%", check: () => (!state.mpr.lastFLR || state.mpr.lastFLR.flrPct >= 40 || (state.mpr._stagingData && state.mpr._stagingData.childPugh === 'A5')) },
-                { id: "margin_r0", name: "Marge chirurgicale R0 ≥ 1 mm", check: () => (!state.mpr._stagingData || !state.mpr._stagingData.crm || state.mpr._stagingData.crm.includes('Négatif')) }
+                { id: "cord_mobility", name: "Corde vocale mobile ou stade ≤ T2 pour chirurgie partielle/laser", check: () => (!state.mpr._stagingData || state.mpr._stagingData.cordMobility !== 'Fixée') },
+                { id: "cartilage", name: "Absence d'invasion cartilagineuse pour préservation d'organe", check: () => (!state.mpr._stagingData || state.mpr._stagingData.cartilageInv !== 'Oui') },
+                { id: "voice_rehab", name: "Consultation orthophoniste programmée avant chirurgie", check: () => true }
               ]
             },
-            colorectal: {
-              title: "🏥 Guidelines HAS / NCCN — Chirurgie Colorectale",
+            otologie: {
+              title: "🏥 Guidelines HAS / EAONO — Chirurgie Otologique",
               rules: [
-                { id: "crm_rectum", name: "Marge circonférentielle (CRM) > 1 mm", check: () => (!state.mpr._stagingData || !state.mpr._stagingData.crm || state.mpr._stagingData.crm.includes('Négatif')) },
-                { id: "mesorectum", name: "Exérèse totale du mésorectum (TME)", check: () => true }
+                { id: "facial_nerve", name: "Grade House-Brackmann ≤ III (fonction faciale préservée)", check: () => (!state.mpr._stagingData || !state.mpr._stagingData.hbGrade || !['IV', 'V', 'VI'].includes(state.mpr._stagingData.hbGrade)) },
+                { id: "cholesteatoma_mri", name: "IRM diffusion pré-op si cholestéatome stade ≥ II", check: () => true }
               ]
             },
-            thoracique: {
-              title: "🏥 Guidelines HAS / NCCN — Chirurgie Thoracique",
+            rhinologie: {
+              title: "🏥 Guidelines HAS / EPOS — Chirurgie Rhino-Sinusienne",
               rules: [
-                { id: "vems_ppo", name: "VEMS prédit postopératoire (ppo) ≥ 30%", check: () => (!state.mpr._stagingData || !state.mpr._stagingData.vems || parseFloat(state.mpr._stagingData.vems) >= 30) },
-                { id: "dlco_ppo", name: "DLCO ppo ≥ 30% ou épreuve d'effort VO2max > 15 ml/kg/min", check: () => true }
+                { id: "skull_base", name: "Absence d'invasion base du crâne / orbite pour abord endoscopique isolé", check: () => (!state.mpr._stagingData || (state.mpr._stagingData.skullBaseInv !== 'Oui' && state.mpr._stagingData.orbitInv !== 'Oui')) },
+                { id: "lund_mackay", name: "Score de Lund-Mackay documenté avant chirurgie", check: () => (!state.mpr._stagingData || state.mpr._stagingData.lundMackay != null) }
+              ]
+            },
+            cervicofacial: {
+              title: "🏥 Guidelines HAS / NCCN Head & Neck — Chirurgie Cervico-Faciale",
+              rules: [
+                { id: "extracapsular", name: "Absence de rupture capsulaire ganglionnaire (sinon RT adjuvante)", check: () => (!state.mpr._stagingData || state.mpr._stagingData.extracapsular !== 'Oui') },
+                { id: "facial_nerve_monitor", name: "Neuromonitoring du nerf facial disponible en peropératoire", check: () => true }
+              ]
+            },
+            pediatrique: {
+              title: "🏥 Guidelines HAS / SFORL — ORL Pédiatrique",
+              rules: [
+                { id: "osa18_psg", name: "Score OSA-18 corrélé à la polysomnographie avant chirurgie", check: () => true },
+                { id: "parental_consent", name: "Consentement parental éclairé recueilli", check: () => true }
               ]
             }
           };
@@ -1218,8 +1325,8 @@
           // pour lire le vrai état (state.mpr._stagingData) avec repli sûr si non encore renseigné.
 
           function evaluateGuidelines() {
-            const mod = document.body.getAttribute('data-mod') || 'hbp';
-            const guide = GUIDELINES_RULES[mod] || GUIDELINES_RULES.hbp;
+            const mod = document.body.getAttribute('data-mod') || 'laryngologie';
+            const guide = GUIDELINES_RULES[mod] || GUIDELINES_RULES.laryngologie;
 
             let html = `<div class="staging-section"><div class="staging-section-title">${guide.title}</div>`;
             let allOk = true;
@@ -1389,8 +1496,8 @@
             const sp = state.mpr.spacing || { x: 1, y: 1, z: 1 };
             const N = state.mpr.volSize || 64;
             const tumorVoxels = state.mpr.segments.tumor.voxels;
-            const portalVoxels = state.mpr.segments.portal_vein.voxels;
-            const hepaticVoxels = state.mpr.segments.hepatic_vein.voxels;
+            const vesselVoxels = state.mpr.segments.vessel.voxels;
+            const nerveVoxels = state.mpr.segments.nerve.voxels;
 
             if (!tumorVoxels || tumorVoxels.size === 0) {
               state.mpr.margins.status = 'Pas de tumeur';
@@ -1417,9 +1524,9 @@
 
             state.mpr.margins.minCutDistanceMM = parseFloat(minCutDist.toFixed(1));
 
-            // 2. Distance Tumeur - Vaisseaux (Porte / Sus-Hépatique)
+            // 2. Distance Tumeur - Structures à risque (vasculaires / nerveuses)
             let minVascDist = 9999.0;
-            const vascVoxels = new Set([...(portalVoxels || []), ...(hepaticVoxels || [])]);
+            const vascVoxels = new Set([...(vesselVoxels || []), ...(nerveVoxels || [])]);
 
             if (vascVoxels.size > 0) {
               // Échantillonnage rapide pour performance en temps réel
@@ -1475,11 +1582,11 @@
             const totalML = state.mpr.lastFLR ? state.mpr.lastFLR.totalML : 1250.0;
 
             // Simulation de la dévascularisation proportionnelle aux vaisseaux coupés
-            const portalCount = state.mpr.segments.portal_vein.voxels.size || 0;
-            const hepaticCount = state.mpr.segments.hepatic_vein.voxels.size || 0;
+            const vesselCount = state.mpr.segments.vessel.voxels.size || 0;
+            const nerveCount = state.mpr.segments.nerve.voxels.size || 0;
 
             // Facteur d'ischémie simulée
-            const ischemiaFactor = Math.min(15.0, (portalCount + hepaticCount) * 0.01);
+            const ischemiaFactor = Math.min(15.0, (vesselCount + nerveCount) * 0.01);
             const funcFlr = Math.max(10.0, baseFlr - ischemiaFactor);
 
             state.mpr.ischemia.functionalFlrPct = parseFloat(funcFlr.toFixed(1));
@@ -1502,7 +1609,9 @@
           state.mpr.curvedCut = {
             points: [],
             active: false,
-            wedgeResectedML: 0.0
+            wedgeResectedML: 0.0,
+            view: null,   // vue MPR où le tracé a été dessiné (axial/coronal/sagittal)
+            sliceIdx: null // index de coupe au moment du tracé (referme le pont MPR → plan de coupe)
           };
 
           function recomputeCurvilinearFLR() {
@@ -1569,7 +1678,7 @@
             const pid = (mod0 && mod0.patient && mod0.patient.id) || "ID-9999";
             const ts = I18N.formatDate(new Date(), { dateStyle: 'medium', timeStyle: 'short' });
             const surgeon = (state.settings && state.settings.chirurgien) || "Chirurgien Oncologue";
-            const mod = document.body.getAttribute('data-mod') || 'hbp';
+            const mod = document.body.getAttribute('data-mod') || 'laryngologie';
 
             const html = `
     ${'<'}!DOCTYPE html>
@@ -1600,7 +1709,7 @@
       <div class="header">
         <div>
           <h1>✈️ Plan de Vol Chirurgical</h1>
-          <div style="font-size:12px;color:#64748b;margin-top:4px">GeneralSurgPlan3D MIMO — Oncology Suite 2026</div>
+          <div style="font-size:12px;color:#64748b;margin-top:4px">ORLSurgPlan3D — Oncology Suite 2026</div>
         </div>
         <div style="text-align:right">
           <span class="badge" style="background:#eab308;color:#1e293b" title="Prototype non certifié — voir 🛡️ Conformité MDR">PROTOTYPE — NON CERTIFIÉ</span>
@@ -1730,6 +1839,11 @@
                 const nPy = (e.clientY - r.top) / canvas.height;
 
                 state.mpr.curvedCut.points.push([nPx, nPy]);
+                // Mémorise vue + coupe du tracé : nécessaires au pont MPR → plan de coupe
+                // (app-part3.js:planChirurgicalImportMprPlane) pour convertir les pixels
+                // normalisés en coordonnées maillage (mm) au bon endroit du volume.
+                state.mpr.curvedCut.view = plane;
+                state.mpr.curvedCut.sliceIdx = state.mpr.plane[plane];
                 if (state.mpr.curvedCut.points.length >= 3) {
                   recomputeCurvilinearFLR();
                 }

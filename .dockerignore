@@ -4,7 +4,7 @@ __pycache__
 *.pyc
 storage/
 pbdtest_reports/
-generalsurg.db
+orlsurgplan3d.db
 *.db
 .env
 .env.*

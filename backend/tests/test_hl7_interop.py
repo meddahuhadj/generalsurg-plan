@@ -19,7 +19,7 @@ class FakePatient:
     nom = "DUPONT Jean"
     sexe = "M"
     chirurgien = "Dr. Hadj"
-    specialty = "hbp"
+    specialty = "laryngologie"
 
 
 @pytest.fixture
@@ -63,13 +63,13 @@ def test_adt_a08_message_type_and_pv1(patient):
 
 
 def test_orm_o01_message_type_and_order(patient):
-    msg = interop.hl7_orm_o01(patient, "Hépatectomie droite")
+    msg = interop.hl7_orm_o01(patient, "Laryngectomie totale")
     parsed = hl7.parse(msg)
     assert str(parsed.segment("MSH")(9)) == "ORM^O01"
     orc = parsed.segment("ORC")
     assert str(orc(1)) == "NW"  # New order
     obr = parsed.segment("OBR")
-    assert "Hépatectomie droite" in str(obr(4))
+    assert "Laryngectomie totale" in str(obr(4))
 
 
 def test_hl7_escaping_of_special_characters():

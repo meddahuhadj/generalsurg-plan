@@ -52,7 +52,7 @@ class Patient(Base):
     taille_cm = Column(Float, nullable=False)
     diagnostic = Column(Text, nullable=False)
     chirurgien = Column(String(128), nullable=False)
-    specialty = Column(String(32), nullable=False, default="hbp")
+    specialty = Column(String(32), nullable=False, default="laryngologie")
     urgence = Column(String(16), default="vert")
     note = Column(Text, nullable=True)
     status = Column(String(32), default="active")
@@ -220,6 +220,33 @@ class VolumetrieResult(Base):
     margin_cm = Column(Float, default=1.0)
     is_cirrhotic = Column(Boolean, default=False)
     computed_at = Column(DateTime, default=datetime.utcnow)
+
+
+class ResectionPlan(Base):
+    """Plan de résection (fermeture de la boucle Planification → FLR → Plan chirurgical).
+    Stocke le plan de coupe (point + normale), la marge oncologique demandée, les métriques
+    calculées (FLR, volumes, énergie de déformation post-résection) et la référence au maillage
+    déformé exporté par le solveur hyperélastique (backend/biomech_solver.py)."""
+    __tablename__ = "resection_plans"
+
+    id = Column(String(36), primary_key=True, default=_uuid)
+    patient_id = Column(String(32), ForeignKey("patients.id", ondelete="CASCADE"), nullable=False)
+    title = Column(String(256), nullable=False, default="Plan de résection")
+    status = Column(String(32), nullable=False, default="DRAFT")  # DRAFT | SELECTED
+    tissue_type = Column(String(32), nullable=False, default="liver_parenchyma")
+    model = Column(String(32), nullable=False, default="mooney_rivlin")
+    mesh_ref = Column(Text, nullable=True)         # maillage organe réel utilisé pour la simulation
+    plane_point = Column(JSON, nullable=False)
+    plane_normal = Column(JSON, nullable=False)
+    margin_mm = Column(Float, nullable=False, default=5.0)
+    metrics_json = Column("metrics", JSON, default=dict)
+    deformed_mesh_url = Column(Text, nullable=True)
+    warning = Column(Text, nullable=True)
+    created_by = Column(Integer, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    patient = relationship("Patient")
 
 
 class AuditLog(Base):

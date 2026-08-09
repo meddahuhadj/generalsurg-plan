@@ -44,11 +44,11 @@ function assert(cond, msg) {
 // ── Mocks minimaux (pas de THREE.js/scène nécessaire : ces fonctions ne touchent
 // que state/MODULES/realMeshGroup, des objets JS simples) ──
 global.state = {
-  mod: 'hbp',
+  mod: 'laryngologie',
   mpr: { volume: new Float32Array(64 * 64 * 64).fill(20), volSize: 64 } // "tissu" partout -> fracTissue ~1
 };
 global.MODULES = {
-  hbp: { metrics: [{ st: 'ok' }, { st: 'warn' }], patient: { urg: 'orange', age: 55 } }
+  laryngologie: { metrics: [{ st: 'ok' }, { st: 'warn' }], patient: { urg: 'orange', age: 55 } }
 };
 global.realMeshGroup = null;
 // I18N : computeAnalysis()/riskLevel() appellent I18N.t() depuis l'internationalisation de

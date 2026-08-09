@@ -1,10 +1,10 @@
 global.THREE = require('three');
 const fs = require('fs');
 const code = fs.readFileSync(__dirname + '/extracted_pbd.js', 'utf8');
-global.state = { mod: 'hbp' };
+global.state = { mod: 'laryngologie' };
 eval(code);
 
-const specialties = ['hbp','colorectal','gastrique','thyroide','thoracique','cardiaque','urologie','anesthesie_reanimation'];
+const specialties = ['laryngologie','otologie','rhinologie','cervicofacial','pediatrique','anesthesie_reanimation'];
 console.log('Spécialités testées:', specialties.join(', '));
 console.log();
 
@@ -31,5 +31,5 @@ for (const mod of specialties) {
   console.log(`${ok ? '✅' : '❌'} ${mod.padEnd(12)} sommets=${geo.attributes.position.count} contraintes=${constraints.length} ancrés=${nPinned} étirement_max=${maxStretch.toFixed(2)}x NaN=${nanCount}`);
 }
 console.log();
-console.log(allOk ? '✅ Les 7 spécialités produisent un jumeau numérique stable.' : '❌ Au moins une spécialité échoue.');
+console.log(allOk ? '✅ Les 6 modules produisent un jumeau numérique stable.' : '❌ Au moins un module échoue.');
 process.exitCode = allOk ? 0 : 1;

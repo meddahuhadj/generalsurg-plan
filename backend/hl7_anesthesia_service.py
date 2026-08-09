@@ -45,9 +45,9 @@ router = APIRouter(prefix="/api/v2/or-monitor", tags=["or-anesthesia-monitoring"
 
 class SimulateClampingRequest(BaseModel):
     twin_id: str = Field(..., description="ID du jumeau numérique ou de la session peropératoire")
-    vessel_name: str = Field("Pédicule hépatique (Manœuvre de Pringle)", description="Nom du vaisseau clampé")
+    vessel_name: str = Field("Pédicule vasculaire du lambeau libre (anastomose microchirurgicale)", description="Nom du vaisseau clampé")
     clamping_duration_min: float = Field(18.0, description="Durée de clampage ischémique prévisible (en minutes)")
-    specialty: str = Field("HBP", description="Spécialité chirurgicale active")
+    specialty: str = Field("cervicofacial", description="Spécialité chirurgicale active")
     patient_asa_score: int = Field(2, description="Score ASA d'anesthésie (1 à 5)")
 
 # ---------------------------------------------------------------------------
@@ -98,26 +98,32 @@ async def simulate_vascular_clamping_hemodynamics(
     db: Session = Depends(get_db)
 ):
     """
-    Calcule l'impact hémodynamique immédiat et la tolérance à l'ischémie chaude d'un organe
-    lors d'un clampage vasculaire (ex: Manœuvre de Pringle, clampage artère rénale ou colique).
+    Calcule l'impact hémodynamique immédiat et la tolérance à l'ischémie tissulaire lors d'un
+    clampage vasculaire en chirurgie ORL (ex: clampage carotidien en exérèse tumorale cervicale
+    avancée, ischémie du pédicule d'un lambeau libre microchirurgical de reconstruction).
     Génère des alertes prédictives pour l'anesthésiste et le chirurgien.
     """
     now_utc = datetime.now(timezone.utc).isoformat()
     event_id = str(uuid.uuid4())
-    
-    # Calcul de tolérance à l'ischémie chaude (Hot Ischemia Time - HIT)
-    max_tolerance_min = 45.0
-    if req.specialty == "Urologie" or "rénale" in req.vessel_name.lower():
-        max_tolerance_min = 25.0 # Tolérance rénale plus stricte
-    elif req.specialty == "Thoracique" or "pulmonaire" in req.vessel_name.lower():
-        max_tolerance_min = 30.0
-    elif req.patient_asa_score >= 3:
+    vessel_lower = req.vessel_name.lower()
+
+    # Calcul de tolérance à l'ischémie (seuils très différents selon le type de vaisseau) :
+    #   - clampage carotidien (résection tumorale cervicale) : tolérance cérébrale sans shunt ~3 min
+    #   - ischémie de pédicule de lambeau libre microchirurgical : tolérance ~240 min (4h)
+    #   - autre vaisseau cervico-facial (ex: veine jugulaire, branche artérielle accessoire) : 20 min par défaut
+    if "carotid" in vessel_lower:
+        max_tolerance_min = 3.0
+    elif "lambeau" in vessel_lower or "libre" in vessel_lower or "microvasculaire" in vessel_lower or "microchirurgical" in vessel_lower:
+        max_tolerance_min = 240.0
+    else:
+        max_tolerance_min = 20.0
+    if req.patient_asa_score >= 3:
         max_tolerance_min *= 0.8 # Réduction de 20% si patient fragile (ASA 3/4)
-        
+
     remaining_safe_time = round(max_tolerance_min - req.clamping_duration_min, 1)
-    
-    # Impact hémodynamique prédictif (Chute du retour veineux et débit cardiaque)
-    delta_map_mmhg = -8.5 if "Pringle" in req.vessel_name or "hépatique" in req.vessel_name.lower() else -5.0
+
+    # Impact hémodynamique prédictif (Chute de la PAM, risque d'hypoperfusion cérébrale au clampage carotidien)
+    delta_map_mmhg = -8.5 if "carotid" in vessel_lower else -5.0
     delta_co_percent = -14.2 if delta_map_mmhg < -7.0 else -8.0
     
     status_level = "OK"
@@ -132,7 +138,7 @@ async def simulate_vascular_clamping_hemodynamics(
     # Recommandations d'anesthésie intelligentes
     recommendation = "Maintien de la normovolémie. Pas d'intervention vasoactive immédiate requise."
     if delta_map_mmhg < -7.0:
-        recommendation = "Anticipation de la baisse du retour veineux porte : pré-remplissage vasculaire modéré ou micro-bolus d'éphédrine/noradrénaline conseillé par l'IA."
+        recommendation = "Risque d'hypoperfusion cérébrale au clampage carotidien : surveillance EEG/NIRS, pré-remplissage vasculaire modéré ou micro-bolus d'éphédrine/noradrénaline conseillé par l'IA, envisager un shunt carotidien temporaire si mal tolérée."
         
     payload_to_hash = f"{event_id}|{req.twin_id}|{req.vessel_name}|{req.clamping_duration_min}|{status_level}|{now_utc}"
     crypto_hash = hashlib.sha256(payload_to_hash.encode("utf-8")).hexdigest()

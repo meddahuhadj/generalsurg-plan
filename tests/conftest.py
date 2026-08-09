@@ -24,7 +24,7 @@ if str(_BACKEND_DIR) not in sys.path:
 # Base de données de test isolée
 # ---------------------------------------------------------------------------
 # Sans ceci, les tests retombent sur DATABASE_URL par défaut de db.py
-# (sqlite:///./generalsurg.db), c'est-à-dire la même base que celle utilisée
+# (sqlite:///./orlsurgplan3d.db), c'est-à-dire la même base que celle utilisée
 # en dev local (`uvicorn main:app --reload`) : un test qui crée/supprime un
 # patient pollue alors les données de dev, et le contenu des tests dépend de
 # l'historique local de la machine. On pointe donc vers un fichier temporaire
@@ -32,12 +32,18 @@ if str(_BACKEND_DIR) not in sys.path:
 # propre connexion, donc sa propre base vide, en l'absence de StaticPool).
 # `setdefault` : un DATABASE_URL déjà positionné explicitement (ex. pour
 # tester contre un vrai PostgreSQL) reste prioritaire.
-_TEST_DB_PATH = Path(tempfile.gettempdir()) / f"generalsurg_test_{os.getpid()}.db"
+_TEST_DB_PATH = Path(tempfile.gettempdir()) / f"orlsurgplan3d_test_{os.getpid()}.db"
 os.environ.setdefault("DATABASE_URL", f"sqlite:///{_TEST_DB_PATH.as_posix()}")
 os.environ.setdefault("SEED_DEMO_USERS", "true")
 os.environ.setdefault("JWT_SECRET", "test-secret-not-for-production-use")
 os.environ.setdefault("APP_ENV", "development")
 os.environ.setdefault("RESEARCH_MODE", "false")
+
+# Isolation du stockage des maillages : les tests (planification chirurgicale,
+# organe synthétique de démo) écrivent des .glb dans MESH_STORAGE ; on pointe
+# vers un dossier temporaire dédié pour ne pas polluer ./storage/meshes du dev.
+_TEST_MESH_DIR = Path(tempfile.gettempdir()) / f"orlsurgplan3d_meshes_test_{os.getpid()}"
+os.environ.setdefault("MESH_STORAGE_DIR", str(_TEST_MESH_DIR))
 
 
 @pytest.fixture(scope="session")
@@ -46,7 +52,7 @@ def client():
 
     Le `with` déclenche l'événement `startup` de l'app (création des tables +
     seed des comptes de démo dr.hadj/dr.benali) exactement une fois, contre le
-    fichier temporaire ci-dessus — jamais contre backend/generalsurg.db.
+    fichier temporaire ci-dessus — jamais contre backend/orlsurgplan3d.db.
     """
     from fastapi.testclient import TestClient
     from backend.main import app

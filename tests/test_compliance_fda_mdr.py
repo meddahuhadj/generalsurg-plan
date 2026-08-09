@@ -103,8 +103,8 @@ def test_voice_dictate_report_is_labeled_as_keyword_matching_not_llm():
         "patient_id": "PAT-TEST-MDR-888",
         "twin_id": "TWIN-888",
         "surgeon_username": "dr.hadj.test",
-        "specialty": "HBP",
-        "raw_voice_transcript": "Hépatectomie droite réglée par laparotomie avec clampage de 18 minutes. Tranche de section hémostasiée au collafilm.",
+        "specialty": "Laryngologie",
+        "raw_voice_transcript": "Laryngectomie totale avec curage cervical fonctionnel bilatéral. Prothèse phonatoire trachéo-œsophagienne mise en place.",
         "request_fhir_cda": True,
     }
     response = client.post("/api/v2/voice/dictate-report", json=payload)
@@ -113,7 +113,7 @@ def test_voice_dictate_report_is_labeled_as_keyword_matching_not_llm():
 
     assert data["generation_method"] == "keyword_matching_demo"
     assert len(data["ccam_codes_assigned"]) > 0
-    assert data["ccam_codes_assigned"][0]["code"] == "HFMA009"
+    assert data["ccam_codes_assigned"][0]["code"] == "GALA002"
 
     sha_hash = data["sha256_integrity_hash"]
     assert len(sha_hash) == 64, "Le hash SHA-256 ne fait pas 64 caractères hexadécimaux"
@@ -143,17 +143,17 @@ def test_or_anesthesia_hemodynamic_clamping_simulation_is_labeled_as_heuristic()
     """
     payload = {
         "twin_id": "TWIN-OR-TEST-111",
-        "vessel_name": "Pédicule hépatique (Manœuvre de Pringle)",
-        "clamping_duration_min": 18.0,
-        "specialty": "HBP",
+        "vessel_name": "Clampage carotidien (exérèse tumorale cervicale)",
+        "clamping_duration_min": 1.5,
+        "specialty": "Cervicofacial",
         "patient_asa_score": 2,
     }
     response = client.post("/api/v2/or-monitor/simulate-clamping", json=payload)
     assert response.status_code == 200
     data = response.json()
 
-    assert data["max_ischemia_tolerance_min"] == 45.0
-    assert data["remaining_safe_ischemia_min"] == 27.0
+    assert data["max_ischemia_tolerance_min"] == 3.0
+    assert data["remaining_safe_ischemia_min"] == 1.5
     assert data["hemodynamic_impact_prediction"]["map_drop_mmhg"] < 0
     assert data["model_type"] == "rule_based_heuristic_fixed_thresholds_not_clinically_validated"
 

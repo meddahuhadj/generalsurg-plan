@@ -3,10 +3,10 @@
 db.py — Connexion base de données (PostgreSQL en production).
 
 Par défaut, si DATABASE_URL n'est pas configurée dans .env, on retombe sur
-un fichier SQLite local (./generalsurg.db) afin que l'application démarre
+un fichier SQLite local (./orlsurgplan3d.db) afin que l'application démarre
 sans dépendance externe pour le développement. En production, définissez :
 
-    DATABASE_URL=postgresql+psycopg2://user:password@host:5432/generalsurg
+    DATABASE_URL=postgresql+psycopg2://user:password@host:5432/orlsurgplan3d
 
 Un docker-compose.yml est fourni à la racine du backend pour lancer un
 PostgreSQL local en une commande : `docker compose up -d db`.
@@ -16,7 +16,7 @@ import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./generalsurg.db")
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./orlsurgplan3d.db")
 
 connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
 engine = create_engine(DATABASE_URL, connect_args=connect_args, pool_pre_ping=True)

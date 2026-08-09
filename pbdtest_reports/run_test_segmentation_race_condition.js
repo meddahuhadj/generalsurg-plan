@@ -38,10 +38,10 @@ function assert(cond, msg) {
 
 // ── Mocks ──
 global.MODULES = {
-  hbp: { patient: { id: 'PAT-A-HBP' } },
-  colorectal: { patient: { id: 'PAT-B-COLORECTAL' } },
+  laryngologie: { patient: { id: 'PAT-A-LARYNGOLOGIE' } },
+  otologie: { patient: { id: 'PAT-B-OTOLOGIE' } },
 };
-global.state = { mod: 'hbp', settings: { apiBase: 'http://backend.test' } };
+global.state = { mod: 'laryngologie', settings: { apiBase: 'http://backend.test' } };
 global.guardReadOnly = () => false;
 global.getBackendToken = async () => 'fake-token';
 global.closeModal = () => {};
@@ -56,7 +56,7 @@ global.notify = (msg, type) => { lastNotify = { msg, type }; };
 // pollSegmentationJob simule un job long : pendant l'attente, le test change state.mod pour
 // simuler un changement de patient par le chirurgien.
 global.pollSegmentationJob = async (base, job_id) => {
-  state.mod = 'colorectal'; // ← le chirurgien bascule sur un AUTRE patient pendant le calcul
+  state.mod = 'otologie'; // ← le chirurgien bascule sur un AUTRE patient pendant le calcul
   return { segments: [{ label: 'Liver', volume_ml: 1234 }], liver_total_ml: 1234 };
 };
 

@@ -154,7 +154,7 @@ async def test_chat_falls_back_from_gemini_to_groq_on_network_failure(client_wit
 
     monkeypatch.setattr(httpx.AsyncClient, "post", fake_post)
 
-    r = client.post("/chat", json={"message": "Quel est le volume hépatique ?", "specialty": "hbp"})
+    r = client.post("/chat", json={"message": "Quel est le stade T du larynx ?", "specialty": "laryngologie"})
     assert r.status_code == 200
     body = r.json()
     assert body["source"] == "groq"
@@ -173,7 +173,7 @@ async def test_chat_returns_clean_503_when_all_providers_down(client_with_fake_a
 
     monkeypatch.setattr(httpx.AsyncClient, "post", always_down)
 
-    r = client.post("/chat", json={"message": "test", "specialty": "hbp"})
+    r = client.post("/chat", json={"message": "test", "specialty": "laryngologie"})
     assert r.status_code == 503
     detail = r.json()["detail"]
     assert "indisponibles" in detail
@@ -205,14 +205,14 @@ async def test_chat_breaker_opens_and_subsequent_calls_fail_fast(client_with_fak
 
     # Seuil par défaut du disjoncteur Gemini = 3 échecs consécutifs.
     for _ in range(3):
-        r = client.post("/chat", json={"message": "test", "specialty": "hbp"})
+        r = client.post("/chat", json={"message": "test", "specialty": "laryngologie"})
         assert r.status_code == 200
 
     assert resilience.GEMINI_BREAKER.state == "open"
     calls_before = gemini_calls["n"]
     assert calls_before == 3  # max_attempts=1 côté /chat (pas de retry interne pour un chat interactif)
 
-    r = client.post("/chat", json={"message": "test", "specialty": "hbp"})
+    r = client.post("/chat", json={"message": "test", "specialty": "laryngologie"})
     assert r.status_code == 200
     assert r.json()["source"] == "groq"
     # Le disjoncteur étant ouvert, Gemini n'a PAS été retenté :

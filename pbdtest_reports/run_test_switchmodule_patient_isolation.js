@@ -51,8 +51,8 @@ global.document = { body: { setAttribute() {} } };
 global.showLoader = () => {};
 global.hideLoader = () => {};
 global.MODULES = {
-  hbp: { name: 'HBP', patient: { id: 'PAT-A-HBP' } },
-  colorectal: { name: 'Colorectal', patient: { id: 'PAT-B-COLORECTAL' } },
+  laryngologie: { name: 'Laryngologie', patient: { id: 'PAT-A-LARYNGOLOGIE' } },
+  otologie: { name: 'Otologie', patient: { id: 'PAT-B-OTOLOGIE' } },
 };
 global.twin = { active: false };
 global.buildOrgan = () => {};
@@ -74,15 +74,15 @@ global.dicomIsoEnabled = true; // simule des voxels DICOM réels affichés pour 
 global._dicomDisposeIso = () => { dicomDisposeCalled = true; global.dicomIsoEnabled = false; };
 
 global.state = {
-  mod: 'hbp',
+  mod: 'laryngologie',
   anatomyMode: 'procedural',
   live: { history: [{ role: 'user', text: 'Quelle est la taille de la tumeur ?' }, { role: 'model', text: '4.5 cm au segment 7.' }] },
   registration: { tx: 12, ty: -8, tz: 3, rx: 0.1, ry: 0.05, rz: -0.02, rms: 2.4, targetLandmarks: [[1, 2, 3]], sourceLandmarks: [[1.1, 2.1, 3.1]] },
   mpr: {
     segments: {
       tumor: { label: 'Tumeur', voxels: new Set([10, 11, 12]) },
-      portal_vein: { label: 'Veine porte', voxels: new Set([20]) },
-      hepatic_vein: { label: 'Veine sus-hépatique', voxels: new Set() },
+      vessel: { label: 'Vaisseau à risque', voxels: new Set([20]) },
+      nerve: { label: 'Nerf à risque', voxels: new Set() },
     },
     _stagingData: { T: 'T3', N: 'N1', M: 'M0', bclc: 'B', childPugh: 'B7' },
     measurements: [{ type: 'distance', plane: 'axial', pts: [[0, 0], [1, 1]], value: 24.5, unit: 'mm' }],
@@ -91,7 +91,7 @@ global.state = {
     ischemia: { functionalFlrPct: 41.2, congestedML: 180.0, devascularizedML: 45.0, status: 'Ischémie critique' },
     curvedCut: { points: [[1,2],[3,4],[5,6]], active: true, wedgeResectedML: 220.0 },
     lastFLR: { totalML: 1450, resectedML: 700, flrPct: 51.7 },
-    // Volume DICOM RÉEL importé pour le patient HBP (pas une estimation) — la fuite la plus
+    // Volume DICOM RÉEL importé pour le patient Laryngologie (pas une estimation) — la fuite la plus
     // grave de toute cette famille de bugs si elle n'est pas nettoyée : de vraies coupes
     // scanner d'un patient continueraient à s'afficher (MPR + voxels 3D) pour un autre patient.
     volume: new Float32Array([100, 200, 300]),
@@ -104,26 +104,26 @@ global.state = {
 const code = [extractFunction(html, 'resetPatientState'), extractFunction(html, 'switchModule')].join('\n\n');
 eval(code);
 
-// Pré-conditions : le patient HBP a bien des données "sales" avant le changement de module.
-assert(state.mpr.segments.tumor.voxels.size === 3, 'pré-condition : voxels tumeur du patient HBP présents');
-assert(state.mpr._stagingData !== null, 'pré-condition : stadification du patient HBP présente');
-assert(realMeshGroup !== null, 'pré-condition : maillage réel du patient HBP chargé');
-assert(state.live.history.length === 2, 'pré-condition : historique Gemini Live du patient HBP présent');
-assert(state.mpr.couinaud.tumorSegments.length === 2, 'pré-condition : segments Couinaud infiltrés du patient HBP présents');
-assert(state.mpr.margins.status !== 'Non calculé', 'pré-condition : statut de marge du patient HBP présent');
-assert(state.mpr.ischemia.status !== 'Normal', 'pré-condition : statut d\'ischémie du patient HBP présent');
-assert(state.mpr.curvedCut.active === true, 'pré-condition : coupe curviligne du patient HBP active');
-assert(state.mpr.lastFLR !== null, 'pré-condition : dernier FLR du patient HBP présent');
-assert(state.registration.rms > 0, 'pré-condition : résultat de recalage du patient HBP présent');
-assert(state.mpr.volume !== null && state.mpr.fromDicom === true, 'pré-condition : volume DICOM réel du patient HBP présent');
-assert(dicomIsoEnabled === true, 'pré-condition : voxels DICOM 3D du patient HBP affichés');
+// Pré-conditions : le patient Laryngologie a bien des données "sales" avant le changement de module.
+assert(state.mpr.segments.tumor.voxels.size === 3, 'pré-condition : voxels tumeur du patient Laryngologie présents');
+assert(state.mpr._stagingData !== null, 'pré-condition : stadification du patient Laryngologie présente');
+assert(realMeshGroup !== null, 'pré-condition : maillage réel du patient Laryngologie chargé');
+assert(state.live.history.length === 2, 'pré-condition : historique Gemini Live du patient Laryngologie présent');
+assert(state.mpr.couinaud.tumorSegments.length === 2, 'pré-condition : segments Couinaud infiltrés du patient Laryngologie présents');
+assert(state.mpr.margins.status !== 'Non calculé', 'pré-condition : statut de marge du patient Laryngologie présent');
+assert(state.mpr.ischemia.status !== 'Normal', 'pré-condition : statut d\'ischémie du patient Laryngologie présent');
+assert(state.mpr.curvedCut.active === true, 'pré-condition : coupe curviligne du patient Laryngologie active');
+assert(state.mpr.lastFLR !== null, 'pré-condition : dernier FLR du patient Laryngologie présent');
+assert(state.registration.rms > 0, 'pré-condition : résultat de recalage du patient Laryngologie présent');
+assert(state.mpr.volume !== null && state.mpr.fromDicom === true, 'pré-condition : volume DICOM réel du patient Laryngologie présent');
+assert(dicomIsoEnabled === true, 'pré-condition : voxels DICOM 3D du patient Laryngologie affichés');
 
-switchModule('colorectal');
+switchModule('otologie');
 
 // Après changement de module (= changement de patient), plus aucune trace du patient précédent.
-assert(state.mod === 'colorectal', 'state.mod mis à jour vers le nouveau module');
+assert(state.mod === 'otologie', 'state.mod mis à jour vers le nouveau module');
 assert(state.mpr.segments.tumor.voxels.size === 0, 'voxels tumeur du patient précédent effacés');
-assert(state.mpr.segments.portal_vein.voxels.size === 0, 'voxels veine porte du patient précédent effacés');
+assert(state.mpr.segments.vessel.voxels.size === 0, 'voxels vaisseau à risque du patient précédent effacés');
 assert(state.mpr._stagingData === null || state.mpr._stagingData === undefined, 'stadification TNM/BCLC/Child-Pugh du patient précédent effacée');
 assert(state.mpr.measurements.length === 0, 'mesures/annotations MPR du patient précédent effacées');
 assert(realMeshGroup === null, 'maillage de segmentation réelle du patient précédent déchargé');

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-GeneralSurg Plan MIMO — Backend Sécurisé v2.0 (multi-spécialités)
+ORLSurgPlan3D — Backend Sécurisé v2.0 (multi-spécialités)
 ==================================================================
 Version "production-ready" (priorité 1 de la feuille de route) :
   ✓ Authentification forte : mot de passe (bcrypt) + 2FA TOTP optionnelle par utilisateur
@@ -21,15 +21,17 @@ Démarrage rapide (SQLite, aucune dépendance externe) :
 
 Démarrage avec PostgreSQL :
     docker compose up -d db
-    # éditer .env : DATABASE_URL=postgresql+psycopg2://generalsurg:generalsurg@localhost:5432/generalsurg
+    # éditer .env : DATABASE_URL=postgresql+psycopg2://orlsurgplan3d:orlsurgplan3d@localhost:5432/orlsurgplan3d
     alembic -c migrations/alembic.ini upgrade head
     uvicorn main:app --reload --host 0.0.0.0 --port 8000
 """
 
 import os
+import sys
 import logging
 import time
 import traceback as _traceback
+import importlib
 from contextlib import asynccontextmanager
 from pathlib import Path
 from datetime import datetime
@@ -84,7 +86,7 @@ BOOTSTRAP_ADMIN_FULL_NAME = os.getenv("BOOTSTRAP_ADMIN_FULL_NAME", "").strip()
 
 # ── Logging structuré JSON + correlation IDs ───────────────────────────────
 setup_logging(os.getenv("LOG_LEVEL", "INFO"))
-logger = logging.getLogger("generalsurg.main")
+logger = logging.getLogger("orlsurgplan3d.main")
 
 # ── Garde-fou anti-mauvaise-config (priorité sécurité, ajouté suite à l'audit
 # de juillet 2026) ───────────────────────────────────────────────────────────
@@ -215,7 +217,7 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(title="GeneralSurg Plan MIMO — Backend", version="2.1.0", lifespan=lifespan)
+app = FastAPI(title="ORLSurgPlan3D — Backend", version="2.1.0", lifespan=lifespan)
 
 # ---------------------------------------------------------------------------
 # Middleware correlation ID — chaque requête reçoit un ID unique tracable
@@ -229,7 +231,7 @@ async def correlation_id_middleware(request: Request, call_next):
     response.headers["X-Correlation-ID"] = cid
     return response
 
-request_logger = logging.getLogger("generalsurg.request")
+request_logger = logging.getLogger("orlsurgplan3d.request")
 
 @app.middleware("http")
 async def request_logging_middleware(request: Request, call_next):
@@ -265,7 +267,7 @@ app.add_middleware(
 import traceback as _traceback
 from sqlalchemy.exc import OperationalError, DBAPIError
 
-resilience_logger = logging.getLogger("generalsurg.resilience")
+resilience_logger = logging.getLogger("orlsurgplan3d.resilience")
 
 
 def _log_incident(request: Request, exc: Exception) -> str:
@@ -361,69 +363,62 @@ _real_services = [
     ("pacs_router_v2", "router"),
     ("biomechanics_engine", "router"),
     ("voice_llm_service", "router"),
-    ("voice_llm_service", "compliance_router"),
+    ("compliance_status", "router"),
     ("hl7_anesthesia_service", "router"),
+    ("routers.surgical_planning", "router"),
 ]
 PACS_ROUTER_AVAILABLE = True
 for _mod_name, _router_attr in _real_services:
     try:
-        _mod = __import__(_mod_name)
+        _mod = importlib.import_module(_mod_name)
         app.include_router(getattr(_mod, _router_attr))
     except Exception as e:  # noqa: BLE001
         logger.warning("Service %s.%s non chargé: %s", _mod_name, _router_attr, e)
         PACS_ROUTER_AVAILABLE = False
 
-# ── Services EXPLORATOIRES (Jalons M21-M40) ─────────────────────────────────
-# Nanorobots, interface cerveau-machine, cryo-BNCT, bio-impression, etc. Ce
-# sont des concepts de recherche, PAS des dispositifs médicaux validés — ils
-# ne doivent JAMAIS être exposés en production. Désactivés par défaut ; ne se
-# chargent que si RESEARCH_MODE=true est explicitement positionné dans
-# l'environnement (jamais en clinique, uniquement pour démonstration interne
-# ou R&D encadrée). Voir aussi le Mode Recherche du frontend (bouton 🔬),
-# qui doit rester cohérent avec ce flag côté serveur.
+# ── Deux versions du logiciel ──────────────────────────────────────────────
+#   • "Recherche / Démo"  : la version actuelle, qui montre le concept et les
+#     innovations via les modules de `demo/` (patients fictifs, exemples de
+#     structures de données). Elle affiche une mention explicite "Ce logiciel
+#     n'est pas destiné à un usage clinique" (voir /health et le frontend).
+#   • "Clinique / Production" : la version dépouillée — uniquement les
+#     fonctionnalités validées (Segmentation, Visualisation, Planification de
+#     coupe, Interopérabilité). Aucun module demo/ n'est chargé.
 #
-# monai_pipeline_v2 est inclus ici (et non dans _real_services) car audité et
-# confirmé n'appeler ni torch ni monai : il retourne des volumes hépatiques et
-# segments de Couinaud FIXES et IDENTIQUES pour tout patient (aucun calcul
-# réel), tout en écrivant un enregistrement 'READY' en base avec un hash
-# d'audit — sans jamais l'indiquer. Non utilisé par le frontend actuel
-# (voir index.html / assets/app-part2.js, qui appelle /segmentation/auto et
-# segmentation_service.py, la vraie intégration TotalSegmentator).
-#
-# real_patient_dicom_mesh_service a été déplacé ici depuis _real_services :
-# malgré son nom, il ne contacte aucun PACS et n'exécute aucune IA — c'est un
-# dictionnaire codé en dur de 2 patients fictifs, auparavant étiqueté
-# "CERTIFIED_CLINICAL_REAL_ANATOMY". Corrigé pour être honnête (voir le
-# fichier), mais reste un module de démonstration, pas un flux clinique réel.
-RESEARCH_MODE = os.environ.get("RESEARCH_MODE", "false").strip().lower() in ("1", "true", "yes")
-_exploratory_services = [
-    "monai_pipeline_v2",
-    "webxr_spatial_service",
-    "robotic_ras_service",
-    "genai_microsurgery_service",
-    "pqc_bioprinting_service",
-    "bci_cortical_service",
-    "nanorobotics_swarm_service",
-    "autonomous_robotic_laser_service",
-    "epigenetic_sonogenetics_service",
-    "raman_spectroscopy_plasma_service",
-    "cryo_ire_bnct_service",
-    "organoid_biomimetic_assembly_service",
-    "iknife_reims_theranostics_service",
-    "real_patient_dicom_mesh_service",
-]
-if RESEARCH_MODE:
-    logger.warning("RESEARCH_MODE=true — chargement des services exploratoires "
-                   "NON VALIDÉS CLINIQUEMENT. Ne jamais activer ce flag en production.")
-    for _mod_name in _exploratory_services:
+# DEMO_MODE est activé par défaut (version de démonstration). Pour la version
+# clinique : `APP_MODE=clinical` (ou `DEMO_MODE=false`) dans l'environnement.
+APP_MODE = os.getenv("APP_MODE", "").strip().lower()
+DEMO_MODE = (APP_MODE != "clinical") and os.getenv("DEMO_MODE", "true").strip().lower() in ("1", "true", "yes")
+
+if APP_MODE == "clinical":
+    logger.info("APP_MODE=clinical — version CLINIQUE / PRODUCTION : seuls les modules "
+                "cliniquement validés sont chargés (Segmentation, Visualisation, "
+                "Planification de coupe, Interopérabilité). Aucun module demo/.")
+elif DEMO_MODE:
+    logger.warning("Version DÉMO — CE LOGICIEL N'EST PAS DESTINÉ À UN USAGE CLINIQUE. "
+                   "Les modules de demo/ sont chargés à des fins d'illustration uniquement.")
+else:
+    logger.info("DEMO_MODE=false — aucun module demo/ chargé.")
+
+if DEMO_MODE:
+    # Modules de démonstration (demo/) : exemples de structures de données et de
+    # concepts. Chargés UNIQUEMENT dans la version "Recherche / Démo" — jamais
+    # dans la version clinique. Chaque module est chargé dans son propre
+    # try/except pour qu'une erreur d'import n'empoisonne pas le reste de l'app.
+    _demo_modules = [
+        ("demo_patient_dicom_mesh_service", "router"),
+        ("demo_synthetic_organ_service", "router"),
+    ]
+    _demo_dir = (Path(os.path.dirname(__file__)).parent / "demo").resolve()
+    if _demo_dir.is_dir() and str(_demo_dir) not in sys.path:
+        sys.path.insert(0, str(_demo_dir))
+    for _mod_name, _attr in _demo_modules:
         try:
             _mod = __import__(_mod_name)
-            app.include_router(_mod.router)
+            app.include_router(getattr(_mod, _attr))
+            logger.info("Module de démonstration %s chargé (version DÉMO).", _mod_name)
         except Exception as e:  # noqa: BLE001
-            logger.warning("Service exploratoire %s non chargé: %s", _mod_name, e)
-else:
-    logger.info("Mode clinique (RESEARCH_MODE=false) — %d services exploratoires non chargés",
-                len(_exploratory_services))
+            logger.warning("Module de démonstration %s non chargé: %s", _mod_name, e)
 
 
 # ---------------------------------------------------------------------------
@@ -452,6 +447,10 @@ async def health():
             "pacs": resilience.PACS_BREAKER.status(),
         },
         uptime_seconds=round(_time.monotonic() - _start_time, 1),
+        app_mode="clinical" if APP_MODE == "clinical" else "demo",
+        demo_mode=DEMO_MODE,
+        disclaimer=("Ce logiciel n'est pas destiné à un usage clinique." if DEMO_MODE
+                    else "Prototype logiciel — certification CE MDR / FDA 510(k) en cours."),
     )
 
 
@@ -583,7 +582,7 @@ async def serve_frontend():
             1,
         )
         return HTMLResponse(html)
-    return {"msg": "GeneralSurg Plan MIMO API — voir /docs pour la documentation."}
+    return {"msg": "ORLSurgPlan3D API — voir /docs pour la documentation."}
 
 
 # Fichiers PWA à la racine (manifest, service worker, favicon) : on les sert

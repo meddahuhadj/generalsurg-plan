@@ -33,11 +33,11 @@ def fhir_patient(p) -> Dict[str, Any]:
     return {
         "resourceType": "Patient",
         "id": p.id,
-        "identifier": [{"system": "urn:generalsurgplan:patient-id", "value": p.id}],
+        "identifier": [{"system": "urn:orlsurgplan3d:patient-id", "value": p.id}],
         "name": [{"text": p.nom}],
         "gender": {"M": "male", "F": "female"}.get(p.sexe, "unknown"),
         "extension": [
-            {"url": "urn:generalsurgplan:age-years", "valueInteger": p.age},
+            {"url": "urn:orlsurgplan3d:age-years", "valueInteger": p.age},
         ],
     }
 
@@ -152,8 +152,8 @@ def _hl7_pid(p, sex: str) -> str:
     return f"PID|1||{p.id}||{_hl7_escape(p.nom)}|||{sex}|||||||||||"
 
 
-def hl7_oru_r01(p, volumetrie: Optional[dict], segments: List, sender_app: str = "GeneralSurgPlan",
-                 sender_facility: str = "GeneralSurgPlan", message_control_id: Optional[str] = None) -> str:
+def hl7_oru_r01(p, volumetrie: Optional[dict], segments: List, sender_app: str = "ORLSurgPlan3D",
+                 sender_facility: str = "ORLSurgPlan3D", message_control_id: Optional[str] = None) -> str:
     """Génère un message HL7 v2.5 ORU^R01 texte (segments MSH/PID/OBR/OBX)
     transportant les résultats de planification chirurgicale, destiné à être
     envoyé à un moteur d'interface HL7 (Mirth, Ensemble, etc.) qui l'insérera
@@ -188,7 +188,7 @@ def hl7_oru_r01(p, volumetrie: Optional[dict], segments: List, sender_app: str =
     return "\r".join(segs) + "\r"
 
 
-def hl7_adt_a08(p, sender_app: str = "GeneralSurgPlan", sender_facility: str = "GeneralSurgPlan",
+def hl7_adt_a08(p, sender_app: str = "ORLSurgPlan3D", sender_facility: str = "ORLSurgPlan3D",
                  message_control_id: Optional[str] = None) -> str:
     """Génère un message HL7 v2.5 ADT^A08 (« Update Patient Information »),
     envoyé quand une fiche patient est créée ou modifiée dans l'application,
@@ -210,8 +210,8 @@ def hl7_adt_a08(p, sender_app: str = "GeneralSurgPlan", sender_facility: str = "
     return "\r".join(segs) + "\r"
 
 
-def hl7_orm_o01(p, procedure_label: str, sender_app: str = "GeneralSurgPlan",
-                 sender_facility: str = "GeneralSurgPlan", message_control_id: Optional[str] = None,
+def hl7_orm_o01(p, procedure_label: str, sender_app: str = "ORLSurgPlan3D",
+                 sender_facility: str = "ORLSurgPlan3D", message_control_id: Optional[str] = None,
                  order_control_id: Optional[str] = None) -> str:
     """Génère un message HL7 v2.5 ORM^O01 (demande d'examen/intervention),
     typiquement pour transmettre une demande d'intervention chirurgicale

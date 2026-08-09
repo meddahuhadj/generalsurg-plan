@@ -1,14 +1,19 @@
 # -*- coding: utf-8 -*-
 """
-real_patient_dicom_mesh_service.py — Prototype de démonstration (Jalon M37)
+demo_patient_dicom_mesh_service.py — Exemple de démonstration (dossier demo/)
 ===================================================================================================
-⚠️ AVERTISSEMENT HONNÊTE : malgré son nom et sa documentation d'origine, ce module NE fait AUCUNE
-ingestion PACS réelle, AUCUNE segmentation IA réelle, et NE calcule AUCUN maillage 3D réel. C'est un
-dictionnaire codé en dur de deux patients FICTIFS ("Sophie Martin", "Jean Dupont") dont les volumes,
-diagnostics et fichiers .gltf référencés n'existent pas sur disque.
+⚠️ AVERTISSEMENT HONNÊTE : ce module NE fait AUCUNE ingestion PACS réelle, AUCUNE segmentation
+automatique réelle, et NE calcule AUCUN maillage 3D réel. C'est un dictionnaire codé en dur de
+deux patients FICTIFS ("Sophie Martin", "Jean Dupont") dont les volumes, diagnostics et fichiers
+.gltf référencés n'existent pas sur disque.
 
-Ce module est désormais chargé uniquement en mode recherche (`RESEARCH_MODE=true`, voir
-`backend/main.py`) et n'est plus actif par défaut, car il n'a rien de "réel" malgré son nom.
+Ce module vit dans `demo/`, en dehors du chemin de l'API (`backend/`) : il illustre la STRUCTURE
+des données qu'un vrai pipeline PACS → segmentation → maillage produirait, rien de plus. Il n'est
+chargé que par la version "Recherche / Démo" du logiciel (flag `DEMO_MODE=true`) et JAMAIS par la
+version "Clinique / Production" (`DEMO_MODE=false` ou `APP_MODE=clinical`).
+
+Mention obligatoire : CE LOGICIEL N'EST PAS DESTINÉ À UN USAGE CLINIQUE — version de
+démonstration. Les données ci-dessous sont fictives.
 
 Pour une intégration PACS → segmentation → maillage réellement fonctionnelle, voir
 `backend/pacs_router.py` / `backend/pacs_router_v2.py` (import DICOMweb/DIMSE réel) et
@@ -20,9 +25,17 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
+import sys
 import uuid
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
+
+# Le module vit hors de backend/ : on ajoute ce dossier au sys.path pour pouvoir
+# réutiliser les helpers backend (db, logging) dans ce démo. Voir demo/__init__.py.
+_BACKEND_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "backend"))
+if _BACKEND_DIR not in sys.path:
+    sys.path.insert(0, _BACKEND_DIR)
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
@@ -34,7 +47,7 @@ from logging_config import get_logger
 
 logger = get_logger(__name__)
 
-router = APIRouter(prefix="/api/v2/patient-anatomy", tags=["fictional-demo-anatomy-NOT-real"])
+router = APIRouter(prefix="/api/v2/demo/patient-anatomy", tags=["demo-fictional-anatomy"])
 
 # ---------------------------------------------------------------------------
 # Modèles Pydantic

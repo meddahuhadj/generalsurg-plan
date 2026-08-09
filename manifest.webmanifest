@@ -1,7 +1,7 @@
 {
-  "name": "GeneralSurg Plan — Plateforme Chirurgicale Modulaire",
-  "short_name": "GeneralSurg Plan",
-  "description": "Planification chirurgicale assistée par IA (HBP, Colorectal, Gastrique, Thyroïde, Thoracique, Cardiaque, Urologique) — prototype de démonstration, non certifié, ne pas utiliser en contexte clinique réel.",
+  "name": "ORLSurgPlan3D — Plateforme Chirurgicale Modulaire",
+  "short_name": "ORLSurgPlan3D",
+  "description": "Planification chirurgicale ORL assistée par IA (Laryngologie, Otologie, Rhinologie, Cervico-Facial, ORL Pédiatrique, Anesthésie-Réanimation) — prototype de démonstration, non certifié, ne pas utiliser en contexte clinique réel.",
   "id": "/",
   "start_url": "/",
   "scope": "/",
@@ -31,29 +31,29 @@
       "sizes": "512x512",
       "type": "image/png",
       "form_factor": "narrow",
-      "label": "Module de planification chirurgicale HBP"
+      "label": "Module de planification chirurgicale Laryngologie"
     }
   ],
   "shortcuts": [
     {
-      "name": "Module HBP",
-      "short_name": "HBP",
-      "description": "Chirurgie hépatobiliaire et pancréatique",
-      "url": "/?mod=hbp",
+      "name": "Module Laryngologie",
+      "short_name": "Laryngologie",
+      "description": "Chirurgie laryngée et des voies aéro-digestives supérieures",
+      "url": "/?mod=laryngologie",
       "icons": [{ "src": "assets/icons/icon-192.png", "sizes": "192x192" }]
     },
     {
-      "name": "Module Colorectal",
-      "short_name": "Colorectal",
-      "description": "Chirurgie colorectale",
-      "url": "/?mod=colorectal",
+      "name": "Module Otologie",
+      "short_name": "Otologie",
+      "description": "Chirurgie otologique",
+      "url": "/?mod=otologie",
       "icons": [{ "src": "assets/icons/icon-192.png", "sizes": "192x192" }]
     },
     {
-      "name": "Module Thoracique",
-      "short_name": "Thoracique",
-      "description": "Chirurgie thoracique",
-      "url": "/?mod=thoracic",
+      "name": "Module Rhinologie",
+      "short_name": "Rhinologie",
+      "description": "Chirurgie rhino-sinusienne",
+      "url": "/?mod=rhinologie",
       "icons": [{ "src": "assets/icons/icon-192.png", "sizes": "192x192" }]
     }
   ]

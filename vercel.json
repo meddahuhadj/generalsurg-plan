@@ -1,0 +1,22 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "rewrites": [
+    { "source": "/auth/:path*", "destination": "/api/index" },
+    { "source": "/patients", "destination": "/api/index" },
+    { "source": "/patients/:path*", "destination": "/api/index" },
+    { "source": "/chat", "destination": "/api/index" },
+    { "source": "/ws/:path*", "destination": "/api/index" },
+    { "source": "/audit", "destination": "/api/index" },
+    { "source": "/audit/:path*", "destination": "/api/index" },
+    { "source": "/health", "destination": "/api/index" },
+    { "source": "/healthz", "destination": "/api/index" },
+    { "source": "/readyz", "destination": "/api/index" },
+    { "source": "/specialties", "destination": "/api/index" }
+  ],
+  "headers": [
+    {
+      "source": "/sw.js",
+      "headers": [{ "key": "Cache-Control", "value": "no-cache" }]
+    }
+  ]
+}

@@ -1,5 +1,5 @@
 """
-Alembic migration runner — GeneralSurg Plan MIMO
+Alembic migration runner — ORLSurgPlan3D
 """
 
 import os

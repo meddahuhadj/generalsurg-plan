@@ -1,4 +1,4 @@
-// sw.js — Service Worker de GeneralSurg Plan
+// sw.js — Service Worker d'ORLSurgPlan3D
 // =============================================================================
 // Objectif : rendre l'app shell (HTML/CSS/JS statiques) installable et
 // disponible hors-ligne, SANS jamais mettre en cache une réponse d'API.
@@ -28,9 +28,9 @@
 // chaque déploiement : c'est la clé de cache. L'ancien cache est supprimé
 // automatiquement lors de l'activation du nouveau SW.
 // En CI/CD, remplacez cette ligne par :
-//   const CACHE_VERSION = 'generalsurg-shell-__BUILD_TIMESTAMP__';
+//   const CACHE_VERSION = 'orlsurgplan3d-shell-__BUILD_TIMESTAMP__';
 // et substituez __BUILD_TIMESTAMP__ avec `date +%Y%m%d%H%M%S` dans le pipeline.
-const CACHE_VERSION = 'generalsurg-shell-v2-20260731';
+const CACHE_VERSION = 'orlsurgplan3d-shell-v2-20260731';
 
 // ── Ressources du shell à pré-cacher ─────────────────────────────────────────
 // Uniquement des ressources statiques versionnées, jamais de données patient.

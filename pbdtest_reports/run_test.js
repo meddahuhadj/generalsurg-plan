@@ -6,7 +6,7 @@ global.THREE = require('three');
 const fs = require('fs');
 const code = fs.readFileSync(__dirname + '/extracted_pbd.js', 'utf8');
 // Le code utilise `state.mod` — on le simule minimalement.
-global.state = { mod: 'hbp' };
+global.state = { mod: 'laryngologie' };
 eval(code);
 
 function assert(cond, msg) {

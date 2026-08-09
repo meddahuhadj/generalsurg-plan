@@ -34,7 +34,7 @@ from passlib.context import CryptContext
 JWT_ALG = "HS256"
 JWT_TTL_MIN = int(os.getenv("JWT_TTL_MIN", "480"))
 PRE_AUTH_TTL_MIN = 5
-TOTP_ISSUER = os.getenv("TOTP_ISSUER", "GeneralSurg Plan MIMO")
+TOTP_ISSUER = os.getenv("TOTP_ISSUER", "ORLSurgPlan3D")
 
 # Sécurité : si aucun JWT_SECRET n'est fourni dans .env, on génère un secret
 # aléatoire au démarrage (plutôt que la valeur publique "CHANGEZ-MOI-EN-PRODUCTION"

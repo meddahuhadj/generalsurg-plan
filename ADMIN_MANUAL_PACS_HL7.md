@@ -1,5 +1,5 @@
 # Manuel Technique d'Administration Hospitalière & Ingénierie Biomédicale
-## GeneralSurgPlan3D NextGen — Architecture & Interopérabilité (2026–2046)
+## ORLSurgPlan3D NextGen — Architecture & Interopérabilité (2026–2046)
 
 **Version :** 2.4.0-Enterprise-MDR  
 **Classification Réglementaire :** CE MDR 2017/745 Classe IIb / C & FDA 510(k) Equivalence  
@@ -8,7 +8,7 @@
 ---
 
 ## 1. Vue d'Ensemble de l'Infrastructure et Règlements de Sécurité
-GeneralSurgPlan3D NextGen est conçu comme un micro-écosystème conteneurisé à haute disponibilité, déployable en centre de traumatologie ou en hôpital universitaire.
+ORLSurgPlan3D NextGen est conçu comme un micro-écosystème conteneurisé à haute disponibilité, déployable en centre de traumatologie ou en hôpital universitaire.
 
 ```
 +-----------------------------------------------------------------------------------+
@@ -43,12 +43,12 @@ Le serveur PACS intégré (Orthanc) communique de manière bidirectionnelle avec
 ### Table des AE Titles et Ports
 | Composant | AE Title | Adresse IP / Host | Port TCP | Protocole |
 | :--- | :--- | :--- | :--- | :--- |
-| **Orthanc PACS** | `GENERALSURG_PACS` | `orthanc` (ou IP serveur) | **4242** | DICOM C-STORE / C-FIND |
-| **Passerelle WADO** | `GENERALSURG_WEB` | `localhost:8042` | **8042** | HTTP REST / DICOMweb (QIDO-RS / WADO-RS) |
+| **Orthanc PACS** | `ORLSURGPLAN3D_PACS` | `orthanc` (ou IP serveur) | **4242** | DICOM C-STORE / C-FIND |
+| **Passerelle WADO** | `ORLSURGPLAN3D_WEB` | `localhost:8042` | **8042** | HTTP REST / DICOMweb (QIDO-RS / WADO-RS) |
 | **Scanner Hospitalier** | `CT_TRAUMA_01` | *À définir par le biomédical* | 104 / 4006 | DICOM C-ECHO / C-STORE |
 
 ### Configuration d'importation automatique WADO-RS
-Dans le fichier `orthanc.json` de l'hôpital, autorisez les requêtes du routeur PACS de GeneralSurgPlan3D :
+Dans le fichier `orthanc.json` de l'hôpital, autorisez les requêtes du routeur PACS d'ORLSurgPlan3D :
 ```json
 {
   "DicomWeb": {
@@ -84,21 +84,21 @@ Pour alimenter le module peropératoire **🏥 Bloc IA (SurgOR-AI)** et déclenc
 Sur le serveur Linux GPU (NVIDIA RTX A6000 / L40S) du centre de calcul hospitalier :
 ```bash
 # 1. Cloner le workspace clinique
-cd /opt/generalsurgplan3d
+cd /opt/orlsurgplan3d
 
 # 2. Lancer l'assemblage et le démarrage des conteneurs
 docker compose -f docker-compose.yml up -d --build
 
 # 3. Vérifier la santé du système et la conformité SHA-256
-docker exec -it generalsurg_app python backend/healthcheck_nextgen.py
+docker exec -it orlsurgplan3d_app python backend/healthcheck_nextgen.py
 ```
 
 ### Procédure de Sauvegarde & Sauvetage Après Sinistre (Disaster Recovery)
 Le chaînage cryptographique SHA-256 nécessite une sauvegarde cohérente et simultanée de la base de données et des maillages :
 ```bash
 # Snapshot quotidien à chaud (sans interruption de service au bloc)
-docker exec generalsurg_db pg_dump -U surguser -d generalsurg_db -F c -b -v -f /tmp/backup_db_$(date +%F).dump
-tar -czf /mnt/nfs_hospital/backups/generalsurg_backup_$(date +%F).tar.gz /tmp/backup_db_*.dump /tmp/storage/meshes_v2/
+docker exec orlsurgplan3d_db pg_dump -U surguser -d orlsurgplan3d_db -F c -b -v -f /tmp/backup_db_$(date +%F).dump
+tar -czf /mnt/nfs_hospital/backups/orlsurgplan3d_backup_$(date +%F).tar.gz /tmp/backup_db_*.dump /tmp/storage/meshes_v2/
 ```
 
 ---

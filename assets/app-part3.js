@@ -59,18 +59,21 @@
                 // Adaptation dynamique du moteur de dictée CCAM selon la spécialité (Jalon M10)
                 const btnD1 = document.getElementById('btn-dict-1');
                 const btnD2 = document.getElementById('btn-dict-2');
-                if (id === 'colorectal') {
-                  if (btnD1) { btnD1.innerHTML = '🔊 Dictée : « Hémicolectomie droite laparoscopique avec anastomose iléo-colique »'; btnD1.setAttribute('onclick', "simulateCcamDictation('hemicolectomie')"); }
-                  if (btnD2) { btnD2.innerHTML = '🔊 Dictée : « Résection antérieure du rectum moyen avec exérèse mésorectale totale TME »'; btnD2.setAttribute('onclick', "simulateCcamDictation('rectum')"); }
-                } else if (id === 'gastrique') {
-                  if (btnD1) { btnD1.innerHTML = '🔊 Dictée : « Gastrectomie totale avec curage ganglionnaire D2 et anse en Y de Roux »'; btnD1.setAttribute('onclick', "simulateCcamDictation('gastrectomie')"); }
-                  if (btnD2) { btnD2.innerHTML = '🔊 Dictée : « Gastrectomie subtotale distale pour adénocarcinome antral »'; btnD2.setAttribute('onclick', "simulateCcamDictation('subtotale')"); }
-                } else if (id === 'thoracique') {
-                  if (btnD1) { btnD1.innerHTML = '🔊 Dictée : « Lobectomie pulmonaire supérieure droite thoracoscopique VATS »'; btnD1.setAttribute('onclick', "simulateCcamDictation('lobectomie')"); }
-                  if (btnD2) { btnD2.innerHTML = '🔊 Dictée : « Segmentectomie anatomique S6 avec curage radical médiastinal »'; btnD2.setAttribute('onclick', "simulateCcamDictation('segmentectomie_thor')"); }
+                if (id === 'otologie') {
+                  if (btnD1) { btnD1.innerHTML = '🔊 Dictée : « Tympanoplastie de type I avec greffe de cartilage tragal »'; btnD1.setAttribute('onclick', "simulateCcamDictation('tympanoplastie')"); }
+                  if (btnD2) { btnD2.innerHTML = '🔊 Dictée : « Mastoïdectomie avec exérèse de cholestéatome et ossiculoplastie en un temps »'; btnD2.setAttribute('onclick', "simulateCcamDictation('mastoidectomie')"); }
+                } else if (id === 'rhinologie') {
+                  if (btnD1) { btnD1.innerHTML = '🔊 Dictée : « Chirurgie endoscopique des sinus bilatérale avec méatotomie moyenne »'; btnD1.setAttribute('onclick', "simulateCcamDictation('cees')"); }
+                  if (btnD2) { btnD2.innerHTML = '🔊 Dictée : « Septoplastie avec turbinectomie inférieure bilatérale »'; btnD2.setAttribute('onclick', "simulateCcamDictation('septoplastie')"); }
+                } else if (id === 'cervicofacial') {
+                  if (btnD1) { btnD1.innerHTML = '🔊 Dictée : « Parotidectomie superficielle droite avec neuromonitoring du nerf facial »'; btnD1.setAttribute('onclick', "simulateCcamDictation('parotidectomie')"); }
+                  if (btnD2) { btnD2.innerHTML = '🔊 Dictée : « Curage ganglionnaire cervical fonctionnel des niveaux II à IV »'; btnD2.setAttribute('onclick', "simulateCcamDictation('curage_cervical')"); }
+                } else if (id === 'pediatrique') {
+                  if (btnD1) { btnD1.innerHTML = '🔊 Dictée : « Amygdalectomie bilatérale avec adénoïdectomie pour syndrome d\'apnées obstructives »'; btnD1.setAttribute('onclick', "simulateCcamDictation('amygdalectomie')"); }
+                  if (btnD2) { btnD2.innerHTML = '🔊 Dictée : « Pose d\'aérateurs trans-tympaniques bilatéraux pour otite séro-muqueuse chronique »'; btnD2.setAttribute('onclick', "simulateCcamDictation('att')"); }
                 } else {
-                  if (btnD1) { btnD1.innerHTML = '🔊 Dictée : « Hépatectomie droite réglée par laparotomie avec clampage pédiculaire de 18 min »'; btnD1.setAttribute('onclick', "simulateCcamDictation('hepatectomie')"); }
-                  if (btnD2) { btnD2.innerHTML = '🔊 Dictée : « Cholécystectomie cœlioscopique pour lithiase biliaire symptomatique »'; btnD2.setAttribute('onclick', "simulateCcamDictation('cholecystectomie')"); }
+                  if (btnD1) { btnD1.innerHTML = '🔊 Dictée : « Laryngectomie totale avec curage cervical fonctionnel bilatéral »'; btnD1.setAttribute('onclick', "simulateCcamDictation('laryngectomie')"); }
+                  if (btnD2) { btnD2.innerHTML = '🔊 Dictée : « Cordectomie transorale au laser CO2 pour carcinome T1a de la corde vocale droite »'; btnD2.setAttribute('onclick', "simulateCcamDictation('cordectomie')"); }
                 }
                 notify('Module ' + MODULES[id].short + ' chargé — Dictées CCAM auto-configurées', 'ok');
               }, 800);
@@ -95,9 +98,9 @@
             let html = `<div class="sidebar-scroll">`;
             let planningInfo = '';
             const room1 = I18N.t('sidebar.room', { n: 1 });
-            if (p.id === '48392-HEP') planningInfo = `${room1} • 10:30 - 14:30 (${I18N.t('sidebar.statusOngoing')})`;
-            else if (p.id === '33815-TH') planningInfo = `${room1} • 08:00 - 10:00 (${I18N.t('sidebar.statusDone')})`;
-            else if (p.id === '51027-CR') planningInfo = `${room1} • 15:00 - 18:00 (${I18N.t('sidebar.statusPlanned')})`;
+            if (p.id === '40218-LAR') planningInfo = `${room1} • 10:30 - 14:30 (${I18N.t('sidebar.statusOngoing')})`;
+            else if (p.id === '52130-OTO') planningInfo = `${room1} • 08:00 - 10:00 (${I18N.t('sidebar.statusDone')})`;
+            else if (p.id === '61045-RHI') planningInfo = `${room1} • 15:00 - 18:00 (${I18N.t('sidebar.statusPlanned')})`;
             else planningInfo = I18N.t('sidebar.notScheduledToday');
 
             // Patient card
@@ -265,7 +268,12 @@
     <div id="analyse-body">Calcul en cours...</div>
   </div>`;
 
-            body.innerHTML = planHtml + implantHtml + chatHtml + analyseHtml;
+            // Plan chirurgical pane (FLR/marge/FEM via backend — planification réelle)
+            let planchirHtml = `<div class="rtab-pane" id="pane-planchir">
+    <div id="planchir-body">Connexion au backend…</div>
+  </div>`;
+
+            body.innerHTML = planHtml + implantHtml + chatHtml + analyseHtml + planchirHtml;
             setTab(state.tab);
             runAnalysis();
           }
@@ -282,7 +290,7 @@
             let tissue = 0;
             for (let i = 0; i < state.mpr.volume.length; i++) if (state.mpr.volume[i] > 15) tissue++;
             const fracTissue = tissue / (N * N * N);
-            const refML = { hbp: 1450, colorectal: 350, gastrique: 1100, thyroide: 20, thoracique: 4500, cardiaque: 300 }[state.mod] || 500;
+            const refML = { laryngologie: 15, otologie: 2, rhinologie: 40, cervicofacial: 25, pediatrique: 10, anesthesie_reanimation: 500 }[state.mod] || 500;
             // Normalise against the expected fraction for a centred ellipsoid (~0.28) so refML stays the anchor.
             return refML * (fracTissue / 0.28);
           }
@@ -401,6 +409,20 @@
 
           async function exportPlan() {
             const mod = MODULES[state.mod];
+            // Si le backend est configuré et qu'un plan chirurgical RETENU (SELECTED) existe,
+            // l'export passe par le vrai endpoint DICOM SR du plan calculé sur le maillage segmenté.
+            // Sinon, fallback honnête : export JSON local clairement étiqueté estimation procédurale.
+            if (state.settings.apiBase) {
+              try {
+                const plans = await planChirurgicalList(mod.patient.id);
+                const selected = plans.find(p => p.status === 'SELECTED');
+                if (selected) {
+                  await planChirurgicalExport(mod.patient.id, selected.id, 'dicom-sr');
+                  notify('Export DICOM SR du plan chirurgical retenu généré', 'ok');
+                  return;
+                }
+              } catch (e) { /* fall through to local export */ }
+            }
             const realVol = getRealSegmentationVolumeMl();
             const organVol = realVol != null ? realVol : computeOrganVolumeMl();
             const volumeSource = realVol != null ? 'real_segmentation_totalsegmentator' : 'procedural_estimate_not_clinical';
@@ -408,23 +430,13 @@
               patient: { id: mod.patient.id, nom: mod.patient.nom },
               specialty: state.mod,
               volumetrie: { organ_volume_ml: Math.round(organVol), remnant_pct: 60, volume_source: volumeSource },
-              notes: 'Export généré depuis GeneralSurg Plan MIMO'
+              notes: 'Export généré depuis ORLSurgPlan3D'
                 + (volumeSource === 'procedural_estimate_not_clinical'
                   ? ' — ⚠ volume_organe = estimation procédurale, PAS une mesure de segmentation clinique validée.'
                   : ' — volume_organe issu de la segmentation IA réelle (TotalSegmentator).')
             };
-            if (state.settings.apiBase) {
-              try {
-                const base = state.settings.apiBase.replace(/\/+$/, '');
-                const r = await fetch(base + '/export/dicom-sr', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                const data = await r.json();
-                downloadJson(data, `plan_${mod.patient.id}.json`);
-                notify('Export généré via le backend', 'ok');
-                return;
-              } catch (e) { /* fall through to local export */ }
-            }
             downloadJson(payload, `plan_${mod.patient.id}.json`);
-            notify('Export local généré (backend non configuré)', 'info');
+            notify('Export local généré (plan retenu inexistant ou backend non configuré)', 'info');
           }
 
           function downloadJson(obj, filename) {
@@ -434,10 +446,489 @@
             URL.revokeObjectURL(url);
           }
 
+          // ════════════════════════════════════════════════
+          //  PLAN CHIRURGICAL — pont frontend ↔ backend de planification réelle
+          //  (/api/v2/surgical-planning/...). Le backend calcule sur le maillage
+          //  segmenté : FLR (découpage tétraédrique), marge oncologique tumeur↔plan,
+          //  relaxation hyperélastique post-résection (FEM Mooney-Rivlin/Ogden), plans
+          //  persistés, plan retenu (SELECTED), export PDF / DICOM SR.
+          //  Les fonctions pures (chemin API, payload, tri anatomique, HTML) sont
+          //  testées par pbdtest_reports/run_test_plan_chirurgical.js.
+          // ════════════════════════════════════════════════
+
+          function planChirurgicalBase() {
+            return state.settings.apiBase ? state.settings.apiBase.replace(/\/+$/, '') : '';
+          }
+
+          function planChirurgicalAvailable() {
+            return !!(state.settings && state.settings.apiBase);
+          }
+
+          function planChirurgicalPatientId() {
+            const mod = MODULES[state.mod];
+            return mod && mod.patient ? mod.patient.id : '';
+          }
+
+          function planChirurgicalPath(kind, patientId, planId) {
+            const pid = encodeURIComponent(patientId || '');
+            const base = '/api/v2/surgical-planning/patients/' + pid + '/resection';
+            switch (kind) {
+              case 'simulate': return base + '/simulate';
+              case 'plans': return base + '/plans';
+              case 'plan': return base + '/plans/' + encodeURIComponent(planId || '');
+              case 'select': return base + '/plans/' + encodeURIComponent(planId || '') + '/select';
+              case 'export': return base + '/plans/' + encodeURIComponent(planId || '') + '/export';
+              default: return base;
+            }
+          }
+
+          async function planChirurgicalFetch(path, opts) {
+            opts = opts || {};
+            if (!planChirurgicalAvailable()) throw new Error('Planification réelle indisponible : aucun backend configuré (⚙ Paramètres).');
+            const headers = Object.assign({ 'Content-Type': 'application/json' }, opts.headers || {});
+            const token = await getBackendToken();
+            if (token) headers['Authorization'] = 'Bearer ' + token;
+            const init = { method: opts.method || 'GET', headers };
+            if (opts.body !== undefined && opts.body !== null) init.body = JSON.stringify(opts.body);
+            const r = await fetch(planChirurgicalBase() + path, init);
+            if (r.status === 401) await handleUnauthorized(r);
+            return r;
+          }
+
+          function planChirurgicalSimulatePayload(planePoint, planeNormal, marginMm, tissueType, model, runFem) {
+            return {
+              plane_point: [Number(planePoint[0]), Number(planePoint[1]), Number(planePoint[2])],
+              plane_normal: [Number(planeNormal[0]), Number(planeNormal[1]), Number(planeNormal[2])],
+              margin_mm: Math.min(50, Math.max(0, Number(marginMm) || 5.0)),
+              tissue_type: tissueType || 'liver_parenchyma',
+              model: model || 'mooney_rivlin',
+              run_fem: !!runFem,
+              max_displacement_mm: 1.5
+            };
+          }
+
+          async function planChirurgicalSimulate(patientId, payload) {
+            const r = await planChirurgicalFetch(planChirurgicalPath('simulate', patientId), { method: 'POST', body: payload });
+            const data = await r.json().catch(() => ({}));
+            if (!r.ok) throw new Error((data.detail || 'Simulation échouée') + (data.error_id ? ' [' + data.error_id + ']' : ''));
+            return data;
+          }
+
+          async function planChirurgicalList(patientId) {
+            const r = await planChirurgicalFetch(planChirurgicalPath('plans', patientId));
+            if (!r.ok) return [];
+            return await r.json();
+          }
+
+          async function planChirurgicalSave(patientId, title, payload) {
+            const body = Object.assign({ title: title || 'Plan de résection' }, payload);
+            const r = await planChirurgicalFetch(planChirurgicalPath('plans', patientId), { method: 'POST', body });
+            const data = await r.json().catch(() => ({}));
+            if (!r.ok) throw new Error((data.detail || 'Enregistrement du plan échoué') + (data.error_id ? ' [' + data.error_id + ']' : ''));
+            return data;
+          }
+
+          async function planChirurgicalSelect(patientId, planId) {
+            const r = await planChirurgicalFetch(planChirurgicalPath('select', patientId, planId), { method: 'POST' });
+            const data = await r.json().catch(() => ({}));
+            if (!r.ok) throw new Error((data.detail || 'Sélection du plan impossible') + (data.error_id ? ' [' + data.error_id + ']' : ''));
+            return data;
+          }
+
+          async function planChirurgicalDelete(patientId, planId) {
+            const r = await planChirurgicalFetch(planChirurgicalPath('plan', patientId, planId), { method: 'DELETE' });
+            if (!r.ok) throw new Error('Suppression du plan impossible (' + r.status + ')');
+          }
+
+          async function planChirurgicalExport(patientId, planId, format) {
+            const r = await planChirurgicalFetch(planChirurgicalPath('export', patientId, planId) + '?format=' + encodeURIComponent(format || 'pdf'));
+            if (!r.ok) {
+              const data = await r.json().catch(() => ({}));
+              throw new Error((data.detail || 'Export impossible') + (data.error_id ? ' [' + data.error_id + ']' : ''));
+            }
+            const blob = await r.blob();
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'plan_' + String(planId || 'x').slice(0, 8) + '.' + (format === 'dicom-sr' ? 'dcm' : 'pdf');
+            a.click();
+            URL.revokeObjectURL(url);
+          }
+
+          async function planChirurgicalEnsurePatient() {
+            const patientId = planChirurgicalPatientId();
+            const mod = MODULES[state.mod];
+            const body = {
+              id: patientId, nom: mod.patient.nom, age: mod.patient.age, sexe: mod.patient.sexe || 'M',
+              poids_kg: mod.patient.poids || 70, taille_cm: mod.patient.taille || 170,
+              diagnostic: mod.patient.diag, chirurgien: state.settings.chirurgien || 'Dr. non renseigné',
+              specialty: state.mod, urgence: mod.patient.urg || 'vert'
+            };
+            let r = await planChirurgicalFetch('/patients/' + encodeURIComponent(patientId), { method: 'PUT', body });
+            if (r.status === 404) {
+              r = await planChirurgicalFetch('/patients', { method: 'POST', body });
+              if (!r.ok) throw new Error('Création du patient dans le backend impossible (' + r.status + ')');
+            } else if (!r.ok) {
+              throw new Error('Synchronisation du patient impossible (' + r.status + ')');
+            }
+            return true;
+          }
+
+          async function planChirurgicalSegments() {
+            const r = await planChirurgicalFetch('/patients/' + encodeURIComponent(planChirurgicalPatientId()) + '/segments');
+            if (!r.ok) return [];
+            return await r.json();
+          }
+
+          async function planChirurgicalGenerateSyntheticOrgan() {
+            const r = await planChirurgicalFetch('/api/v2/demo/synthetic-organ', { method: 'POST', body: { patient_id: planChirurgicalPatientId() } });
+            const data = await r.json().catch(() => ({}));
+            if (!r.ok) throw new Error((data.detail || 'Génération de l\'anatomie synthétique impossible') + (data.error_id ? ' [' + data.error_id + ']' : ''));
+            return data;
+          }
+
+          // Tri des segments en organe(s) planifiable(s) et lésion(s) + badge honnête réel/synthétique.
+          // mesh_ref /meshes/{job_id}/... = segmentation IA réelle ; /meshes/demo/... ou 'synthetic' = démo.
+          function planChirurgicalPlanifiable(segments) {
+            const segs = segments || [];
+            const organs = segs.filter(s => s.type === 'organe' || s.type === 'structure_tubulaire' || s.type === 'liver');
+            const lesions = segs.filter(s => s.type === 'lesion' || s.type === 'liver_tumor' || s.type === 'tumeur');
+            const withMesh = segs.filter(s => !!s.mesh_ref);
+            const isSynthetic = s => s.mesh_ref.includes('/demo/') || /synthetic/i.test(s.mesh_ref);
+            return {
+              organs, lesions,
+              hasOrganMesh: organs.some(s => !!s.mesh_ref),
+              hasLesionMesh: lesions.some(s => !!s.mesh_ref),
+              hasMesh: withMesh.length > 0,
+              realCount: withMesh.filter(s => !isSynthetic(s)).length,
+              syntheticCount: withMesh.filter(s => isSynthetic(s)).length,
+              total: segs.length
+            };
+          }
+
+          // ── Pont MPR → plan de coupe (référentiel maillage, mm) ──
+          // L'outil « ✂️ Wedge » (state.mpr.toolMode='curved') laisse un tracé de points
+          // normalisés (0..1) sur une vue MPR (state.mpr.curvedCut.points). Ce pont le convertit
+          // en { plane_point, plane_normal } dans le référentiel du maillage segmenté (mm) :
+          //   • vue axial  → coupe = z ; coronal → y ; sagittal → x (aligné sur drawMprOverlay) ;
+          //   • voxel → mm : mode 'corner' (segmentation réelle, vertices mm, origine coin NIfTI,
+          //     coordonnée = voxel × spacing) ou 'synthetic' (anatomie démo centrée origine,
+          //     ≈2.5 mm/voxel — conversion documentée approximative, démo uniquement) ;
+          //   • plan de coupe = plan contenant la droite du tracé, perpendiculaire à la vue.
+          function planChirurgicalMprViewAxes(view) {
+            if (view === 'coronal') return { u: 0, v: 2, w: 1, normal: [0, 1, 0] };
+            if (view === 'sagittal') return { u: 2, v: 1, w: 0, normal: [1, 0, 0] };
+            return { u: 0, v: 1, w: 2, normal: [0, 0, 1] }; // axial
+          }
+
+          function planChirurgicalMprVoxelFromNormalized(view, nPx, nPy, N, sliceIdx) {
+            const a = planChirurgicalMprViewAxes(view);
+            const vox = [0, 0, 0];
+            vox[a.u] = nPx * N;
+            vox[a.v] = nPy * N;
+            vox[a.w] = sliceIdx;
+            return vox;
+          }
+
+          function planChirurgicalMprToMeshMm(voxel, spacing, mode) {
+            const sp = spacing || {};
+            const sx = Number(sp.x) || 1, sy = Number(sp.y) || 1, sz = Number(sp.z) || 1;
+            if (mode === 'synthetic') {
+              const N = 64, mmPerVoxel = 2.5;
+              return [(voxel[0] - N / 2) * mmPerVoxel, (voxel[1] - N / 2) * mmPerVoxel, (voxel[2] - N / 2) * mmPerVoxel];
+            }
+            return [voxel[0] * sx, voxel[1] * sy, voxel[2] * sz];
+          }
+
+          function planChirurgicalMprPlaneFromCut(cut, opts) {
+            opts = opts || {};
+            const pts = cut && Array.isArray(cut.points) ? cut.points : [];
+            if (!pts.length) return null;
+            const view = cut.view || 'axial';
+            const N = opts.volSize || 64;
+            const spacing = opts.spacing;
+            const sliceIdx = (cut.sliceIdx != null) ? cut.sliceIdx : (opts.planeIdx != null ? opts.planeIdx : 0);
+            const mode = opts.mode === 'synthetic' ? 'synthetic' : 'corner';
+            const a = planChirurgicalMprViewAxes(view);
+
+            const pts3d = pts.map(p => planChirurgicalMprToMeshMm(
+              planChirurgicalMprVoxelFromNormalized(view, p[0], p[1], N, sliceIdx), spacing, mode));
+
+            let c = [0, 0, 0];
+            pts3d.forEach(p => { c[0] += p[0]; c[1] += p[1]; c[2] += p[2]; });
+            c = [c[0] / pts3d.length, c[1] / pts3d.length, c[2] / pts3d.length];
+
+            if (pts3d.length === 1) {
+              return { plane_point: c, plane_normal: a.normal.slice(), view, sliceIdx, mode, points: 1 };
+            }
+
+            // Droite de moindres carrés dans le plan de la vue (axes u,v) : vecteur propre
+            // dominant de la matrice de covariance 2×2.
+            let cuu = 0, cuv = 0, cvv = 0;
+            pts3d.forEach(p => {
+              const du = p[a.u] - c[a.u], dv = p[a.v] - c[a.v];
+              cuu += du * du; cuv += du * dv; cvv += dv * dv;
+            });
+            const trace = cuu + cvv;
+            let dirU = 1, dirV = 0;
+            if (trace > 1e-12) {
+              const disc = Math.sqrt(Math.max(0, trace * trace - 4 * (cuu * cvv - cuv * cuv)));
+              const l1 = (trace + disc) / 2;
+              if (Math.abs(cuv) > 1e-12) { dirU = l1 - cvv; dirV = cuv; }
+              else if (cuu >= cvv) { dirU = 1; dirV = 0; }
+              else { dirU = 0; dirV = 1; }
+              const dl = Math.hypot(dirU, dirV) || 1;
+              dirU /= dl; dirV /= dl;
+            }
+            const d = [0, 0, 0];
+            d[a.u] = dirU; d[a.v] = dirV;
+            // Normale du plan de coupe = normale de la vue × direction du tracé.
+            const n = [
+              a.normal[1] * d[2] - a.normal[2] * d[1],
+              a.normal[2] * d[0] - a.normal[0] * d[2],
+              a.normal[0] * d[1] - a.normal[1] * d[0],
+            ];
+            const nl = Math.hypot(n[0], n[1], n[2]) || 1;
+            return {
+              plane_point: [Math.round(c[0] * 100) / 100, Math.round(c[1] * 100) / 100, Math.round(c[2] * 100) / 100],
+              plane_normal: [Math.round(n[0] / nl * 100) / 100, Math.round(n[1] / nl * 100) / 100, Math.round(n[2] / nl * 100) / 100],
+              view, sliceIdx, mode, points: pts3d.length,
+            };
+          }
+
+          // Mode de conversion MPR→maillage par défaut : 'corner' pour une segmentation réelle,
+          // 'synthetic' quand seule l'anatomie de démo (centrée) est chargée.
+          function planChirurgicalDefaultMappingMode(anat) {
+            return anat && anat.syntheticCount > 0 && anat.realCount === 0 ? 'synthetic' : 'corner';
+          }
+
+          // Métriques FLR/marge/FEM → HTML (pure, testable).
+          function planChirurgicalMetricsHtml(m) {
+            m = m || {};
+            const flr = m.flr_pct;
+            const flrOk = typeof flr === 'number' && flr >= 30;
+            const marginOk = m.margin_ok;
+            const rows = [
+              '<div class="metric-row"><span class="k">Volume total</span><span class="v">' + (m.total_volume_ml != null ? m.total_volume_ml + ' ml' : 'n/a') + '</span></div>',
+              '<div class="metric-row"><span class="k">Volume réséqué</span><span class="v">' + (m.resected_volume_ml != null ? m.resected_volume_ml + ' ml' : 'n/a') + '</span></div>',
+              '<div class="metric-row"><span class="k">Reliquat (remnant)</span><span class="v">' + (m.remnant_volume_ml != null ? m.remnant_volume_ml + ' ml' : 'n/a') + '</span></div>',
+              '<div class="metric-row"><span class="k">FLR</span><span class="v ' + (flrOk ? 'ok' : 'warn') + '">' + (flr != null ? flr + '%' : 'n/a') + '</span></div>'
+            ];
+            if (m.margin_mm != null) {
+              rows.push('<div class="metric-row"><span class="k">Marge tumorale</span><span class="v ' + (marginOk ? 'ok' : 'alert') + '">' + m.margin_mm + ' mm' + (marginOk === false ? ' (insuffisante)' : '') + '</span></div>');
+            }
+            if (m.strain_energy_relaxation_pct != null) {
+              rows.push(
+                '<div class="metric-row"><span class="k">Relaxation FEM</span><span class="v">' + m.strain_energy_relaxation_pct + '%</span></div>',
+                '<div class="metric-row"><span class="k">Déplacement max</span><span class="v">' + (m.peak_displacement_mm != null ? m.peak_displacement_mm + ' mm' : 'n/a') + '</span></div>',
+                '<div class="metric-row"><span class="k">Convergence</span><span class="v ' + (m.converged ? 'ok' : 'warn') + '">' + (m.converged ? 'oui' : 'non') + (m.iterations != null ? ' (' + m.iterations + ' it.)' : '') + '</span></div>'
+              );
+            }
+            return '<div class="psec"><div class="psec-title">Métriques calculées (backend)</div>' + rows.join('') + '</div>';
+          }
+
+          function planChirurgicalBadgeHtml(anat) {
+            if (anat.syntheticCount > 0 && anat.realCount === 0) return '<span class="planchir-badge synth">anatomie synthétique (démo)</span>';
+            if (anat.realCount > 0 && anat.syntheticCount === 0) return '<span class="planchir-badge real">segmentation IA réelle</span>';
+            if (anat.realCount > 0 && anat.syntheticCount > 0) return '<span class="planchir-badge mixed">mixte réel + synthétique</span>';
+            return '<span class="planchir-badge none">aucun maillage 3D</span>';
+          }
+
+          function planChirurgicalPanelHtml(anat, plans) {
+            const plansList = plans || [];
+            const organsOpts = anat.organs.map((s, i) =>
+              '<label class="planchir-org"><input type="radio" name="planchir-organ" value="' + escapeHtml(s.mesh_ref || '') + '" data-name="' + escapeHtml(s.name || '') + '"' + (i === 0 ? ' checked' : '') + '/>' + escapeHtml(s.name || '') + '<span class="sub">' + escapeHtml(s.type || '') + (s.mesh_ref ? '' : ' · sans maillage') + '</span></label>'
+            ).join('') || '<div class="planchir-empty">Aucun organe segmenté. Lancez la segmentation (bouton Anatomie) ou générez une anatomie démo.</div>';
+            const plansHtml = plansList.map(p => {
+              const m = p.metrics || {};
+              const isSel = p.status === 'SELECTED';
+              return '<div class="planchir-plan' + (isSel ? ' sel' : '') + '">'
+                + '<div class="planchir-plan-head"><span class="planchir-plan-title">' + escapeHtml(p.title || '') + '</span>'
+                + '<span class="planchir-plan-status ' + (isSel ? 'ok' : '') + '">' + (isSel ? '★ RETENU' : 'brouillon') + '</span></div>'
+                + '<div class="planchir-plan-meta">FLR ' + (m.flr_pct != null ? m.flr_pct + '%' : 'n/a')
+                + ' · marge ' + (m.margin_mm != null ? m.margin_mm + ' mm' : 'n/a')
+                + (m.margin_ok === false ? ' ⚠' : '')
+                + (m.strain_energy_relaxation_pct != null ? ' · FEM ' + m.strain_energy_relaxation_pct + '%' : '') + '</div>'
+                + '<div class="planchir-plan-actions">'
+                + '<button class="btn-planchir" data-plan-id="' + p.id + '" data-act="select"' + (isSel ? ' disabled' : '') + '>Retenir</button>'
+                + '<button class="btn-planchir" data-plan-id="' + p.id + '" data-act="export">PDF</button>'
+                + '<button class="btn-planchir" data-plan-id="' + p.id + '" data-act="export-sr">DICOM SR</button>'
+                + '<button class="btn-planchir danger" data-plan-id="' + p.id + '" data-act="del">Suppr.</button>'
+                + '</div></div>';
+            }).join('') || '<div class="planchir-empty">Aucun plan enregistré. Réglez le plan de coupe puis « Simuler & enregistrer ».</div>';
+            return ''
+              + '<div class="psec"><div class="psec-title">Anatomie planifiable</div>'
+              + '<div class="planchir-badge-row">' + planChirurgicalBadgeHtml(anat) + (anat.total ? '<span class="planchir-badge none">' + anat.total + ' segment(s)</span>' : '') + '</div>'
+              + organsOpts
+              + (anat.hasMesh ? '' : '<button class="btn-planchir accent" id="planchir-gen">⚙ Générer une anatomie démo</button>')
+              + '</div>'
+              + '<div class="psec"><div class="psec-title">Plan de coupe (mm, référentiel du maillage segmenté)</div>'
+              + '<div class="planchir-empty" id="planchir-mpr-status">Dessinez une coupe avec l\'outil « ✂️ Wedge » sur une vue MPR (axial/coronal/sagittal), puis « ↩ Importer le tracé MPR ». Conversion voxel→mm approximative ; le backend recalcule FLR/marge sur le vrai maillage.</div>'
+              + '<div class="form-row"><label class="form-label">Référentiel MPR → maillage (mm)</label><select class="form-control" id="planchir-mapmode">'
+              + '<option value="corner"' + (planChirurgicalDefaultMappingMode(anat) === 'corner' ? ' selected' : '') + '>Segmentation réelle (voxel × spacing)</option>'
+              + '<option value="synthetic"' + (planChirurgicalDefaultMappingMode(anat) === 'synthetic' ? ' selected' : '') + '>Anatomie démo centrée (≈2.5 mm/voxel)</option>'
+              + '</select></div>'
+              + '<button class="btn-planchir accent" id="planchir-import-mpr" style="width:100%">↩ Importer le tracé MPR (✂️ Wedge)</button>'
+              + '<div class="form-row"><label class="form-label">Point du plan (x,y,z)</label><div class="planchir-vec">'
+              + [0, 1, 2].map(i => '<input type="number" step="1" class="form-control planchir-num" id="planchir-pp' + i + '" value="0"/>').join('')
+              + '</div></div>'
+              + '<div class="form-row"><label class="form-label">Normale (nx,ny,nz) — côté positif = reliquat</label><div class="planchir-vec">'
+              + [0, 1, 2].map(i => '<input type="number" step="0.1" class="form-control planchir-num" id="planchir-pn' + i + '" value="' + (i === 2 ? '1' : '0') + '"/>').join('')
+              + '</div></div>'
+              + '<div class="form-row"><label class="form-label">Marge tumorale demandée (mm)</label><input type="number" step="0.5" min="0" max="50" class="form-control planchir-num" id="planchir-margin" value="5"/></div>'
+              + '<div class="form-row"><label class="form-label">Tissu</label><select class="form-control" id="planchir-tissue">'
+              + '<option value="liver_parenchyma">Parenchyme hépatique</option><option value="soft_tissue">Tissus mous</option><option value="bone">Os</option>'
+              + '</select></div>'
+              + '<div class="form-row"><label class="form-label">Modèle hyperélastique</label><select class="form-control" id="planchir-model">'
+              + '<option value="mooney_rivlin">Mooney-Rivlin</option><option value="ogden">Ogden</option><option value="neo_hookean">Néo-hookéen</option><option value="linear">Linéaire (rapide)</option>'
+              + '</select></div>'
+              + '<div class="form-row"><label class="form-label check"><input type="checkbox" id="planchir-fem" checked/> FEM post-résection (≈5-15 s)</label></div>'
+              + '<button class="btn-primary" id="planchir-sim" style="width:100%">▶ Simuler & enregistrer le plan</button>'
+              + '</div>'
+              + '<div class="psec"><div class="psec-title">Plans enregistrés</div>' + plansHtml + '</div>';
+          }
+
+          function planChirurgicalOfflineHtml() {
+            return '<div class="psec"><div class="psec-title">Plan chirurgical</div>'
+              + '<div class="planchir-empty">Planification réelle indisponible — le backend n\'est pas configuré. '
+              + 'Ouvrez ⚙ Paramètres et renseignez l\'URL de l\'API (puis reconnectez-vous) pour activer le calcul '
+              + 'FLR/marge/FEM sur le maillage segmenté, la persistance des plans et l\'export PDF / DICOM SR.</div></div>';
+          }
+
+          async function planChirurgicalRefresh() {
+            const el = document.getElementById('planchir-body');
+            if (!el) return;
+            if (!planChirurgicalAvailable()) {
+              el.innerHTML = planChirurgicalOfflineHtml();
+              return;
+            }
+            el.innerHTML = '<div class="psec"><div class="psec-title">Plan chirurgical</div><div class="planchir-empty">Connexion au backend…</div></div>';
+            try {
+              await planChirurgicalEnsurePatient();
+              const segments = await planChirurgicalSegments();
+              const plans = await planChirurgicalList(planChirurgicalPatientId());
+              el.innerHTML = planChirurgicalPanelHtml(planChirurgicalPlanifiable(segments), plans);
+              planChirurgicalBind(el);
+            } catch (e) {
+              el.innerHTML = '<div class="psec"><div class="psec-title">Plan chirurgical</div>'
+                + '<div class="planchir-empty" style="color:#ef4444">' + escapeHtml(e.message) + '</div></div>';
+            }
+          }
+
+          function planChirurgicalBind(root) {
+            root = root || document;
+            const simBtn = root.querySelector('#planchir-sim');
+            if (simBtn) simBtn.addEventListener('click', planChirurgicalSimulateFromUi);
+            const genBtn = root.querySelector('#planchir-gen');
+            if (genBtn) genBtn.addEventListener('click', planChirurgicalGenerateFromUi);
+            const importBtn = root.querySelector('#planchir-import-mpr');
+            if (importBtn) importBtn.addEventListener('click', planChirurgicalImportMprPlane);
+            root.querySelectorAll('[data-plan-id]').forEach(btn => {
+              btn.addEventListener('click', () => {
+                const id = btn.dataset.planId;
+                const act = btn.dataset.act;
+                if (act === 'select') planChirurgicalSelectUi(id);
+                else if (act === 'export') planChirurgicalExportUi(id, 'pdf');
+                else if (act === 'export-sr') planChirurgicalExportUi(id, 'dicom-sr');
+                else if (act === 'del') planChirurgicalDeleteUi(id);
+              });
+            });
+          }
+
+          async function planChirurgicalGenerateFromUi() {
+            try {
+              notify('Génération de l\'anatomie synthétique (organe + lésion)…', 'info');
+              await planChirurgicalGenerateSyntheticOrgan();
+              notify('Anatomie démo générée — relancez la planification.', 'ok');
+              planChirurgicalRefresh();
+            } catch (e) { notify(e.message, 'error'); }
+          }
+
+          // Importe le tracé MPR (✂️ Wedge) dans les champs plan de coupe et signale le résultat.
+          function planChirurgicalImportMprPlane() {
+            const cut = state.mpr.curvedCut;
+            if (!cut || !Array.isArray(cut.points) || cut.points.length === 0) {
+              notify('Aucun tracé MPR — dessinez d\'abord une coupe avec l\'outil « ✂️ Wedge » sur une vue axiale/coronale/sagittale.', 'warn');
+              return;
+            }
+            const modeSel = document.getElementById('planchir-mapmode');
+            const mode = modeSel ? modeSel.value : 'corner';
+            const plane = planChirurgicalMprPlaneFromCut(cut, {
+              volSize: state.mpr.volSize,
+              spacing: state.mpr.spacing,
+              planeIdx: state.mpr.plane ? state.mpr.plane[cut.view] : 0,
+              mode,
+            });
+            if (!plane) { notify('Tracé MPR vide.', 'warn'); return; }
+            plane.plane_point.forEach((v, i) => { const el = document.getElementById('planchir-pp' + i); if (el) el.value = v; });
+            plane.plane_normal.forEach((v, i) => { const el = document.getElementById('planchir-pn' + i); if (el) el.value = v; });
+            const st = document.getElementById('planchir-mpr-status');
+            if (st) {
+              st.textContent = 'Plan importé : vue ' + plane.view + ', coupe ' + plane.sliceIdx + ', '
+                + plane.points + ' point(s), mode ' + (plane.mode === 'synthetic' ? 'démo' : 'segmentation réelle')
+                + ' — vérifiez le FLR calculé (conversion voxel→mm approximative).';
+            }
+            notify('Plan de coupe importé depuis le tracé MPR (' + plane.view + ').', 'ok');
+          }
+
+          async function planChirurgicalSimulateFromUi() {
+            const organ = document.querySelector('input[name="planchir-organ"]:checked');
+            if (!organ) { notify('Sélectionnez d\'abord un organe planifiable.', 'error'); return; }
+            const pp = [0, 1, 2].map(i => Number(document.getElementById('planchir-pp' + i).value) || 0);
+            const pn = [0, 1, 2].map(i => Number(document.getElementById('planchir-pn' + i).value) || 0);
+            const margin = Number(document.getElementById('planchir-margin').value) || 5;
+            const tissue = document.getElementById('planchir-tissue').value;
+            const model = document.getElementById('planchir-model').value;
+            const runFem = document.getElementById('planchir-fem').checked;
+            const payload = planChirurgicalSimulatePayload(pp, pn, margin, tissue, model, runFem);
+            notify('Calcul en cours (tétraédrisation + marge' + (runFem ? ' + FEM' : '') + ')…', 'info');
+            const btn = document.getElementById('planchir-sim');
+            if (btn) btn.disabled = true;
+            try {
+              const out = await planChirurgicalSimulate(planChirurgicalPatientId(), payload);
+              const m = out.metrics || {};
+              await planChirurgicalSave(planChirurgicalPatientId(), 'Résection — marge ' + margin + ' mm', payload);
+              const flr = m.flr_pct != null ? m.flr_pct + '%' : 'n/a';
+              const mg = m.margin_mm != null ? m.margin_mm + ' mm' : 'n/a';
+              notify('Plan enregistré : FLR ' + flr + ' · marge ' + mg + (m.margin_ok === false ? ' (⚠ insuffisante)' : ''), m.margin_ok === false ? 'warn' : 'ok');
+              if (out.warning) console.warn('[Plan chirurgical] ' + out.warning);
+              planChirurgicalRefresh();
+            } catch (e) {
+              notify('Échec simulation : ' + e.message, 'error');
+            } finally {
+              if (btn) btn.disabled = false;
+            }
+          }
+
+          async function planChirurgicalSelectUi(planId) {
+            try {
+              const rec = await planChirurgicalSelect(planChirurgicalPatientId(), planId);
+              notify('Plan retenu : « ' + rec.title + ' »', 'ok');
+              planChirurgicalRefresh();
+            } catch (e) { notify(e.message, 'error'); }
+          }
+
+          async function planChirurgicalExportUi(planId, format) {
+            try {
+              await planChirurgicalExport(planChirurgicalPatientId(), planId, format);
+              notify('Export ' + (format === 'dicom-sr' ? 'DICOM SR' : 'PDF') + ' du plan généré.', 'ok');
+            } catch (e) { notify(e.message, 'error'); }
+          }
+
+          async function planChirurgicalDeleteUi(planId) {
+            if (!window.confirm('Supprimer ce plan de résection ?')) return;
+            try {
+              await planChirurgicalDelete(planChirurgicalPatientId(), planId);
+              notify('Plan supprimé.', 'info');
+              planChirurgicalRefresh();
+            } catch (e) { notify(e.message, 'error'); }
+          }
+
           function setTab(tab) {
             state.tab = tab;
             document.querySelectorAll('.rtab').forEach(t => t.classList.toggle('on', t.dataset.tab === tab));
             document.querySelectorAll('.rtab-pane').forEach(p => p.classList.toggle('on', p.id === 'pane-' + tab));
+            if (tab === 'planchir') planChirurgicalRefresh();
           }
 
           // ── VP HUD ──
@@ -538,6 +1029,8 @@
                 state.mpr.curvedCut.points = [];
                 state.mpr.curvedCut.active = false;
                 state.mpr.curvedCut.wedgeResectedML = 0.0;
+                state.mpr.curvedCut.view = null;
+                state.mpr.curvedCut.sliceIdx = null;
               }
               // Dernier calcul de volumétrie/FLR (utilisé en fallback par plusieurs exports).
               state.mpr.lastFLR = null;
@@ -583,21 +1076,20 @@
             }, 600);
           }
 
-          // ── Mode Clinique (défaut) / Mode Recherche ──────────────────────────
-          // Masque par défaut les modules exploratoires non validés cliniquement
-          // (Jalons M21-M40 : nanorobots, BCI, cryo-BNCT, iKnife/Ac-225, etc.)
-          // pour que le chirurgien ne voie que les outils utilisables au bloc.
-          // Rien n'est supprimé : le Mode Recherche les révèle explicitement.
-          function setResearchMode(on) {
-            state.researchMode = !!on;
-            document.body.classList.toggle('research-mode', state.researchMode);
-            const btn = document.getElementById('btn-research-toggle');
-            if (btn) btn.classList.toggle('active', state.researchMode);
-            notify(state.researchMode
-              ? '🔬 Mode Recherche activé — modules exploratoires + Paramètres techniques (⚙) visibles'
-              : '✅ Mode Clinique — seuls les outils validés pour le bloc sont affichés', 'info');
+          // ── Paramètres avancés (technique/maintenance) ──────────────────────
+          // Masque par défaut les réglages techniques (clé Gemini, URL backend)
+          // pour que le chirurgien ne voie que les outils utilisables au bloc ;
+          // le personnel technique/maintenance les révèle explicitement.
+          function setAdvancedMode(on) {
+            state.advancedMode = !!on;
+            document.body.classList.toggle('advanced-mode', state.advancedMode);
+            const btn = document.getElementById('btn-advanced-toggle');
+            if (btn) btn.classList.toggle('active', state.advancedMode);
+            notify(state.advancedMode
+              ? '🔧 Paramètres avancés activés — réglages techniques (⚙) visibles'
+              : '✅ Seuls les outils validés pour le bloc sont affichés', 'info');
           }
-          function toggleResearchMode() { setResearchMode(!state.researchMode); }
+          function toggleAdvancedMode() { setAdvancedMode(!state.advancedMode); }
 
           function setOrMode(on) {
             state.or = !!on;
@@ -866,102 +1358,78 @@
           //  pas une phrase générique.
           // ════════════════════════════════════════════════
           const OFFLINE_KNOWLEDGE = {
-            hbp: [
-              { kw: ['flr', 'remnant', 'reste', 'foie restant'], a: "Le FLR (Future Liver Remnant) doit rester ≥20% en foie sain, ≥30% après chimiothérapie, et ≥40% en cas de cirrhose ou fibrose significative. En dessous de ces seuils, le risque d'insuffisance hépatique post-opératoire augmente nettement — une embolisation portale préalable peut être envisagée pour hypertrophier le foie restant." },
-              { kw: ['fistule', 'biliaire'], a: "Le risque de fistule biliaire après hépatectomie majeure est de l'ordre de 5 à 8%, classé selon le grading ISGLS (A: sans conséquence clinique, B: nécessite un drainage, C: nécessite une reprise). Le risque augmente avec la complexité de la résection et la proximité des voies biliaires principales." },
-              { kw: ['coupe', 'plan', 'segment', 'couinaud'], a: "Le plan de coupe doit respecter la segmentation de Couinaud (I à VIII) et préserver la vascularisation portale et le drainage biliaire du parenchyme restant. Une marge de sécurité d'au moins 1cm autour de la lésion est généralement recherchée quand la fonction hépatique le permet." },
-              { kw: ['icg', 'fonction hépatique', 'r15'], a: "L'ICG-R15 (rétention du vert d'indocyanine à 15 minutes) évalue la fonction hépatique : <10% est considéré normal, 10-20% intermédiaire (prudence), >20% indique un risque élevé d'insuffisance hépatique post-opératoire et doit faire réduire l'étendue de la résection envisagée." },
-              { kw: ['5 ans', 'survie', 'pronostic', 'récidive'], a: "Le pronostic à 5 ans dépend fortement du type histologique, du stade et de la marge de résection (R0 vs R1). Pour le CHC sur foie non cirrhotique avec résection R0, la survie à 5 ans se situe généralement entre 40 et 60% ; elle est significativement plus faible en cas de cirrhose sous-jacente ou de marge positive." },
+            laryngologie: [
+              { kw: ['tnm', 'stade', 't3', 't4'], a: "La stadification T du larynx dépend de la sous-unité et de la mobilité cordale : T1 = lésion limitée à une sous-unité avec mobilité normale, T2 = extension muqueuse avec mobilité normale ou diminuée, T3 = fixation cordale ou envahissement de l'espace paraglottique/de la corticale interne du cartilage thyroïde, T4a = envahissement à travers le cartilage thyroïde ou des tissus extralaryngés." },
+              { kw: ['laryngectomie', 'totale', 'partielle'], a: "Une chirurgie partielle (cordectomie, laryngectomie partielle) ou par laser CO2 est envisageable pour les stades T1-T2 avec corde mobile ; une laryngectomie totale est généralement recommandée en cas de fixation cordale, d'envahissement cartilagineux ou de stade T3-T4 avancé, notamment après échec de traitement conservateur." },
+              { kw: ['récidive', 'locale'], a: "Le risque de récidive locale dépend principalement du statut des marges de résection, de l'envahissement cartilagineux et de l'extension extralaryngée. Une marge >5mm et l'absence d'invasion cartilagineuse sont associées à un risque de récidive locale nettement plus faible." },
+              { kw: ['voix', 'réhabilitation', 'phonatoire'], a: "La réhabilitation vocale après laryngectomie totale repose principalement sur la prothèse phonatoire trachéo-œsophagienne (type Provox), avec un taux de réussite de l'ordre de 90% ; la voix œsophagienne et le laryngophone électronique restent des alternatives en cas d'échec ou de contre-indication." },
             ],
-            colorectal: [
-              { kw: ['crm', 'marge', 'circonférentielle'], a: "La CRM (marge de résection circonférentielle) est le facteur pronostique majeur en chirurgie rectale : une marge <1mm est considérée comme menacée/positive et multiplie significativement le risque de récidive locale. L'objectif chirurgical est toujours une CRM ≥1mm, idéalement >2mm." },
-              { kw: ['néo-adjuvant', 'radiothérapie', 'réponse'], a: "La réponse au traitement néo-adjuvant s'évalue par IRM (régression du volume tumoral, score de régression tumorale) et peut aller d'une réponse complète (pas de résidu visible) à une absence de réponse. Une bonne réponse peut permettre une chirurgie moins radicale, voire une stratégie de surveillance (watch-and-wait) dans certains protocoles." },
-              { kw: ['anastomose', 'type'], a: "Le type d'anastomose dépend du niveau de résection : anastomose colo-rectale mécanique circulaire pour les résections hautes/moyennes, anastomose colo-anale (manuelle ou mécanique basse) pour les résections très basses. Une stomie de protection est souvent indiquée si l'anastomose est à moins de 5cm de la marge anale ou après radiothérapie." },
-              { kw: ['récidive', 'locale'], a: "Le risque de récidive locale dépend principalement de la CRM (marge circonférentielle), du stade ganglionnaire (N) et de la qualité de l'exérèse mésorectale (TME). Avec une CRM négative et une TME complète, le risque de récidive locale à 5 ans est généralement inférieur à 10%." },
+            otologie: [
+              { kw: ['paralysie', 'faciale', 'nerf facial'], a: "Le risque de paralysie faciale (grade House-Brackmann) après chirurgie otologique est faible en primo-chirurgie non compliquée (environ 1-3% de paralysie transitoire), mais augmente significativement en cas de reprise chirurgicale ou d'érosion du canal de Fallope par un cholestéatome." },
+              { kw: ['gain', 'auditif', 'audition'], a: "Le gain auditif attendu après ossiculoplastie dépend du type de prothèse : une fermeture du Rinne (air-bone gap) <20dB est obtenue dans environ 70-80% des cas avec une PORP, un peu moins avec une TORP du fait de la chaîne de transmission plus longue." },
+              { kw: ['implant', 'cochléaire', 'indication'], a: "L'implantation cochléaire est indiquée en cas de surdité neurosensorielle sévère à profonde bilatérale avec bénéfice insuffisant des aides auditives conventionnelles, typiquement pour un seuil auditif moyen >70-90dB et une discrimination vocale <50-60% en champ libre appareillé." },
+              { kw: ['récidive', 'cholestéatome'], a: "Le taux de cholestéatome résiduel ou récidivant est de l'ordre de 10-20% à 5 ans après technique fermée (canal wall up), nettement plus faible après technique ouverte (canal wall down). Une chirurgie en 2 temps ou une IRM de diffusion de surveillance permet de dépister une récidive infraclinique." },
             ],
-            gastrique: [
-              { kw: ['extension', 'tumorale', 't3', 't4'], a: "L'extension tumorale (stade T) doit être précisée par l'imagerie (TDM, écho-endoscopie) : T1 = muqueuse/sous-muqueuse, T2 = musculeuse, T3 = séreuse, T4 = organes adjacents. Le stade T oriente directement l'étendue de la gastrectomie et l'indication d'un traitement périopératoire." },
-              { kw: ['curage', 'd1', 'd2', 'ganglion'], a: "Le curage D2 (recommandations JGCA) inclut les stations ganglionnaires périgastriques (D1) plus les stations le long des artères gastrique gauche, hépatique commune, splénique et du tronc cœliaque. Il est recommandé pour les tumeurs avancées (T2 et plus) opérables à visée curative." },
-              { kw: ['fuite', 'anastomotique'], a: "Le risque de fuite anastomotique après gastrectomie totale (anastomose œso-jéjunale) est de l'ordre de 3 à 5%, un peu moins après gastrectomie subtotale. Les facteurs de risque incluent la dénutrition, le diabète, et une anastomose sous tension." },
-              { kw: ['pronostic', 'iiia', 'stade', 'survie'], a: "Le pronostic du stade IIIA (TNM AJCC 8e édition) reste réservé, avec une survie à 5 ans de l'ordre de 20 à 35% selon les séries, largement dépendante de la qualité du curage ganglionnaire (D2) et de la réponse à la chimiothérapie périopératoire." },
+            rhinologie: [
+              { kw: ['brèche', 'méningée', 'liquide céphalo-rachidien'], a: "Le risque de brèche ostéo-méningée en chirurgie endoscopique des sinus est faible (de l'ordre de 0,5 à 1%) en chirurgie de routine, mais augmente nettement au voisinage de la lame criblée ou du toit de l'ethmoïde et lors des exérèses tumorales étendues vers la base du crâne." },
+              { kw: ['extension', 'orbitaire', 'endocrânienne'], a: "Une extension orbitaire ou endocrânienne d'une tumeur naso-sinusienne doit être recherchée systématiquement par IRM (envahissement de la graisse orbitaire, de la dure-mère) en complément du scanner, et fait discuter un abord combiné endoscopique-externe avec les équipes d'ophtalmologie et de neurochirurgie." },
+              { kw: ['récidive', 'polypose'], a: "La polypose naso-sinusienne récidive dans 40 à 60% des cas à 5 ans en l'absence de traitement médical d'entretien adapté ; les biothérapies anti-IL4/IL5/IgE sont désormais proposées dans les formes sévères à phénotype éosinophilique récidivantes après chirurgie." },
+              { kw: ['indication', 'chirurgicale', 'traitement médical'], a: "Selon les recommandations EPOS, un traitement médical maximal (corticothérapie locale, lavages de sérum salé, cure courte de corticoïdes oraux si besoin) doit être tenté en première intention ; la chirurgie est indiquée en cas d'échec du traitement médical bien conduit ou de complication." },
             ],
-            thyroide: [
-              { kw: ['récurrent', 'nerf', 'paralysie'], a: "Le risque de lésion du nerf récurrent est de 1 à 2% en chirurgie thyroïdienne élective, mais peut monter à 5-10% en cas de reprise chirurgicale ou d'envahissement tumoral. Le monitoring neural (NIM) per-opératoire est recommandé pour réduire ce risque et le documenter." },
-              { kw: ['curage', 'central', 'prophylactique'], a: "Un curage central (compartiment VI) prophylactique est recommandé pour les carcinomes papillaires de plus de 1cm, ou en présence de signes d'extension ganglionnaire à l'imagerie. Il n'est généralement pas indiqué pour les microcarcinomes de bas risque." },
-              { kw: ['pth', 'hypocalcémie', 'hypoparathyroïdie'], a: "La PTH doit être dosée à H6 et H24 post-opératoires. Une PTH basse (<10-15 pg/mL) avec calcium ionisé abaissé signe une hypoparathyroïdie transitoire (fréquente, 10-30% après thyroïdectomie totale) et justifie une supplémentation calcique/vitamine D préventive." },
-              { kw: ['bilatérale', 'unilatérale', 'lobectomie'], a: "Le choix entre lobectomie (unilatérale) et thyroïdectomie totale (bilatérale) dépend de la taille tumorale, de la multifocalité, des antécédents d'irradiation cervicale et du stade ganglionnaire. Pour un carcinome papillaire unifocal <4cm sans facteur de risque, une lobectomie peut suffire selon les dernières recommandations ATA." },
+            cervicofacial: [
+              { kw: ['paralysie', 'faciale', 'parotidectomie'], a: "Le risque de parésie faciale transitoire après parotidectomie superficielle pour tumeur bénigne est de l'ordre de 15 à 30%, avec récupération complète dans la grande majorité des cas en quelques mois ; le risque de paralysie définitive reste faible (1 à 5%) hors chirurgie carcinologique avec sacrifice nerveux." },
+              { kw: ['extension', 'ganglionnaire'], a: "L'extension ganglionnaire cervicale s'évalue selon les niveaux I à VI (classification AAO-HNS) ; l'échographie avec cytoponction et l'IRM cervico-faciale précisent le niveau atteint, la taille et la présence de signes de rupture capsulaire, déterminants pour le type de curage à réaliser." },
+              { kw: ['type', 'curage'], a: "Le curage cervical peut être radical (sacrifice du nerf spinal, de la veine jugulaire interne et du sterno-cléido-mastoïdien), radical modifié (préservation d'une ou plusieurs de ces structures) ou sélectif (limité à certains niveaux ganglionnaires) — le choix dépend du site tumoral primitif et du statut ganglionnaire clinique/radiologique." },
+              { kw: ['nerf spinal', 'accessoire'], a: "La préservation du nerf spinal accessoire (XI) lors d'un curage sélectif limite le risque de syndrome de l'épaule (douleur, dysfonction du trapèze) ; sa préservation est la règle sauf envahissement tumoral direct documenté du nerf." },
             ],
-            thoracique: [
-              { kw: ['vems', 'fonction', 'ppo'], a: "Le VEMS post-opératoire prédit (ppoFEV1) s'estime à partir du VEMS pré-opératoire et de la quantité de parenchyme fonctionnel réséqué. Un ppoFEV1 >40% est généralement considéré comme sûr ; en dessous, une évaluation fonctionnelle plus poussée (DLCO, VO2 max) est nécessaire." },
-              { kw: ['fissure', 'interlobaire'], a: "Une fissure interlobaire complète facilite la dissection vasculaire et bronchique lors d'une lobectomie ; une fissure incomplète ou absente augmente la difficulté technique et le risque de fuite aérienne prolongée, et peut orienter vers une approche différente (dissection fissure-less)." },
-              { kw: ['ganglion', 'médiastinal', 'n2', 'n1'], a: "L'évaluation ganglionnaire médiastinale suit la carte de l'IASLC (stations 2R/4R/7/8/9 à droite, 5/6/7/8/9 à gauche, etc.). Un envahissement N2 (ganglions médiastinaux homolatéraux) modifie significativement le pronostic et oriente souvent vers un traitement néo-adjuvant." },
-              { kw: ['néo-adjuvant', 'indication'], a: "Une chimiothérapie (ou chimio-immunothérapie) néo-adjuvante est généralement indiquée à partir du stade II-IIIA résécable, notamment en présence d'un envahissement ganglionnaire N1/N2 confirmé, pour améliorer les chances de résection complète et réduire le risque de récidive." },
-            ],
-            cardiaque: [
-              { kw: ['euroscore', 'score', 'risque'], a: "L'EuroSCORE II estime la mortalité opératoire prédite à partir de facteurs patient (âge, fonction rénale, FEVG...) et chirurgicaux (urgence, complexité). Un score >8-10% signe un risque élevé nécessitant une discussion collégiale (heart team) sur la meilleure stratégie (chirurgie classique vs alternative type TAVI)." },
-              { kw: ['valve', 'mécanique', 'biologique', 'prothèse'], a: "Une prothèse biologique est généralement préférée après 65-70 ans ou en cas de contre-indication aux anticoagulants au long cours ; une prothèse mécanique est plutôt réservée aux patients plus jeunes, au prix d'une anticoagulation à vie (AVK) et d'un risque hémorragique/thromboembolique associé." },
-              { kw: ['viabilité', 'myocarde', 'ischémie'], a: "La viabilité myocardique (IRM de stress, scintigraphie, échographie de stress à la dobutamine) doit être confirmée avant de revasculariser un territoire akinétique : un myocarde viable a un potentiel de récupération fonctionnelle après revascularisation, un myocarde non viable (fibrose transmurale) n'en bénéficiera pas." },
-              { kw: ['revascularisation', 'pontage', 'cabg', 'stratégie'], a: "Le choix de stratégie de revascularisation (pontage chirurgical vs angioplastie) dépend de la complexité coronarienne (score SYNTAX), de la fonction ventriculaire, du diabète et des comorbidités. Une atteinte tritronculaire ou du tronc commun avec diabète oriente généralement vers le pontage." },
-            ],
-            urologie: [
-              { kw: ['renal', 'néphrométrie', 'score'], a: "Le score RENAL (néphrométrie) évalue la complexité d'une tumeur rénale sur 5 critères (taille, exophytique/endophytique, proximité du sinus, position antérieure/postérieure, localisation polaire) : un score ≤6 est simple, 7-9 intermédiaire, ≥10 complexe — ce dernier oriente souvent vers une néphrectomie totale plutôt que partielle." },
-              { kw: ['hémorragie', 'clampage', 'saignement'], a: "Le risque hémorragique au déclampage après néphrectomie partielle dépend de la qualité de l'hémostase de la tranche de section et du temps d'ischémie chaude. Un temps de clampage prolongé (>25-30 min) augmente le risque d'insuffisance rénale post-opératoire sans nécessairement réduire le risque hémorragique." },
-              { kw: ['marge', 'chirurgicale'], a: "L'objectif en néphrectomie partielle est une marge de résection négative (R0), même minime — une marge positive n'implique pas systématiquement une récidive mais justifie une surveillance rapprochée. La marge attendue dépend directement du score RENAL et de la proximité de la tumeur avec le sinus rénal." },
-              { kw: ['fonction rénale', 'dfg', 'post-op'], a: "La fonction rénale post-opératoire dépend du volume de parenchyme sain préservé et du temps d'ischémie chaude. Une néphrectomie partielle préserve mieux le DFG à long terme qu'une néphrectomie totale, particulièrement chez les patients avec DFG pré-opératoire déjà réduit ou rein unique." },
+            pediatrique: [
+              { kw: ['indication', 'amygdalectomie'], a: "L'amygdalectomie est indiquée en cas d'angines récidivantes répondant aux critères de Paradise (≥7 épisodes/an, ou ≥5/an sur 2 ans, ou ≥3/an sur 3 ans) ou en cas d'hypertrophie amygdalienne obstructive avec syndrome d'apnées obstructives du sommeil confirmé ou fortement suspecté." },
+              { kw: ['hémorragie', 'post-amygdalectomie'], a: "L'hémorragie post-amygdalectomie primaire (dans les 24h) survient dans environ 0,5 à 1% des cas ; l'hémorragie secondaire (J5-J10, chute d'escarre) est plus fréquente (2 à 5%) et justifie une surveillance parentale attentive durant les 10 premiers jours post-opératoires." },
+              { kw: ['osa-18', 'score'], a: "Le score OSA-18 (échelle de qualité de vie, 18 à 126 points) est considéré comme cliniquement significatif à partir de 60 points environ ; il doit être corrélé à la polysomnographie pour confirmer et quantifier objectivement le syndrome d'apnées obstructives avant d'indiquer une chirurgie." },
+              { kw: ['corps étranger', 'prise en charge'], a: "La prise en charge d'un corps étranger des voies aéro-digestives dépend de sa localisation et de sa nature : une pile bouton œsophagienne est une urgence d'extraction immédiate (risque de nécrose caustique en quelques heures), alors qu'un corps étranger bronchique inerte peut être extrait par endoscopie rigide en semi-urgence sous anesthésie générale." },
             ],
           };
 
           const SPECIALTY_PROMPTS = {
-            hbp: `EXPERTISE HBP — repères à utiliser quand pertinent :
-- Segmentation de Couinaud (I à VIII) pour décrire toute localisation hépatique.
-- Seuils de FLR (Future Liver Remnant) : ≥20% si foie sain, ≥30% après chimiothérapie, ≥40% si cirrhose/fibrose.
-- ICG-R15 : <10% = fonction hépatique normale ; >20% = risque élevé d'insuffisance hépatique post-opératoire.
-- Classification de Bismuth-Corlette pour les cholangiocarcinomes hilaires.
-- Fistule biliaire : grading ISGLS (A/B/C). Hémorragie post-hépatectomie : grading ISGLS également.
-- Toujours resituer une décision de résection majeure par rapport au couple FLR/volumétrie tumorale.`,
+            laryngologie: `EXPERTISE LARYNGOLOGIE — repères à utiliser quand pertinent :
+- Stadification TNM du larynx (UICC/AJCC), spécifique par sous-site (supraglotte/glotte/sous-glotte).
+- Mobilité cordale : normale (T1-T2), fixée (T3, souvent envahissement paraglottique/cartilagineux).
+- Envahissement cartilagineux (thyroïde/cricoïde) : contre-indique la chirurgie de préservation d'organe.
+- Niveaux ganglionnaires cervicaux (II-IV pour le drainage laryngé, VI pour le récurrentiel/sous-glottique).
+- Réhabilitation vocale post-laryngectomie totale : prothèse phonatoire trachéo-œsophagienne (Provox), voix œsophagienne, laryngophone.
+- Toujours resituer une décision d'exérèse (partielle/laser vs totale) par rapport à la mobilité cordale et l'extension cartilagineuse.`,
 
-            colorectal: `EXPERTISE COLORECTALE — repères à utiliser quand pertinent :
-- CRM (marge de résection circonférentielle) : <1mm = marge menacée/positive, facteur majeur de récidive locale.
-- Stadification TNM/AJCC (8e édition) et réponse au traitement néo-adjuvant évaluée en RECIST/imagerie.
-- Score EMVI (extramural vascular invasion) à l'IRM comme facteur pronostique.
-- Indications de stomie de protection après résection antérieure basse (anastomose <5cm de la marge anale, radiothérapie néo-adjuvante).
-- Classification de Clavien-Dindo pour les complications post-opératoires (fuite anastomotique en particulier).`,
+            otologie: `EXPERTISE OTOLOGIE — repères à utiliser quand pertinent :
+- Grade House-Brackmann (I à VI) pour la fonction du nerf facial, avant et après chirurgie.
+- Classification EAONO-JOS du cholestéatome (stade I à III) — oriente le bilan d'imagerie et le risque de complication.
+- PTA (seuil auditif moyen), test de Rinne/Weber pour caractériser une surdité de transmission vs de perception.
+- Indications d'implant cochléaire : surdité neurosensorielle sévère à profonde bilatérale, bénéfice prothétique insuffisant.
+- Techniques de mastoïdectomie : canal wall up (préserve l'anatomie, risque de récidive) vs canal wall down (moindre récidive, cavité d'évidement).
+- Toujours resituer une décision opératoire par rapport au risque de lésion du nerf facial et au gain auditif attendu.`,
 
-            gastrique: `EXPERTISE GASTRIQUE — repères à utiliser quand pertinent :
-- Classification de Lauren (type intestinal vs diffus/à cellules indépendantes) — pronostique.
-- Curage ganglionnaire D1 vs D1+ vs D2 selon les recommandations JGCA ; objectif R0 systématique.
-- Stadification TNM AJCC 8e édition ; score de Siewert pour les tumeurs de la jonction œso-gastrique.
-- Signe de linite plastique (linitis plastica) = pronostic défavorable, à signaler si présent.
-- Fuite anastomotique et fistule du moignon duodénal = complications majeures à évoquer selon le contexte.`,
+            rhinologie: `EXPERTISE RHINOLOGIE — repères à utiliser quand pertinent :
+- Score de Lund-Mackay (0 à 24) pour quantifier l'atteinte scanographique des sinus.
+- Score SNOT-22 pour le retentissement fonctionnel et qualité de vie.
+- Structures à risque en chirurgie endoscopique : lame criblée, artère ethmoïdale antérieure, nerf optique, carotide interne.
+- Recommandations EPOS : traitement médical maximal avant indication chirurgicale (hors complication ou tumeur).
+- Extension orbitaire ou vers la base du crâne des tumeurs naso-sinusiennes : impose IRM et abord combiné endoscopique-externe.
+- Toujours resituer une décision chirurgicale par rapport au score de Lund-Mackay et à la présence de structures à risque envahies.`,
 
-            thyroide: `EXPERTISE THYROÏDIENNE — repères à utiliser quand pertinent :
-- Classification TI-RADS (ACR) pour le risque échographique d'un nodule ; système de Bethesda pour la cytoponction.
-- Risque de lésion du nerf récurrent : 1-2% en électif, jusqu'à 5-10% en reprise ; monitoring neural (NIM) recommandé.
-- Hypoparathyroïdie post-opératoire : surveiller PTH à H6/H24, calcium ionisé ; supplémentation si PTH basse.
-- Indication de curage central prophylactique (VI) pour les carcinomes papillaires >1cm ou signes d'extension.
-- Stadification AJCC/TNM thyroïdien (âge <55 ans vs ≥55 ans change la classification du stade).`,
+            cervicofacial: `EXPERTISE CERVICO-FACIALE — repères à utiliser quand pertinent :
+- Niveaux ganglionnaires cervicaux I à VI (classification AAO-HNS) pour décrire toute extension.
+- Types de curage cervical : radical, radical modifié, sélectif — selon le site primitif et le statut ganglionnaire.
+- Rupture capsulaire ganglionnaire : facteur majeur d'indication de radiothérapie adjuvante.
+- Grade House-Brackmann prévisionnel et neuromonitoring du nerf facial en chirurgie parotidienne.
+- Préservation du nerf spinal accessoire (XI) en curage sélectif pour limiter le syndrome de l'épaule.
+- Toujours resituer une décision de curage par rapport au statut ganglionnaire (niveau, taille, rupture capsulaire).`,
 
-            thoracique: `EXPERTISE THORACIQUE — repères à utiliser quand pertinent :
-- Stadification TNM pulmonaire (8e édition IASLC).
-- VEMS post-opératoire prédit (ppoFEV1) et DLCO : seuils de résécabilité fonctionnelle (ppoFEV1 >40% généralement sûr).
-- VO2 max à l'effort : <10 ml/kg/min = risque élevé ; >20 = faible risque pour pneumonectomie.
-- Évaluation du curage ganglionnaire médiastinal selon la carte de l'IASLC (stations 2R/4R/7/etc.).
-- Complications typiques à évoquer : fistule bronchopleurale, torsion de lobe, fuite aérienne prolongée.`,
-
-            cardiaque: `EXPERTISE CARDIAQUE — repères à utiliser quand pertinent :
-- EuroSCORE II et STS Score pour le risque opératoire ; classification NYHA pour les symptômes.
-- Sténose aortique sévère (critères ESC/AHA) : gradient moyen >40mmHg, surface valvulaire <1cm² (ou <0.6cm²/m²).
-- Classification de Carpentier pour l'insuffisance mitrale (type I/II/IIIa/IIIb) — oriente réparation vs remplacement.
-- Choix prothèse : biologique si >65-70 ans ou contre-indication aux AVK ; mécanique si plus jeune (anticoagulation à vie).
-- Viabilité myocardique (IRM de stress, scintigraphie) avant revascularisation d'un territoire akinétique.`,
-
-            urologie: `EXPERTISE UROLOGIQUE — repères à utiliser quand pertinent :
-- Score de néphrométrie RENAL (Radius, Exophytic/endophytic, Nearness au sinus, Anterior/posterior, Location) : score ≤6 = simple, 7-9 = intermédiaire, ≥10 = complexe — oriente néphrectomie partielle vs totale.
-- Classification de Bosniak pour les kystes rénaux (I à IV, risque de malignité croissant).
-- Score de Gleason / grade ISUP (1 à 5) et PI-RADS v2.1 (IRM prostatique, ≥4 = suspicion significative) pour la prostate.
-- Stadification TNM rénale/prostatique/vésicale selon organe concerné.
-- DFG pré/post-opératoire : anticiper l'impact d'une néphrectomie totale vs partielle sur la fonction rénale à long terme.
-- Complications à évoquer selon la procédure : hémorragie au déclampage, fistule urinaire, incontinence/dysfonction érectile (prostatectomie).`
+            pediatrique: `EXPERTISE ORL PÉDIATRIQUE — repères à utiliser quand pertinent :
+- Critères de Paradise pour l'indication d'amygdalectomie sur angines récidivantes (≥7/an, ≥5/an×2 ans, ≥3/an×3 ans).
+- Score OSA-18 (18 à 126) : seuil de retentissement significatif autour de 60, à corréler à la polysomnographie.
+- Grade amygdalien de Brodsky (0 à 4) pour quantifier l'obstruction oropharyngée.
+- Hémorragie post-amygdalectomie : primaire (<24h, ~0,5-1%) vs secondaire (J5-J10, ~2-5%, chute d'escarre).
+- Urgence d'extraction d'un corps étranger selon sa nature : pile bouton = urgence absolue (risque de nécrose caustique).
+- Toujours resituer une décision opératoire par rapport à l'âge, au poids et aux contraintes anesthésiques pédiatriques.`
           };
 
           // Instructions de commandes d'action — partagées par TOUS les canaux
@@ -997,13 +1465,12 @@
               `- "ferme" / "ferme la fenêtre" → [ACTION:close_modal]`,
               `- "recalcule l'analyse" / "recalcule le risque" → [ACTION:recalc_analysis]`,
               `- "exporte le plan" → [ACTION:export_plan]`,
-              `- "sélectionne le hub hépato-biliaire" / "passe au module HBP" → [ACTION:switch_hbp]`,
-              `- "sélectionne le hub colorectal" → [ACTION:switch_colorectal]`,
-              `- "sélectionne le hub gastrique" → [ACTION:switch_gastrique]`,
-              `- "sélectionne le hub thyroïde" → [ACTION:switch_thyroide]`,
-              `- "sélectionne le hub thoracique" → [ACTION:switch_thoracique]`,
-              `- "sélectionne le hub cardiaque" → [ACTION:switch_cardiaque]`,
-              `- "sélectionne le hub urologie" → [ACTION:switch_urologie]`,
+              `- "sélectionne le hub laryngologie" / "passe au module larynx" → [ACTION:switch_laryngologie]`,
+              `- "sélectionne le hub otologie" → [ACTION:switch_otologie]`,
+              `- "sélectionne le hub rhinologie" → [ACTION:switch_rhinologie]`,
+              `- "sélectionne le hub cervico-facial" → [ACTION:switch_cervicofacial]`,
+              `- "sélectionne le hub pédiatrique" → [ACTION:switch_pediatrique]`,
+              `- "sélectionne le hub anesthésie-réanimation" → [ACTION:switch_anesthesie_reanimation]`,
             ].join('\n');
           }
 
@@ -1011,7 +1478,7 @@
             const mod = MODULES[state.mod];
             const warn = mod.metrics.filter(m => m.st === 'warn').map(m => `${m.label}: ${m.val}`).join(', ') || 'aucune';
             return [
-              `Tu es "GeneralSurg Live", l'assistant chirurgical vocal intégré au poste de planification ${mod.name}.`,
+              `Tu es "ORLSurgPlan3D Live", l'assistant chirurgical vocal intégré au poste de planification ${mod.name}.`,
               `Tu participes à une conversation ORALE CONTINUE en temps réel avec un chirurgien pendant sa préparation opératoire — pas à un échange écrit formel.`,
               ``,
               `Contexte patient actif : ${mod.patient.nom}, ${mod.patient.age} ans, ${mod.patient.sexe}, diagnostic "${mod.patient.diag}", niveau d'urgence: ${mod.patient.urg}.`,
@@ -1388,13 +1855,12 @@
               close_modal: () => document.querySelectorAll('.modal-overlay.open:not(#modal-login)').forEach(m => m.classList.remove('open')),
               recalc_analysis: () => runAnalysis(),
               export_plan: () => exportPlan(),
-              switch_hbp: () => switchModule('hbp'),
-              switch_colorectal: () => switchModule('colorectal'),
-              switch_gastrique: () => switchModule('gastrique'),
-              switch_thyroide: () => switchModule('thyroide'),
-              switch_thoracique: () => switchModule('thoracique'),
-              switch_cardiaque: () => switchModule('cardiaque'),
-              switch_urologie: () => switchModule('urologie'),
+              switch_laryngologie: () => switchModule('laryngologie'),
+              switch_otologie: () => switchModule('otologie'),
+              switch_rhinologie: () => switchModule('rhinologie'),
+              switch_cervicofacial: () => switchModule('cervicofacial'),
+              switch_pediatrique: () => switchModule('pediatrique'),
+              switch_anesthesie_reanimation: () => switchModule('anesthesie_reanimation'),
               // Ajouts : vue 3D/MPR, zoom, thème, OR/tactile/lecture seule en versions
               // explicites on/off (une commande vocale doit toujours produire le même
               // résultat, pas basculer à l'aveugle selon l'état courant).
@@ -1856,7 +2322,7 @@
             const mod = MODULES[state.mod];
             // I18N : la langue de réponse suit la langue active de l'interface (I18N.currentLocale()),
             // pas "français" codé en dur — voir I18N.t('ai.respondInLanguage').
-            const system = `Tu es l'assistant chirurgical IA GeneralSurg Plan, spécialisé en ${mod.name}. ` +
+            const system = `Tu es l'assistant chirurgical IA ORLSurgPlan3D, spécialisé en ${mod.name}. ` +
               `Patient en cours: ${mod.patient.nom}, ${mod.patient.age} ans, diagnostic: ${mod.patient.diag}. ` +
               `${I18N.t('ai.respondInLanguage', { language: I18N.languageName() })} Réponse concise (3-5 phrases max) et cliniquement pertinente. ` +
               `Rappelle que la décision finale reste au chirurgien.` +
@@ -2532,171 +2998,23 @@
             if (preview) preview.style.display = 'block';
 
             const reports = {
-              hepatectomie: { code: 'HFMA009 (1380,00 €)', desc: '<b>1. Indication :</b> Tumeur maligne S7/S8.<br><b>2. Abord :</b> Laparotomie sous-costale droite élargie.<br><b>3. Geste :</b> Hépatectomie droite réglée, clampage pédiculaire 18 min.<br><b>4. Hémostase :</b> Tranche de section hémostasiée, FLR adéquat > 65%.', sha: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 (texte fixe de démonstration, pas un sceau réel)' },
-              cholecystectomie: { code: 'HHFA002 (410,00 €)', desc: '<b>1. Indication :</b> Lithiase biliaire symptomatique.<br><b>2. Abord :</b> Cœlioscopie 4 trocarts.<br><b>3. Geste :</b> Dissection du triangle de Calot, clipage canal cystique et artère cystique.<br><b>4. Fin d\'intervention :</b> Exérèse vésicule, extraction dans sac Endocatch.', sha: '8f434346648f6b96df89dda901c5176b10a6d83961dd3c1ac88b59b2dc327aa4 (texte fixe de démonstration, pas un sceau réel)' },
-              hemicolectomie: { code: 'HHFA001 (920,50 €)', desc: '<b>1. Indication :</b> Adénocarcinome côlon ascendant.<br><b>2. Abord :</b> Laparoscopie 4 trocarts.<br><b>3. Geste :</b> Hémicolectomie droite avec ligature primordiale des vaisseaux iléo-coliques.<br><b>4. Anastomose :</b> Iléo-transverse latéro-latérale mécanique au stapler linéaire.', sha: '7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b (texte fixe de démonstration, pas un sceau réel)' },
-              rectum: { code: 'HGCC002 (1450,00 €)', desc: '<b>1. Indication :</b> Cancer rectum moyen cT3N1.<br><b>2. Abord :</b> Laparoscopie pelvienne.<br><b>3. Geste :</b> Exérèse totale du mésorectum (TME) avec préservation du plexus hypogastrique.<br><b>4. Anastomose :</b> Colorectale basse mécanique au stapler circulaire EEA 28mm.', sha: '1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c (texte fixe de démonstration, pas un sceau réel)' },
-              gastrectomie: { code: 'HFMA004 (1520,00 €)', desc: '<b>1. Indication :</b> Adénocarcinome gastrique linitique.<br><b>2. Abord :</b> Laparotomy médiane sus-ombicale.<br><b>3. Geste :</b> Gastrectomie totale D2 avec curage des stations N1 à N6 et splénopancréatectomie préservée.<br><b>4. Anastomose :</b> Œsio-jéjunale sur anse montée en Y de Roux.', sha: '4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e (texte fixe de démonstration, pas un sceau réel)' },
-              subtotale: { code: 'HFMA003 (1180,00 €)', desc: '<b>1. Indication :</b> Tumeur antre gastrique.<br><b>2. Abord :</b> Laparoscopie.<br><b>3. Geste :</b> Gastrectomie des 4/5èmes distaux avec curage D1+.<br><b>4. Anastomose :</b> Gastro-jéjunale termino-latérale de type Finsterer.', sha: '9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f (texte fixe de démonstration, pas un sceau réel)' },
-              lobectomie: { code: 'GFMA008 (1340,00 €)', desc: '<b>1. Indication :</b> NSCLC lobe supérieur droit.<br><b>2. Abord :</b> Thoracoscopie VATS 3 trocarts.<br><b>3. Geste :</b> Dissection hilaire, agrafage veine et artère pulmonaires du LSD, agrafage bronche lobaire.<br><b>4. Fin d\'intervention :</b> Test d\'étanchéité sous eau négatif, drain thoracique 28Fr en aspiration.', sha: '2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b (texte fixe de démonstration, pas un sceau réel)' },
-              segmentectomie_thor: { code: 'GFFA002 (980,00 €)', desc: '<b>1. Indication :</b> Métastase pulmonaire S6 droit.<br><b>2. Abord :</b> VATS vidéo-assisté.<br><b>3. Geste :</b> Segmentectomie anatomique S6 de Fowler sous guidage par fluorescence ICG.<br><b>4. Hémostase :</b> Aérostase vérifiée au collafilm, drain 24Fr.', sha: '5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d (texte fixe de démonstration, pas un sceau réel)' }
+              laryngectomie: { code: 'GALA002 (1450,00 €)', desc: '<b>1. Indication :</b> Carcinome épidermoïde glottique cT3N1, corde vocale fixée.<br><b>2. Abord :</b> Cervicotomie.<br><b>3. Geste :</b> Laryngectomie totale avec curage cervical fonctionnel bilatéral (niveaux II-IV) et fermeture pharyngienne en T.<br><b>4. Fin d\'intervention :</b> Trachéostome définitif, prothèse phonatoire trachéo-œsophagienne (Provox) posée en un temps.', sha: 'a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2 (texte fixe de démonstration, pas un sceau réel)' },
+              cordectomie: { code: 'GAFA004 (620,00 €)', desc: '<b>1. Indication :</b> Carcinome T1a de la corde vocale droite.<br><b>2. Abord :</b> Laryngoscopie en suspension.<br><b>3. Geste :</b> Cordectomie transorale au laser CO2, type III (classification ELS).<br><b>4. Fin d\'intervention :</b> Hémostase au contact, pas de trachéotomie.', sha: 'b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3 (texte fixe de démonstration, pas un sceau réel)' },
+              tympanoplastie: { code: 'CAJA001 (540,00 €)', desc: '<b>1. Indication :</b> Perforation tympanique séquellaire d\'otite chronique.<br><b>2. Abord :</b> Voie du conduit / rétro-auriculaire.<br><b>3. Geste :</b> Myringoplastie type I avec greffe de cartilage tragal.<br><b>4. Fin d\'intervention :</b> Méchage résorbable du conduit auditif externe.', sha: 'c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4 (texte fixe de démonstration, pas un sceau réel)' },
+              mastoidectomie: { code: 'CAFA002 (890,00 €)', desc: '<b>1. Indication :</b> Cholestéatome de la caisse, stade II (EAONO-JOS).<br><b>2. Abord :</b> Rétro-auriculaire.<br><b>3. Geste :</b> Mastoïdectomie canal wall up avec exérèse complète de la matrice et ossiculoplastie (PORP) en un temps.<br><b>4. Fin d\'intervention :</b> Intégrité du nerf facial vérifiée au neuromonitoring.', sha: 'd4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5 (texte fixe de démonstration, pas un sceau réel)' },
+              cees: { code: 'GAFA010 (1120,00 €)', desc: '<b>1. Indication :</b> Polypose naso-sinusienne bilatérale récidivante, Lund-Mackay 14/24.<br><b>2. Abord :</b> Endoscopie naso-sinusienne.<br><b>3. Geste :</b> Méatotomie moyenne bilatérale, ethmoïdectomie antérieure et postérieure, sphénoïdotomie.<br><b>4. Fin d\'intervention :</b> Mèches résorbables bilatérales.', sha: 'e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6 (texte fixe de démonstration, pas un sceau réel)' },
+              septoplastie: { code: 'GAEA002 (480,00 €)', desc: '<b>1. Indication :</b> Déviation septale symptomatique avec obstruction nasale.<br><b>2. Abord :</b> Voie endonasale.<br><b>3. Geste :</b> Résection sous-muqueuse du septum avec repositionnement, turbinectomie inférieure bilatérale associée.<br><b>4. Fin d\'intervention :</b> Attelles siliconées bilatérales.', sha: 'f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7 (texte fixe de démonstration, pas un sceau réel)' },
+              parotidectomie: { code: 'CBFA001 (980,00 €)', desc: '<b>1. Indication :</b> Adénome pléomorphe du lobe superficiel de la parotide droite.<br><b>2. Abord :</b> Cervico-parotidien.<br><b>3. Geste :</b> Parotidectomie superficielle avec dissection du tronc et des branches du nerf facial sous neuromonitoring continu.<br><b>4. Fin d\'intervention :</b> Drain aspiratif de Redon.', sha: 'a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8 (texte fixe de démonstration, pas un sceau réel)' },
+              curage_cervical: { code: 'GEFA004 (860,00 €)', desc: '<b>1. Indication :</b> Adénopathies cervicales niveaux II-III métastatiques d\'un carcinome des VADS.<br><b>2. Abord :</b> Cervicotomie.<br><b>3. Geste :</b> Curage ganglionnaire cervical fonctionnel niveaux II à IV avec préservation de la veine jugulaire interne, du SCM et du nerf spinal.<br><b>4. Fin d\'intervention :</b> Drain aspiratif.', sha: 'b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9 (texte fixe de démonstration, pas un sceau réel)' },
+              amygdalectomie: { code: 'GAFA020 (310,00 €)', desc: '<b>1. Indication :</b> Angines récidivantes répondant aux critères de Paradise.<br><b>2. Abord :</b> Voie orale.<br><b>3. Geste :</b> Amygdalectomie bilatérale extracapsulaire au bistouri froid avec adénoïdectomie associée.<br><b>4. Fin d\'intervention :</b> Hémostase par ligatures, pas de packing.', sha: 'c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0 (texte fixe de démonstration, pas un sceau réel)' },
+              att: { code: 'CAFA015 (210,00 €)', desc: '<b>1. Indication :</b> Otite séro-muqueuse chronique bilatérale avec hypoacousie de transmission.<br><b>2. Abord :</b> Otoscopie sous microscope opératoire.<br><b>3. Geste :</b> Myringotomie antéro-inférieure bilatérale avec pose d\'aérateurs trans-tympaniques.<br><b>4. Fin d\'intervention :</b> Perméabilité des aérateurs vérifiée.', sha: 'd0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1 (texte fixe de démonstration, pas un sceau réel)' }
             };
 
-            const rep = reports[type] || reports.hepatectomie;
+            const rep = reports[type] || reports.laryngectomie;
             if (badge) badge.textContent = rep.code;
             if (txt) txt.innerHTML = rep.desc;
             if (sha) sha.textContent = rep.sha;
             notify('🗣️ Démonstration : code CCAM ' + rep.code.split(' ')[0] + ' (texte fixe, pas une reconnaissance vocale réelle)', 'info');
-          }
-
-          function simulateWebXRGesture(gesture, actionDesc) {
-            const outEl = document.getElementById('webxr-gesture-output');
-            if (outEl) {
-              outEl.style.borderLeftColor = '#06b6d4';
-              outEl.innerHTML = `🥽 <b>GESTE DÉTECTÉ (${gesture}) :</b> ${actionDesc} <br><span style="color:var(--green)">⚡ latence de calcul spatiale : 8.4 ms (WASM WebGPU)</span>`;
-            }
-            notify(`🥽 Geste spatial WebXR traité : ${gesture} — ${actionDesc}`, 'ok');
-          }
-
-          function simulateRoboticHaptic(action, force, desc) {
-            const outEl = document.getElementById('robotic-haptic-output');
-            if (outEl) {
-              outEl.style.borderLeftColor = force >= 4.5 ? '#ef4444' : (force >= 3.0 ? '#eab308' : '#22c55e');
-              outEl.innerHTML = `🤖 <b>RETOUR HAPTIQUE (${action}) :</b> ${desc} <br><strong>⚡ Force mesurée : ${force} N</strong> — Boucle 1000 Hz fibre optique active.`;
-            }
-            if (force >= 4.5) {
-              notify(`🛑 ALERTE SÉCURITÉ ROBOTIQUE : Force ${force} N > Seuil 4.5 N ! Verrouillage d'urgence activé et scellé (SHA-256)`, 'warn');
-            } else {
-              notify(`🦾 Simulation haptique traitée : ${action} (${force} N) — Tissu stable`, 'info');
-            }
-          }
-
-          function simulateGenAIPrediction(spec, eventName, prob, desc) {
-            const outEl = document.getElementById('genai-prediction-output');
-            if (outEl) {
-              outEl.style.borderLeftColor = prob >= 70 ? '#ef4444' : (prob >= 30 ? '#eab308' : '#22c55e');
-              outEl.innerHTML = `🧬 <b>PRÉDICTION GENAI (${eventName}) :</b> ${desc} <br><strong>⚡ Probabilité à 15s : ${prob}%</strong> — Transformer 70B (52 400 vidéos OR).`;
-            }
-            if (prob >= 70) {
-              notify(`🛑 ALERTE COMPLICATION GENAI (${prob}%) : ${eventName} ! Action préventive IA recommandée et scellée dans audit_logs (SHA-256)`, 'warn');
-            } else {
-              notify(`🧬 Prédiction GenAI calculée : ${eventName} (${prob}%) — Trajectoire stable`, 'info');
-            }
-          }
-
-          function simulate4DBioprinting(site, vol, layers, desc) {
-            const outEl = document.getElementById('pqc-bioprint-output');
-            if (outEl) {
-              outEl.style.borderLeftColor = '#10b981';
-              outEl.innerHTML = `🛰️ <b>BIO-IMPRESSION 4D (${site}) :</b> ${desc} <br><strong>⚡ Volume : ${vol} mL | ${layers}</strong> — Bras 6 axes CELLINK BioX à 37°C.`;
-            }
-            notify(`🛰️ Bio-impression 4D calibrée sur ${site} (${vol} mL) — G-code transmis sur réseau LEO 6G PQC`, 'ok');
-          }
-
-          function simulateBciAction(action, force, icms, desc) {
-            const outEl = document.getElementById('bci-haptic-output');
-            if (outEl) {
-              outEl.style.borderLeftColor = force >= 4.8 ? '#ef4444' : (force >= 3.5 ? '#eab308' : '#8b5cf6');
-              outEl.innerHTML = `🧠 <b>INTENTION M1 / HAPTIQUE S1 (${action}) :</b> ${desc} <br><strong>⚡ Force PBD : ${force} N | Stimulation S1 : ${icms} @ 200 Hz</strong> — Puce SNN Loihi 2 (< 2.1 ms).`;
-            }
-            if (force >= 4.8) {
-              notify(`🛑 ALERTE INTERLOCK BCI : Indice de fatigue/tension critique ! Découplage neuronal immédiat (SHA-256)`, 'warn');
-            } else {
-              notify(`🧠 Commande BCI traitée : ${action} (${force} N) — Retour haptique S1 ${icms} perçu dans le cortex`, 'info');
-            }
-          }
-
-          function simulateNanoAction(action, param, stat, desc) {
-            const outEl = document.getElementById('nano-swarm-output');
-            if (outEl) {
-              outEl.style.borderLeftColor = param === 0.0 ? '#ef4444' : (param >= 43.0 ? '#10b981' : '#0ea5e9');
-              outEl.innerHTML = `🔬 <b>ESSAIM NANOROBOTIQUE (${action}) :</b> ${desc} <br><strong>⚡ Télémétrie : ${stat} | Gradient : ${param} T/m (ou °C)</strong> — Arrimage EGFR 98.4%.`;
-            }
-            if (param === 0.0) {
-              notify(`🛑 ALERTE ESSAIM NANOROBOTS : Démagnétisation d'urgence activée ! Essaim dispersé en toute sécurité (SHA-256)`, 'warn');
-            } else {
-              notify(`🔬 Commande nanorobotic traitée : ${action} (${stat}) — Zéro dommage parenchymateux`, 'info');
-            }
-          }
-
-          function simulateAutoAction(action, param, stat, desc) {
-            const outEl = document.getElementById('auto-laser-output');
-            if (outEl) {
-              outEl.style.borderLeftColor = param === 0.0 ? '#ef4444' : (param >= 14.0 ? '#10b981' : '#eab308');
-              outEl.innerHTML = `🤖⚡ <b>AUTONOMIE L5 & SOUDURE LASER (${action}) :</b> ${desc} <br><strong>⚡ Force / Fluence : ${param} J/cm² | Résistance : ${stat}</strong> — Moteur VLA RT-2 (< 0.8 ms).`;
-            }
-            if (param === 0.0) {
-              notify(`🛑 ALERTE TAKEOVER HUMAIN (< 1 ms) : Contrôle rendu au chirurgien par BCI ! Laser sécurisé (SHA-256)`, 'warn');
-            } else {
-              notify(`🤖 Exécution autonome L5 réussie : ${action} (${stat}) — Fusion tissulaire hermétique garantie`, 'info');
-            }
-          }
-
-          function simulateEpiAction(action, param, stat, desc) {
-            const outEl = document.getElementById('epi-sono-output');
-            if (outEl) {
-              outEl.style.borderLeftColor = param === 0.0 ? '#ef4444' : (param >= 150.0 ? '#10b981' : '#22c55e');
-              outEl.innerHTML = `🧬✨ <b>RÉJUVÉNATION & SONOGÉNÉTIQUE (${action}) :</b> ${desc} <br><strong>⚡ Pression FUS / Laser NIR : ${param} MPa (ou mW/cm²) | Horloge : ${stat}</strong> — OSKM ARNm LNP.`;
-            }
-            if (param === 0.0) {
-              notify(`🛑 ALERTE INTERLOCK ONCOGÉNIQUE : Verrouillage anti-tératome activé ! Aucune transformation cellulaire (SHA-256)`, 'warn');
-            } else {
-              notify(`🧬 Commande de réjuvénation épigénétique traitée : ${action} (${stat}) — Tissu régénéré`, 'info');
-            }
-          }
-
-          function simulateRamanAction(action, param, stat, desc) {
-            const outEl = document.getElementById('raman-plasma-output');
-            if (outEl) {
-              outEl.style.borderLeftColor = param === 0.0 ? '#ef4444' : (param >= 10.0 ? '#10b981' : '#06b6d4');
-              outEl.innerHTML = `⚡🔬 <b>SPECTROMÉTRIE RAMAN & PLASMA CAP (${action}) :</b> ${desc} <br><strong>⚡ Tension CAP / Fréquence : ${param} kV (ou Hz) | Résultat : ${stat}</strong> — Apoptose RONS.`;
-            }
-            if (param === 0.0) {
-              notify(`🛑 ALERTE INTERLOCK IONISATION : Coupure haute tension (0 kV) ! Arc électrique évité en toute sécurité (SHA-256)`, 'warn');
-            } else {
-              notify(`⚡ Commande Raman/Plasma traitée : ${action} (${stat}) — Zéro résidu tumoral R0 certifié`, 'info');
-            }
-          }
-
-          function simulateCryoAction(action, param, stat, desc) {
-            const outEl = document.getElementById('cryo-bnct-output');
-            if (outEl) {
-              outEl.style.borderLeftColor = param === 0.0 ? '#ef4444' : (param >= 30.0 ? '#10b981' : '#38bdf8');
-              outEl.innerHTML = `❄️☢️ <b>CRYO-IRE & BNCT NEUTRONS (${action}) :</b> ${desc} <br><strong>⚡ Gradient nsPEF / Bore : ${param} kV/cm (ou ppm) | Statut : ${stat}</strong> — Alpha 2.34 MeV.`;
-            }
-            if (param === 0.0) {
-              notify(`🛑 ALERTE INTERLOCK DOSIMÉTRIE : Absorption neutronique seuil ! Coupure immédiate du faisceau (0 n/cm²/s) ! SHA-256`, 'warn');
-            } else {
-              notify(`❄️ Commande Cryo-IRE/BNCT traitée : ${action} (${stat}) — Tissu tumoral éradiqué à 100%`, 'info');
-            }
-          }
-
-          function simulateOrganoidAction(action, param, stat, desc) {
-            const outEl = document.getElementById('organoid-4d-output');
-            if (outEl) {
-              outEl.style.borderLeftColor = param === 0.0 ? '#ef4444' : (param >= 180.0 ? '#10b981' : '#10b981');
-              outEl.innerHTML = `🧬🌱 <b>ORGANOÏDES 4D & LASER 2PP (${action}) :</b> ${desc} <br><strong>⚡ Lévitation / Laser 2PP : ${param} sphéroïdes (ou mW) | Statut : ${stat}</strong> — Précision 10 µm.`;
-            }
-            if (param === 0.0) {
-              notify(`🛑 ALERTE INTERLOCK HYPOXIE : Risque nécrotique détecté ! Coupure immédiate de l'injection (0 sphéroïde/s) ! SHA-256`, 'warn');
-            } else {
-              notify(`🌱 Commande Organoïdes 4D/2PP traitée : ${action} (${stat}) — Reconstruction fonctionnelle complète`, 'info');
-            }
-          }
-
-          function simulateIknifeAction(action, param, stat, desc) {
-            const outEl = document.getElementById('iknife-ac225-output');
-            if (outEl) {
-              outEl.style.borderLeftColor = param === 0.0 ? '#ef4444' : (param >= 760.0 ? '#f43f5e' : '#10b981');
-              outEl.innerHTML = `🔬💨 <b>iKNIFE REIMS & AC-225 (${action}) :</b> ${desc} <br><strong>⚡ m/z (ou Activité MBq) : ${param} | Statut : ${stat}</strong> — Spécificité 99.95%.`;
-            }
-            if (param === 0.0) {
-              notify(`🛑 ALERTE INTERLOCK RADIOLOGIQUE : Seuil dose alpha atteint ! Coupure immédiate d'injection Actinium-225 (0 MBq) ! SHA-256`, 'warn');
-            } else if (param === 760.6) {
-              notify(`🛑 ALERTE iKNIFE REIMS : Marge R1 détectée (Pic PC 34:1 m/z 760.6) ! Infiltration membranaire — Extension chirurgicale requise !`, 'warn');
-            } else {
-              notify(`💨 Diagnostic iKnife / Tir Ac-225 traité : ${action} (${stat}) — Marge R0 et micro-clusters sécurisés`, 'info');
-            }
           }
 
           // ════════════════════════════════════════════════
@@ -2837,23 +3155,23 @@
                 ? 'Jumeau 3D chargé depuis le cache patient'
                 : (isSimulated ? 'Estimation locale (backend de segmentation réelle indisponible)' : 'Jumeau 3D Patient-Spécifique Réel'));
               const vol = (data && data.volumetric_analysis_ml) || {};
-              const tlv = vol.total_liver_volume_tlv || 1420;
-              const tumor = vol.tumor_volume_chc || 320;
-              const flr = vol.future_liver_remnant_flr_s1_s2_s3_s4_s6_s7 || 640;
-              const flrPct = vol.flr_ratio_pct || 45.1;
-              const meshCount = (data && data['3d_mesh_manifest_gltf']) ? data['3d_mesh_manifest_gltf'].length : 6;
+              const organVol = vol.total_organ_volume_ml || 20;
+              const lesionVol = vol.lesion_volume_ml || 3;
+              const remnant = vol.remnant_volume_ml || 12;
+              const remnantPct = vol.remnant_ratio_pct || 60.0;
+              const meshCount = (data && data['3d_mesh_manifest_gltf']) ? data['3d_mesh_manifest_gltf'].length : 5;
 
               const desc = document.getElementById('anatomy-mode-desc');
               if (desc) desc.innerHTML = isSimulated
                 ? `<span style="color:#eab308">⚠ estimation locale, non clinique (${meshCount} structures)</span> • ` +
-                `Foie: <strong style="color:#a78bfa">${tlv} mL</strong> • ` +
-                `Tumeur: <strong style="color:#f87171">${tumor} mL</strong> • ` +
-                `FLR: <strong style="color:#34d399">${flr} mL (${flrPct}%)</strong>` +
+                `Organe: <strong style="color:#a78bfa">${organVol} mL</strong> • ` +
+                `Lésion: <strong style="color:#f87171">${lesionVol} mL</strong> • ` +
+                `Restant: <strong style="color:#34d399">${remnant} mL (${remnantPct}%)</strong>` +
                 `${fromCache ? ' <span style="color:var(--text3)">[cache]</span>' : ' • <span style="color:#eab308">backend de segmentation réelle indisponible</span>'}`
                 : `<span style="color:#10b981">✅ ${meshCount} maillages chargés</span> • ` +
-                `Foie: <strong style="color:#a78bfa">${tlv} mL</strong> • ` +
-                `Tumeur: <strong style="color:#f87171">${tumor} mL</strong> • ` +
-                `FLR: <strong style="color:#34d399">${flr} mL (${flrPct}%)</strong>` +
+                `Organe: <strong style="color:#a78bfa">${organVol} mL</strong> • ` +
+                `Lésion: <strong style="color:#f87171">${lesionVol} mL</strong> • ` +
+                `Restant: <strong style="color:#34d399">${remnant} mL (${remnantPct}%)</strong>` +
                 `${fromCache ? ' <span style="color:var(--text3)">[cache]</span>' : ''}`;
 
               this._setBanner(isSimulated ? 'warn' : 'ok');
@@ -2868,7 +3186,7 @@
               if (!fromCache) {
                 notify(isSimulated
                   ? `⚠️ Backend de segmentation réelle indisponible pour ${patId} — estimation locale affichée (non clinique), voir ⚙ Paramètres`
-                  : `✅ Jumeau 3D Patient-Spécifique ${patId} prêt : ${meshCount} structures, FLR ${flrPct}% — Aucune action requise`, isSimulated ? 'warn' : 'ok');
+                  : `✅ Jumeau 3D Patient-Spécifique ${patId} prêt : ${meshCount} structures, volume restant ${remnantPct}% — Aucune action requise`, isSimulated ? 'warn' : 'ok');
               }
             },
 
@@ -2877,7 +3195,7 @@
               // Estompe le maillage procédural générique
               if (organMesh) {
                 organMesh.material.opacity = 0.06;
-                // Teinte violette pour le parenchyme hépatique réel
+                // Teinte violette pour l'anatomie patient-réelle
                 if (organMesh.material.color) organMesh.material.color.setHex(0x8b5cf6);
               }
               if (wireframeMesh) wireframeMesh.material.opacity = 0.02;
@@ -2892,41 +3210,52 @@
 
               // Met à jour le HUD avec la volumétrie réelle
               const hudVol = document.getElementById('hud-vol');
-              if (hudVol) hudVol.textContent = (vol.total_liver_volume_tlv || 1420) + ' mL TLV';
+              if (hudVol) hudVol.textContent = (vol.total_organ_volume_ml || 20) + ' mL';
             },
 
             // Génère des données cliniquement réalistes patient-spécifiques localement
             _generateLocalPatientData(patId) {
-              const mod = MODULES[state.mod] || MODULES['hbp'];
+              const mod = MODULES[state.mod] || MODULES['laryngologie'];
               const pat = mod.patient || {};
               // Variation pseudo-aléatoire reproductible basée sur l'ID patient
               const seed = patId.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
               const rnd = (base, amp) => Math.round((base + (seed % amp) - amp / 2) * 10) / 10;
-              const tlv = rnd(1420, 200);
-              const tumor = rnd(260, 100);
-              const resected = rnd(620, 150);
-              const flr = tlv - resected;
-              const flrPct = Math.round(flr / tlv * 1000) / 10;
+              // Volume anatomique de référence dérivé du module actif (mêmes ordres de grandeur
+              // que `refML` dans computeOrganVolumeMl()) au lieu d'une valeur figée de foie.
+              const refVol = { laryngologie: 15, otologie: 2, rhinologie: 40, cervicofacial: 25, pediatrique: 10, anesthesie_reanimation: 500 }[mod.id] || 20;
+              const organVol = Math.max(1, rnd(refVol, Math.max(2, refVol * 0.3)));
+              const lesionVol = Math.max(0.5, rnd(refVol * 0.15, Math.max(1, refVol * 0.1)));
+              const resected = Math.max(0.5, rnd(organVol * 0.5, organVol * 0.15));
+              const remnant = Math.max(0, organVol - resected);
+              const remnantPct = Math.round(remnant / organVol * 1000) / 10;
+
+              // Manifeste de mesh dérivé de l'anatomie réelle du module actif (au lieu d'une liste
+              // figée d'organes hépatiques) : chaque groupe de la structure anatomique (mod.structures,
+              // déjà affiché dans l'arbre anatomique du panneau gauche) devient une entité du jumeau,
+              // avec la lésion en tête de liste. Fonctionne pour n'importe quel module, présent ou futur.
+              const groupColors = ['#8b5cf6', '#38bdf8', '#f43f5e', '#3b82f6', '#10b981'];
+              const structures = mod.structures || [];
+              const meshManifest = [{ organ: 'Lesion', color: '#ef4444', volume_ml: lesionVol }];
+              structures.forEach((grp, i) => {
+                meshManifest.push({
+                  organ: grp.name.replace(/[^\p{L}\p{N}]+/gu, '_'),
+                  color: groupColors[i % groupColors.length],
+                  volume_ml: Math.max(0.5, rnd(organVol / (structures.length || 1), 3))
+                });
+              });
+
               return {
                 patient_id: patId,
                 patient_name: pat.nom || patId,
                 clinical_workflow: 'LOCAL_SIMULATION_REAL_ANATOMY 🏥',
                 volumetric_analysis_ml: {
-                  total_liver_volume_tlv: tlv,
-                  tumor_volume_chc: tumor,
-                  resected_volume_s5_s8: resected,
-                  future_liver_remnant_flr_s1_s2_s3_s4_s6_s7: flr,
-                  flr_ratio_pct: flrPct,
-                  portal_vein_diameter_mm: rnd(13.5, 4)
+                  total_organ_volume_ml: organVol,
+                  lesion_volume_ml: lesionVol,
+                  resected_volume_ml: resected,
+                  remnant_volume_ml: remnant,
+                  remnant_ratio_pct: remnantPct
                 },
-                '3d_mesh_manifest_gltf': [
-                  { organ: 'Liver_Parenchyma', color: '#8b5cf6', volume_ml: tlv },
-                  { organ: 'Tumor_Lesion', color: '#ef4444', volume_ml: tumor },
-                  { organ: 'Portal_Vein_Tree', color: '#38bdf8', volume_ml: 80 },
-                  { organ: 'Hepatic_Artery', color: '#f43f5e', volume_ml: 40 },
-                  { organ: 'Hepatic_Veins', color: '#3b82f6', volume_ml: 95 },
-                  { organ: 'Gallbladder', color: '#10b981', volume_ml: 38 }
-                ],
+                '3d_mesh_manifest_gltf': meshManifest,
                 // Correctif honnêteté (audit) : ce générateur ne fait qu'un hash trivial de l'ID
                 // patient (voir `seed` ci-dessus) — ce n'est ni un patient réel, ni une segmentation
                 // réelle, ni un sceau cryptographique. Les champs suivants étaient auparavant
@@ -2940,7 +3269,7 @@
 
             // Forçage de rechargement (bouton Forcer dans la bannière)
             forceReload() {
-              const mod = MODULES[state.mod] || MODULES['hbp'];
+              const mod = MODULES[state.mod] || MODULES['laryngologie'];
               const patId = mod && mod.patient ? mod.patient.id : 'PAT-2026-001';
               delete this._cache[patId];
               notify('🔄 Re-ingestion PACS forcée — Suppression du cache et relance du pipeline complet', 'info');
@@ -3154,7 +3483,7 @@
             document.querySelectorAll('.top-nav button[data-view]').forEach(btn => {
               btn.addEventListener('click', () => {
                 const view = btn.dataset.view;
-                // DICOM / Réalité Augm. / Audit Trail et modules NextGen s'ouvrent en modale
+                // DICOM / Réalité Augm. / Audit Trail et les vues Surg* s'ouvrent en modale
                 if (view === 'dicom') { openDicomViewer(); return; }
                 if (view === 'ar') { openArPanel(); return; }
                 if (view === 'audit') { openAuditTrail(); return; }
@@ -3166,18 +3495,6 @@
                 if (view === 'mdr-fda') { openModal('mdr-fda'); return; }
                 if (view === 'raymarching-dvr') { openModal('raymarching-dvr'); return; }
                 if (view === 'resp-cycle') { openModal('resp-cycle'); return; }
-                if (view === 'webxr') { openModal('webxr'); return; }
-                if (view === 'robotic') { openModal('robotic'); return; }
-                if (view === 'genai-complications') { openModal('genai-complications'); return; }
-                if (view === 'pqc-bioprint') { openModal('pqc-bioprint'); return; }
-                if (view === 'bci-haptic') { openModal('bci-haptic'); return; }
-                if (view === 'nano-swarm') { openModal('nano-swarm'); return; }
-                if (view === 'auto-laser') { openModal('auto-laser'); return; }
-                if (view === 'epi-sono') { openModal('epi-sono'); return; }
-                if (view === 'raman-plasma') { openModal('raman-plasma'); return; }
-                if (view === 'cryo-bnct') { openModal('cryo-bnct'); return; }
-                if (view === 'organoid-4d') { openModal('organoid-4d'); return; }
-                if (view === 'iknife-ac225') { openModal('iknife-ac225'); return; }
                 // 'plan' et 'jumeau' sont de vraies bascules de vue.
                 document.querySelectorAll('.top-nav button[data-view]').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
