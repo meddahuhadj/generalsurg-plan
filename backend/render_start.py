@@ -50,7 +50,6 @@ def main() -> None:
 
     config = uvicorn.Config(
         "main:app",
-        app_dir=_BACKEND_DIR,
         host="0.0.0.0",
         port=PORT,
         workers=1,
