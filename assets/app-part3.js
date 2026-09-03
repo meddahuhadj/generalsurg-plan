@@ -478,6 +478,8 @@
               case 'plan': return base + '/plans/' + encodeURIComponent(planId || '');
               case 'select': return base + '/plans/' + encodeURIComponent(planId || '') + '/select';
               case 'export': return base + '/plans/' + encodeURIComponent(planId || '') + '/export';
+              case 'export-guide': return base + '/plans/' + encodeURIComponent(planId || '') + '/export-guide';
+              case 'export-meshes': return base + '/plans/' + encodeURIComponent(planId || '') + '/export-meshes';
               default: return base;
             }
           }
@@ -551,6 +553,38 @@
             const a = document.createElement('a');
             a.href = url;
             a.download = 'plan_' + String(planId || 'x').slice(0, 8) + '.' + (format === 'dicom-sr' ? 'dcm' : 'pdf');
+            a.click();
+            URL.revokeObjectURL(url);
+          }
+
+          async function planChirurgicalExportGuide(patientId, planId, format) {
+            format = format || 'stl';
+            const r = await planChirurgicalFetch(planChirurgicalPath('export-guide', patientId, planId) + '?format=' + encodeURIComponent(format));
+            if (!r.ok) {
+              const data = await r.json().catch(() => ({}));
+              throw new Error((data.detail || 'Export du guide 3D impossible') + (data.error_id ? ' [' + data.error_id + ']' : ''));
+            }
+            const blob = await r.blob();
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'guide_' + String(planId || 'x').slice(0, 8) + '.' + format;
+            a.click();
+            URL.revokeObjectURL(url);
+          }
+
+          async function planChirurgicalExportMeshes(patientId, planId, part) {
+            part = part || 'remnant';
+            const r = await planChirurgicalFetch(planChirurgicalPath('export-meshes', patientId, planId) + '?part=' + encodeURIComponent(part));
+            if (!r.ok) {
+              const data = await r.json().catch(() => ({}));
+              throw new Error((data.detail || 'Export du maillage 3D impossible') + (data.error_id ? ' [' + data.error_id + ']' : ''));
+            }
+            const blob = await r.blob();
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'organ_' + part + '_' + String(planId || 'x').slice(0, 8) + '.stl';
             a.click();
             URL.revokeObjectURL(url);
           }
@@ -717,6 +751,13 @@
             if (m.margin_mm != null) {
               rows.push('<div class="metric-row"><span class="k">Marge tumorale</span><span class="v ' + (marginOk ? 'ok' : 'alert') + '">' + m.margin_mm + ' mm' + (marginOk === false ? ' (insuffisante)' : '') + '</span></div>');
             }
+            if (Array.isArray(m.critical_structure_margins) && m.critical_structure_margins.length > 0) {
+              m.critical_structure_margins.forEach(cs => {
+                const val = cs.margin_mm;
+                const ok = val != null && val >= 3.0;
+                rows.push('<div class="metric-row"><span class="k">Marge ' + escapeHtml(cs.label || cs.type) + '</span><span class="v ' + (val == null ? '' : (ok ? 'ok' : 'warn')) + '">' + (val != null ? val + ' mm' : 'n/a') + '</span></div>');
+              });
+            }
             if (m.strain_energy_relaxation_pct != null) {
               rows.push(
                 '<div class="metric-row"><span class="k">Relaxation FEM</span><span class="v">' + m.strain_energy_relaxation_pct + '%</span></div>',
@@ -753,6 +794,8 @@
                 + '<button class="btn-planchir" data-plan-id="' + p.id + '" data-act="select"' + (isSel ? ' disabled' : '') + '>Retenir</button>'
                 + '<button class="btn-planchir" data-plan-id="' + p.id + '" data-act="export">PDF</button>'
                 + '<button class="btn-planchir" data-plan-id="' + p.id + '" data-act="export-sr">DICOM SR</button>'
+                + '<button class="btn-planchir accent" data-plan-id="' + p.id + '" data-act="export-guide">🖨️ Guide 3D (STL)</button>'
+                + '<button class="btn-planchir" data-plan-id="' + p.id + '" data-act="export-meshes">📦 Maillages (STL)</button>'
                 + '<button class="btn-planchir danger" data-plan-id="' + p.id + '" data-act="del">Suppr.</button>'
                 + '</div></div>';
             }).join('') || '<div class="planchir-empty">Aucun plan enregistré. Réglez le plan de coupe puis « Simuler & enregistrer ».</div>';
@@ -776,8 +819,14 @@
               + [0, 1, 2].map(i => '<input type="number" step="0.1" class="form-control planchir-num" id="planchir-pn' + i + '" value="' + (i === 2 ? '1' : '0') + '"/>').join('')
               + '</div></div>'
               + '<div class="form-row"><label class="form-label">Marge tumorale demandée (mm)</label><input type="number" step="0.5" min="0" max="50" class="form-control planchir-num" id="planchir-margin" value="5"/></div>'
-              + '<div class="form-row"><label class="form-label">Tissu</label><select class="form-control" id="planchir-tissue">'
-              + '<option value="liver_parenchyma">Parenchyme hépatique</option><option value="soft_tissue">Tissus mous</option><option value="bone">Os</option>'
+              + '<div class="form-row"><label class="form-label">Tissu anatomique</label><select class="form-control" id="planchir-tissue">'
+              + '<option value="liver_parenchyma">Parenchyme hépatique</option>'
+              + '<option value="soft_tissue">Tissus mous génériques</option>'
+              + '<option value="nerve_epineurium">Nerf (Épinèvre - ORL)</option>'
+              + '<option value="cartilage_hyaline">Cartilage hyalin (Larynx/Trachée - ORL)</option>'
+              + '<option value="bone_cortical">Os cortical (Mandibule/Os temporal - ORL)</option>'
+              + '<option value="gland_soft">Glande salivaire (Parotide/Submandibulaire - ORL)</option>'
+              + '<option value="muscle_skeletal">Muscle squelettique</option>'
               + '</select></div>'
               + '<div class="form-row"><label class="form-label">Modèle hyperélastique</label><select class="form-control" id="planchir-model">'
               + '<option value="mooney_rivlin">Mooney-Rivlin</option><option value="ogden">Ogden</option><option value="neo_hookean">Néo-hookéen</option><option value="linear">Linéaire (rapide)</option>'
@@ -792,7 +841,7 @@
             return '<div class="psec"><div class="psec-title">Plan chirurgical</div>'
               + '<div class="planchir-empty">Planification réelle indisponible — le backend n\'est pas configuré. '
               + 'Ouvrez ⚙ Paramètres et renseignez l\'URL de l\'API (puis reconnectez-vous) pour activer le calcul '
-              + 'FLR/marge/FEM sur le maillage segmenté, la persistance des plans et l\'export PDF / DICOM SR.</div></div>';
+              + 'FLR/marge/FEM sur le maillage segmenté, la persistance des plans et l\'export PDF / DICOM SR / Guide 3D STL.</div></div>';
           }
 
           async function planChirurgicalRefresh() {
@@ -823,6 +872,22 @@
             if (genBtn) genBtn.addEventListener('click', planChirurgicalGenerateFromUi);
             const importBtn = root.querySelector('#planchir-import-mpr');
             if (importBtn) importBtn.addEventListener('click', planChirurgicalImportMprPlane);
+
+            const tissueSelect = root.querySelector('#planchir-tissue');
+            const femCheckbox = root.querySelector('#planchir-fem');
+            if (tissueSelect && femCheckbox) {
+              tissueSelect.addEventListener('change', () => {
+                const val = tissueSelect.value;
+                if (val === 'cartilage_hyaline' || val === 'bone_cortical' || val === 'bone') {
+                  femCheckbox.checked = false;
+                  femCheckbox.disabled = true;
+                  notify('FEM désactivée pour ce tissu rigide (calcul géométrique uniquement).', 'info');
+                } else {
+                  femCheckbox.disabled = false;
+                }
+              });
+            }
+
             root.querySelectorAll('[data-plan-id]').forEach(btn => {
               btn.addEventListener('click', () => {
                 const id = btn.dataset.planId;
@@ -830,6 +895,8 @@
                 if (act === 'select') planChirurgicalSelectUi(id);
                 else if (act === 'export') planChirurgicalExportUi(id, 'pdf');
                 else if (act === 'export-sr') planChirurgicalExportUi(id, 'dicom-sr');
+                else if (act === 'export-guide') planChirurgicalExportGuideUi(id);
+                else if (act === 'export-meshes') planChirurgicalExportMeshesUi(id);
                 else if (act === 'del') planChirurgicalDeleteUi(id);
               });
             });
@@ -912,6 +979,22 @@
             try {
               await planChirurgicalExport(planChirurgicalPatientId(), planId, format);
               notify('Export ' + (format === 'dicom-sr' ? 'DICOM SR' : 'PDF') + ' du plan généré.', 'ok');
+            } catch (e) { notify(e.message, 'error'); }
+          }
+
+          async function planChirurgicalExportGuideUi(planId, format) {
+            try {
+              notify('Génération du guide de coupe 3D sur-mesure (STL)…', 'info');
+              await planChirurgicalExportGuide(planChirurgicalPatientId(), planId, format || 'stl');
+              notify('Guide de coupe 3D (STL) téléchargé — prêt pour l\'impression 3D.', 'ok');
+            } catch (e) { notify(e.message, 'error'); }
+          }
+
+          async function planChirurgicalExportMeshesUi(planId, part) {
+            try {
+              notify('Export des sous-maillages 3D (STL)…', 'info');
+              await planChirurgicalExportMeshes(planChirurgicalPatientId(), planId, part || 'remnant');
+              notify('Maillage 3D (STL) du reliquat d\'organe téléchargé.', 'ok');
             } catch (e) { notify(e.message, 'error'); }
           }
 

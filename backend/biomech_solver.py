@@ -447,6 +447,70 @@ def split_tetmesh_by_plane(tet: dict, plane_point: np.ndarray, plane_normal: np.
     return out
 
 
+def split_tetmesh_by_wedge(tet: dict, plane_point: np.ndarray, plane_normal1: np.ndarray, plane_normal2: np.ndarray) -> dict:
+    """Sépare le maillage volumique par une découpe en V (wedge) formée par 2 plans sécants au point `plane_point`.
+    Le côté réséqué est l'intersection des côtés < 0 par rapport aux deux normales."""
+    nodes = tet["nodes"]
+    tets = tet["tets"]
+    p = np.asarray(plane_point, dtype=np.float64)
+    n1 = np.asarray(plane_normal1, dtype=np.float64)
+    n1 = n1 / (np.linalg.norm(n1) + 1e-12)
+    n2 = np.asarray(plane_normal2, dtype=np.float64)
+    n2 = n2 / (np.linalg.norm(n2) + 1e-12)
+
+    s1 = ((nodes - p) @ n1)[tets]
+    s2 = ((nodes - p) @ n2)[tets]
+
+    # Réséqué = tétraèdres situés dans le coin (côté < 0 pour les deux plans)
+    in_wedge = (s1.sum(axis=1) < 0) & (s2.sum(axis=1) < 0)
+
+    out: dict = {}
+    for name, mask in (("remnant", ~in_wedge), ("resected", in_wedge)):
+        sub_tets = tets[mask]
+        if len(sub_tets) == 0:
+            out[name] = None
+            continue
+        used = np.unique(sub_tets)
+        idx = {int(v): i for i, v in enumerate(used)}
+        sub_nodes = nodes[used]
+        sub_tets_renum = np.vectorize(idx.get)(sub_tets)
+        vols = tet_volumes(sub_nodes, sub_tets_renum)
+        out[name] = {
+            "nodes": sub_nodes,
+            "tets": sub_tets_renum,
+            "num_nodes": int(len(sub_nodes)),
+            "num_tets": int(len(sub_tets_renum)),
+            "volume_ml": float(vols.sum() / 1000.0),
+        }
+    return out
+
+
+def export_split_submeshes(organ_mesh_path: Path, plane_point: np.ndarray, plane_normal: np.ndarray,
+                           out_dir: Path, prefix: str = "plan") -> Tuple[Path, Path]:
+    """Exporte les maillages surfaciques (.stl/.glb) du reliquat (remnant) et de la pièce réséquée (resected)."""
+    import trimesh
+    mesh = trimesh.load(str(organ_mesh_path), force="mesh")
+    if mesh is None:
+        raise ValueError(f"Maillage introuvable ou illisible : {organ_mesh_path}")
+
+    p = np.asarray(plane_point, dtype=np.float64)
+    n = np.asarray(plane_normal, dtype=np.float64)
+
+    # Découpage du maillage surfacique par plane_point / plane_normal
+    remnant_mesh = mesh.slice_plane(plane_origin=p, plane_normal=n)
+    resected_mesh = mesh.slice_plane(plane_origin=p, plane_normal=-n)
+
+    out_dir.mkdir(parents=True, exist_ok=True)
+    remnant_path = out_dir / f"{prefix}_remnant.stl"
+    resected_path = out_dir / f"{prefix}_resected.stl"
+
+    remnant_mesh.export(str(remnant_path), file_type="stl")
+    resected_mesh.export(str(resected_path), file_type="stl")
+
+    return remnant_path, resected_path
+
+
+
 def surface_min_distance_to_plane(mesh_path: Path, plane_point: np.ndarray, plane_normal: np.ndarray) -> float:
     """Distance minimale (mm) entre la surface du maillage et le plan de coupe —
     utilisée comme ESTIMATION de la marge oncologique quand le plan est passé

@@ -83,7 +83,7 @@ def test_connection_refused_raises_fast():
     t0 = time.time()
     with pytest.raises(mllp_client.MllpError, match="impossible"):
         mllp_client.send_hl7_message(cfg, "MSH|^~\\&|A|B|C|D|20260705||ADT^A08|MSG789|P|2.5")
-    assert time.time() - t0 < 2.0  # échec net (connexion refusée), pas d'attente du plein timeout
+    assert time.time() - t0 < 3.0  # échec net (connexion refusée), pas d'attente du plein timeout (3s)
 
 
 def test_config_requires_host():

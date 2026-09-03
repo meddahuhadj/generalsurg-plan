@@ -28,6 +28,7 @@ from __future__ import annotations
 import json
 import uuid
 from datetime import datetime
+import numpy as np
 from pathlib import Path
 from typing import List, Optional, Tuple
 
@@ -185,12 +186,18 @@ def _compute_resection(db: Session, patient_id: str, req: ResectionSimulationReq
     plane_point = [float(v) for v in req.plane_point]
     plane_normal = [float(v) for v in req.plane_normal]
 
-    # FLR par découpage réel du maillage tétraédrique
+    # FLR par découpage réel du maillage tétraédrique (plan simple ou coin/wedge)
     try:
         tet = build_tetmesh_from_glb(organ_mesh)
-        split = split_tetmesh_by_plane(
-            tet, np.asarray(plane_point, float), np.asarray(plane_normal, float)
-        )
+        if req.resection_type == "wedge" and req.plane_normal_2 is not None:
+            from biomech_solver import split_tetmesh_by_wedge
+            split = split_tetmesh_by_wedge(
+                tet, np.asarray(plane_point, float), np.asarray(plane_normal, float), np.asarray(req.plane_normal_2, float)
+            )
+        else:
+            split = split_tetmesh_by_plane(
+                tet, np.asarray(plane_point, float), np.asarray(plane_normal, float)
+            )
     except ValueError as e:
         raise HTTPException(400, f"Maillage organe non exploitable : {e}")
 
@@ -796,3 +803,79 @@ async def export_resection_plan(patient_id: str, plan_id: str,
     _log_export(db, request, patient_id, plan_id, format, data, current)
     return Response(content=data, media_type=media,
                     headers={"Content-Disposition": f'attachment; filename="plan_{rec.id[:8]}.{ext}"'})
+
+
+@router.get("/patients/{patient_id}/resection/plans/{plan_id}/export-guide")
+async def export_cutting_guide(
+    patient_id: str,
+    plan_id: str,
+    format: str = Query("stl", pattern="^(stl|glb)$"),
+    slot_width_mm: float = Query(1.5, ge=0.5, le=5.0),
+    request: Request = None,
+    current: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Génère et télécharge le guide de coupe sur-mesure 3D (PSI) imprimable (.stl/.glb)."""
+    rec = _get_plan(db, patient_id, plan_id)
+    _, organ_mesh_path = _resolve_organ(db, patient_id)
+
+    import trimesh
+    from cutting_guide import export_cutting_guide_file, generate_cutting_guide_mesh
+
+    mesh = trimesh.load(str(organ_mesh_path), force="mesh")
+    guide_mesh = generate_cutting_guide_mesh(
+        mesh,
+        plane_point=tuple(rec.plane_point),
+        plane_normal=tuple(rec.plane_normal),
+        slot_width_mm=slot_width_mm,
+    )
+
+    out_dir = MESH_STORAGE / "guides" / patient_id
+    out_path = out_dir / f"guide_{plan_id[:8]}.{format}"
+    export_cutting_guide_file(guide_mesh, out_path, file_format=format)
+
+    data = out_path.read_bytes()
+    media_type = "model/stl" if format == "stl" else "model/gltf-binary"
+    _log_export(db, request, patient_id, plan_id, f"guide-{format}", data, current)
+
+    return Response(
+        content=data,
+        media_type=media_type,
+        headers={"Content-Disposition": f'attachment; filename="guide_{plan_id[:8]}.{format}"'},
+    )
+
+
+@router.get("/patients/{patient_id}/resection/plans/{plan_id}/export-meshes")
+async def export_resection_submeshes(
+    patient_id: str,
+    plan_id: str,
+    part: str = Query("remnant", pattern="^(remnant|resected)$"),
+    request: Request = None,
+    current: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Télécharge le maillage surfacique 3D STL du reliquat d'organe (remnant) ou de la pièce réséquée (resected)."""
+    rec = _get_plan(db, patient_id, plan_id)
+    _, organ_mesh_path = _resolve_organ(db, patient_id)
+
+    from biomech_solver import export_split_submeshes
+
+    out_dir = MESH_STORAGE / "submeshes" / patient_id
+    remnant_path, resected_path = export_split_submeshes(
+        organ_mesh_path,
+        plane_point=np.asarray(rec.plane_point, float),
+        plane_normal=np.asarray(rec.plane_normal, float),
+        out_dir=out_dir,
+        prefix=plan_id[:8],
+    )
+
+    target_path = remnant_path if part == "remnant" else resected_path
+    data = target_path.read_bytes()
+    _log_export(db, request, patient_id, plan_id, f"submesh-{part}", data, current)
+
+    return Response(
+        content=data,
+        media_type="model/stl",
+        headers={"Content-Disposition": f'attachment; filename="organ_{part}_{plan_id[:8]}.stl"'},
+    )
+

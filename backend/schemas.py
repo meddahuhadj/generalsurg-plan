@@ -452,6 +452,8 @@ class ResectionSimulationRequest(BaseModel):
     (mode rapide, pour le déplacement interactif du plan)."""
     plane_point: List[float] = Field(..., min_length=3, max_length=3, description="Point du plan de coupe [x, y, z] mm (référentiel du maillage segmenté)")
     plane_normal: List[float] = Field(..., min_length=3, max_length=3, description="Normale du plan [nx, ny, nz] — côté n·(x-p) > 0 = remnant")
+    plane_normal_2: Optional[List[float]] = Field(None, min_length=3, max_length=3, description="Second plan pour découpe en coin (wedge)")
+    resection_type: Literal["planar", "wedge"] = Field("planar", description="Type de coupe : plan simple ou coin (wedge)")
     tissue_type: str = "liver_parenchyma"
     model: BiomechModel = "mooney_rivlin"
     margin_mm: float = Field(5.0, ge=0.0, le=50.0, description="Marge oncologique minimale demandée (mm)")
