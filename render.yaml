@@ -16,7 +16,7 @@
 
 services:
   - type: web
-    name: ophtalmosurg-plan
+    name: ophtalmosurg-plan-3d
     runtime: docker
     dockerfilePath: ./Dockerfile.render
     plan: free
@@ -35,7 +35,7 @@ services:
       # Remplacez par l'URL réelle si vous renommez le service (Render dérive
       # l'URL publique de "name" ci-dessus : https://<name>.onrender.com).
       - key: ALLOWED_ORIGINS
-        value: https://ophtalmosurg-plan.onrender.com
+        value: https://ophtalmosurg-plan-3d.onrender.com
       - key: LOG_LEVEL
         value: INFO
       # Pas de DATABASE_URL défini : bascule automatique sur SQLite local
