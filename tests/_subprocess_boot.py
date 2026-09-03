@@ -28,6 +28,9 @@ def run_boot_script(script_body: str, env_overrides: dict, timeout: int = 30) ->
     ne peut jamais supprimer une clé héritée du process parent).
     """
     env = os.environ.copy()
+    env["OPENBLAS_NUM_THREADS"] = "1"
+    env["OMP_NUM_THREADS"] = "1"
+    env["MKL_NUM_THREADS"] = "1"
     for key, value in env_overrides.items():
         if value is None:
             env.pop(key, None)
